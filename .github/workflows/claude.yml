@@ -17,4 +17,3 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
