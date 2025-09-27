@@ -1,0 +1,137 @@
+### NEXT.JS FRONTEND ###
+# Dependencies
+my_flow_client/node_modules/
+my_flow_client/.pnp
+my_flow_client/.pnp.js
+my_flow_client/.yarn/install-state.gz
+
+# Testing
+my_flow_client/coverage/
+my_flow_client/.nyc_output
+
+# Next.js
+my_flow_client/.next/
+my_flow_client/out/
+my_flow_client/build/
+my_flow_client/.vercel
+my_flow_client/*.tsbuildinfo
+my_flow_client/next-env.d.ts
+
+# Production
+my_flow_client/build
+my_flow_client/dist
+
+# Debug
+my_flow_client/npm-debug.log*
+my_flow_client/yarn-debug.log*
+my_flow_client/yarn-error.log*
+my_flow_client/.pnpm-debug.log*
+
+# Environment variables
+my_flow_client/.env*.local
+my_flow_client/.env.local
+my_flow_client/.env.development.local
+my_flow_client/.env.test.local
+my_flow_client/.env.production.local
+
+### PYTHON/FASTAPI BACKEND ###
+# Byte-compiled / optimized / DLL files
+my_flow_api/__pycache__/
+my_flow_api/*.py[cod]
+my_flow_api/*$py.class
+my_flow_api/*.so
+
+# Virtual environments
+my_flow_api/venv/
+my_flow_api/env/
+my_flow_api/ENV/
+my_flow_api/.venv
+my_flow_api/.env
+
+# FastAPI
+my_flow_api/instance/
+my_flow_api/.pytest_cache/
+my_flow_api/.coverage
+my_flow_api/htmlcov/
+my_flow_api/*.egg-info/
+my_flow_api/.eggs/
+
+# Environment variables
+my_flow_api/.env
+my_flow_api/.env.*
+my_flow_api/*.env
+
+# uvicorn
+my_flow_api/*.pid
+
+### MONGODB ###
+# MongoDB local data (if running locally)
+mongodb_data/
+data/db/
+*.lock
+*.wt
+WiredTiger*
+mongod.lock
+journal/
+
+### GENERAL ###
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+.project
+.pydevproject
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+log/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Package files
+*.tgz
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Docker (if used later)
+.dockerignore
+docker-compose.override.yml
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cert
+
+# Backup files
+*.backup
+*.bk
+backup/
+
+# Lock files (optional - some teams commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+# poetry.lock
