@@ -53,4 +53,4 @@ If and only if you've completed the required features will bonus points be award
 * **Task Filtering by Label (2.5 points)**: A functional filtering system based on labels.
 * **User Profile Management (2.5 points)**: Users can view and edit their profile details.
 * **Responsive Design (2.5 points)**: The application's layout adapts correctly to different screen sizes.
-* **Comprehensive Error Handling (2.5 points)**: The application provides clear and helpful error messages to the user.
+* **Comprehensive Error Handling (2.5 points)**: The application provides clear and helpful error messages to the user.# Test update
