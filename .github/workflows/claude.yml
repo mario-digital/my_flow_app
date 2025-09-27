@@ -17,3 +17,5 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          review-type: approve  # Explicitly request approval
+          auto-approve: true    # Auto-approve if no issues found
