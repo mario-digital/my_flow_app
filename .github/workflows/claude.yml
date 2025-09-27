@@ -29,6 +29,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          github-token: ${{ github.token }}
           # IMPORTANT: steer behavior via prompt so it leaves comments instead of approving
           prompt: |
             You are a strict PR reviewer. Analyze the diff and:
