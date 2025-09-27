@@ -22,15 +22,10 @@ jobs:
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Claude Code (comments-only review)
-        uses: anthropics/claude-code-action@v1
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ github.token }}
-          github-token: ${{ github.token }}
           # IMPORTANT: steer behavior via prompt so it leaves comments instead of approving
           prompt: |
             You are a strict PR reviewer. Analyze the diff and:
