@@ -17,10 +17,18 @@ const eslintConfig = [
       ".next/**",
       "out/**",
       "build/**",
+      "coverage/**",
       "next-env.d.ts",
     ],
   },
   {
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parserOptions: {
+        project: "./tsconfig.json",
+        tsconfigRootDir: __dirname,
+      },
+    },
     rules: {
       // Strict unused variable checking
       "@typescript-eslint/no-unused-vars": [
@@ -43,7 +51,7 @@ const eslintConfig = [
 
       // Additional strict rules
       "@typescript-eslint/explicit-function-return-type": [
-        "warn",
+        "error",
         {
           allowExpressions: true,
           allowTypedFunctionExpressions: true,

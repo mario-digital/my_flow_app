@@ -1,0 +1,58 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'my_flow_client/**'
+      - '.github/workflows/frontend-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'my_flow_client/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd my_flow_client
+          bun install
+
+      - name: Run linting (ESLint)
+        run: |
+          cd my_flow_client
+          bun run lint
+
+      - name: Run type checking (TypeScript)
+        run: |
+          cd my_flow_client
+          bun run typecheck
+
+      - name: Run tests (Vitest)
+        run: |
+          cd my_flow_client
+          bun run test -- --coverage
+
+      - name: Build verification
+        run: |
+          cd my_flow_client
+          bun run build
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./my_flow_client/coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: false
