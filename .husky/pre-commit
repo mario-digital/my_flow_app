@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged for file-level checks
+bunx lint-staged
+
+# Type check frontend (quick check)
+echo "📝 Type checking frontend..."
+bun --cwd my_flow_client run typecheck
+
+# Type check backend (quick check)
+echo "🐍 Type checking backend..."
+PYTHONPATH=./my_flow_api uv run --project my_flow_api mypy my_flow_api/src/
+
+echo "✅ Pre-commit checks passed!"

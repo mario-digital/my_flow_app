@@ -24,11 +24,25 @@
     "format:backend": "uv run --project my_flow_api ruff format src/",
     "typecheck": "bun run typecheck:frontend && bun run typecheck:backend",
     "typecheck:frontend": "bun --cwd my_flow_client run typecheck",
-    "typecheck:backend": "uv run --project my_flow_api mypy src/"
+    "typecheck:backend": "uv run --project my_flow_api mypy src/",
+    "prepare": "husky"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3"
+  },
   "engines": {
     "bun": ">=1.0.0",
     "python": ">=3.12"
+  },
+  "lint-staged": {
+    "my_flow_client/src/**/*.{ts,tsx}": [
+      "bun --cwd my_flow_client run format",
+      "bun --cwd my_flow_client x eslint --fix"
+    ],
+    "my_flow_api/src/**/*.py": [
+      "uv run --project my_flow_api ruff format",
+      "uv run --project my_flow_api ruff check --fix"
+    ]
   }
 }
