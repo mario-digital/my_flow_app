@@ -31,7 +31,6 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.unit
 
-@pytest.mark.unit
 def test_settings_defaults(clean_env: None) -> None:
     """Test that settings have correct default values."""
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
@@ -46,7 +45,6 @@ def test_settings_defaults(clean_env: None) -> None:
 
 @pytest.mark.unit
 
-@pytest.mark.unit
 def test_production_validation_fails_without_openai_key(clean_env: None) -> None:
     """Test that production environment requires OPENAI_API_KEY."""
     with pytest.raises(ValidationError, match="OPENAI_API_KEY is required in production"):
