@@ -52,6 +52,16 @@ class Settings(BaseSettings):
                 raise ValueError(msg)
         return self
 
+    @model_validator(mode="after")
+    def validate_database_connection(self) -> "Settings":
+        """Validate MongoDB URI format for development and staging environments."""
+        if self.ENV in ["development", "staging"] and not self.MONGODB_URI.startswith(
+            ("mongodb://", "mongodb+srv://")
+        ):
+            msg = "Invalid MongoDB URI format - must start with mongodb:// or mongodb+srv://"
+            raise ValueError(msg)
+        return self
+
 
 # Global settings instance
 settings = Settings()

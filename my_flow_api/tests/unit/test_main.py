@@ -13,6 +13,7 @@ def client():
     return TestClient(app)
 
 
+@pytest.mark.unit
 def test_app_creation():
     """Test that the FastAPI app can be created."""
     assert app is not None
@@ -20,6 +21,7 @@ def test_app_creation():
     assert app.version == settings.VERSION
 
 
+@pytest.mark.unit
 def test_health_check(client):
     """Test the health check endpoint."""
     response = client.get("/api/v1/health")
@@ -30,6 +32,7 @@ def test_health_check(client):
     assert data["version"] == settings.VERSION
 
 
+@pytest.mark.unit
 def test_root_endpoint(client):
     """Test the root endpoint."""
     response = client.get("/")

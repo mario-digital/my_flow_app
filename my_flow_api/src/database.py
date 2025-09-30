@@ -18,6 +18,5 @@ async def connect_to_mongo() -> None:
 
 async def close_mongo_connection() -> None:
     """Close MongoDB connection."""
-    # No global needed - we're only reading the module variable
     if client:
         client.close()
