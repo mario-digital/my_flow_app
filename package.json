@@ -1,0 +1,34 @@
+{
+  "name": "my-flow-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "my_flow_client",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run dev:backend & bun run dev:frontend",
+    "dev:frontend": "bun --cwd my_flow_client run dev",
+    "dev:backend": "PYTHONPATH=./my_flow_api uv run --project my_flow_api uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
+    "build": "bun run build:frontend && bun run build:backend",
+    "build:frontend": "bun --cwd my_flow_client run build",
+    "build:backend": "echo 'Backend build will use Docker in Story 1.8'",
+    "test": "bun run test:frontend && bun run test:backend",
+    "test:frontend": "bun --cwd my_flow_client test",
+    "test:backend": "PYTHONPATH=./my_flow_api uv run --project my_flow_api pytest",
+    "lint": "bun run lint:frontend && bun run lint:backend",
+    "lint:frontend": "bun --cwd my_flow_client run lint",
+    "lint:backend": "uv run --project my_flow_api ruff check src/",
+    "format": "bun run format:frontend && bun run format:backend",
+    "format:frontend": "bun --cwd my_flow_client run format",
+    "format:backend": "uv run --project my_flow_api ruff format src/",
+    "typecheck": "bun run typecheck:frontend && bun run typecheck:backend",
+    "typecheck:frontend": "bun --cwd my_flow_client run typecheck",
+    "typecheck:backend": "uv run --project my_flow_api mypy src/"
+  },
+  "devDependencies": {},
+  "engines": {
+    "bun": ">=1.0.0",
+    "python": ">=3.12"
+  }
+}
