@@ -135,10 +135,4 @@ backup/
 # yarn.lock
 # pnpm-lock.yaml
 # poetry.lock
-# BMAD (local only)
-.bmad-core/
-.bmad-*/
-AGENTS.md
-.docs
-.cursor/rules/bmad
-.claude/commands/BMad
+
