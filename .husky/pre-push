@@ -1,13 +1,25 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 echo "🧪 Running pre-push checks..."
 
-# Run all tests
+# Frontend checks
+echo "🔍 Linting frontend..."
+(cd my_flow_client && bun run lint) || { echo "❌ Frontend linting failed"; exit 1; }
+
+echo "📝 Type checking frontend..."
+(cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
+
 echo "🔬 Running frontend tests..."
-bun --cwd my_flow_client test
+bun --cwd my_flow_client test || { echo "❌ Frontend tests failed"; exit 1; }
+
+# Backend checks
+echo "🐍 Linting backend..."
+(cd my_flow_api && uv run ruff check .) || { echo "❌ Backend linting failed"; exit 1; }
+
+echo "🐍 Type checking backend..."
+(cd my_flow_api && uv run mypy src/) || { echo "❌ Backend type check failed"; exit 1; }
 
 echo "🐍 Running backend tests..."
-PYTHONPATH=./my_flow_api uv run --project my_flow_api pytest
+PYTHONPATH=./my_flow_api uv run --project my_flow_api pytest || { echo "❌ Backend tests failed"; exit 1; }
 
-echo "✅ All tests passed! Pushing..."
+echo "✅ All checks passed! Pushing..."
