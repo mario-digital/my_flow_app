@@ -29,6 +29,9 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(var, raising=False)
 
 
+@pytest.mark.unit
+
+@pytest.mark.unit
 def test_settings_defaults(clean_env: None) -> None:
     """Test that settings have correct default values."""
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
@@ -41,6 +44,9 @@ def test_settings_defaults(clean_env: None) -> None:
     assert settings.DATABASE_NAME == "myflow_dev"
 
 
+@pytest.mark.unit
+
+@pytest.mark.unit
 def test_production_validation_fails_without_openai_key(clean_env: None) -> None:
     """Test that production environment requires OPENAI_API_KEY."""
     with pytest.raises(ValidationError, match="OPENAI_API_KEY is required in production"):
@@ -55,6 +61,8 @@ def test_production_validation_fails_without_openai_key(clean_env: None) -> None
         )
 
 
+
+@pytest.mark.unit
 def test_production_validation_fails_without_anthropic_key(clean_env: None) -> None:
     """Test that production environment requires ANTHROPIC_API_KEY."""
     with pytest.raises(ValidationError, match="ANTHROPIC_API_KEY is required in production"):
@@ -69,6 +77,8 @@ def test_production_validation_fails_without_anthropic_key(clean_env: None) -> N
         )
 
 
+
+@pytest.mark.unit
 def test_production_validation_fails_without_logto_config(clean_env: None) -> None:
     """Test that production environment requires Logto configuration."""
     with pytest.raises(ValidationError, match="Logto configuration is required in production"):
@@ -81,6 +91,8 @@ def test_production_validation_fails_without_logto_config(clean_env: None) -> No
         )
 
 
+
+@pytest.mark.unit
 def test_production_validation_passes_with_all_secrets(clean_env: None) -> None:
     """Test that production environment passes with all required secrets."""
     settings = Settings(
@@ -97,9 +109,30 @@ def test_production_validation_passes_with_all_secrets(clean_env: None) -> None:
     assert settings.ANTHROPIC_API_KEY == "test-anthropic-key"
 
 
+
+@pytest.mark.unit
 def test_development_environment_allows_empty_secrets(clean_env: None) -> None:
     """Test that development environment allows empty API keys."""
     settings = Settings(_env_file=None, ENV="development")  # type: ignore[call-arg]
     assert settings.OPENAI_API_KEY == ""
     assert settings.ANTHROPIC_API_KEY == ""
     assert settings.LOGTO_ENDPOINT == ""
+
+
+
+@pytest.mark.unit
+def test_mongodb_uri_validation_development(clean_env: None) -> None:
+    """Test that development environment validates MongoDB URI format."""
+    with pytest.raises(ValidationError, match="Invalid MongoDB URI format"):
+        Settings(_env_file=None, ENV="development", MONGODB_URI="invalid-uri")  # type: ignore[call-arg]
+
+
+
+@pytest.mark.unit
+def test_mongodb_uri_validation_allows_valid_uri(clean_env: None) -> None:
+    """Test that valid MongoDB URIs are accepted."""
+    settings = Settings(_env_file=None, ENV="development", MONGODB_URI="mongodb://localhost:27017")  # type: ignore[call-arg]
+    assert settings.MONGODB_URI == "mongodb://localhost:27017"
+
+    settings_srv = Settings(_env_file=None, ENV="development", MONGODB_URI="mongodb+srv://cluster.mongodb.net")  # type: ignore[call-arg]
+    assert settings_srv.MONGODB_URI == "mongodb+srv://cluster.mongodb.net"
