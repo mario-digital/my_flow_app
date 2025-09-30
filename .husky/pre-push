@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🧪 Running pre-push checks..."
+
+# Run all tests
+echo "🔬 Running frontend tests..."
+bun --cwd my_flow_client test
+
+echo "🐍 Running backend tests..."
+PYTHONPATH=./my_flow_api uv run --project my_flow_api pytest
+
+echo "✅ All tests passed! Pushing..."
