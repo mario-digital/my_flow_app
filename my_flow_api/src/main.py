@@ -23,12 +23,12 @@ app.add_middleware(
 
 
 @app.get("/api/v1/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok", "service": "my-flow-api", "version": "0.1.0"}
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint."""
     return {"message": "MyFlow API - Navigate to /api/v1/docs for documentation"}
