@@ -8,7 +8,7 @@ bunx lint-staged
 
 # Type check frontend (quick check)
 echo "📝 Type checking frontend..."
-bun --cwd my_flow_client run typecheck
+cd my_flow_client && bun run typecheck && cd ..
 
 # Type check backend (quick check)
 echo "🐍 Type checking backend..."
