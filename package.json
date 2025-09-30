@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "bun run dev:backend & bun run dev:frontend",
-    "dev:frontend": "bun --cwd my_flow_client run dev",
+    "dev:frontend": "cd my_flow_client && bun run dev",
     "dev:backend": "PYTHONPATH=./my_flow_api uv run --project my_flow_api uvicorn src.main:app --reload --host 0.0.0.0 --port 8000",
     "build": "bun run build:frontend && bun run build:backend",
     "build:frontend": "bun --cwd my_flow_client run build",
