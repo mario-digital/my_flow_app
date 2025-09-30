@@ -1,30 +1,63 @@
-# My Flow API
+# MyFlow Backend API
 
-## 🚀 Future Home of the My Flow Backend API
+FastAPI backend application for MyFlow - Context-based flow management system.
 
-This directory will house the robust backend API service for the My Flow application, providing seamless integration between the client interface and core business logic.
+## Tech Stack
 
-### Planned Features
+- **Language**: Python 3.12+
+- **Framework**: FastAPI 0.115+
+- **Database**: MongoDB 7.x+ (Motor async driver)
+- **Auth**: Logto (OAuth 2.0, JWT)
+- **Package Manager**: uv (fast Python package manager)
+- **Testing**: pytest with pytest-asyncio
+- **Linting**: Ruff (fast linter + formatter)
+- **Type Checking**: mypy
 
-- **RESTful API Architecture**: Clean, intuitive endpoints following REST principles
-- **Authentication & Authorization**: Secure user authentication and role-based access control
-- **Flow Management**: Complete CRUD operations for workflow creation and management
-- **Real-time Updates**: WebSocket support for live collaboration and updates
-- **Data Persistence**: Reliable data storage and retrieval mechanisms
-- **Integration Ready**: Built to integrate with third-party services and APIs
+## Setup
 
-### Tech Stack (Planned)
+### Prerequisites
 
-- Modern Python framework (FastAPI/Flask/Django)
-- Async support for high-performance operations
-- Comprehensive API documentation with OpenAPI/Swagger
-- Robust error handling and logging
-- Scalable architecture ready for growth
+- Python 3.12 or later
+- uv package manager
+- MongoDB Atlas account (free tier)
+- 1Password CLI (`op`) for secrets
 
-### Coming Soon
+### Installation
 
-We're actively developing the API infrastructure to power the next generation of workflow automation. Stay tuned for updates!
+```bash
+# From root directory
+cd my_flow_api
 
----
+# Install dependencies
+uv sync
+```
 
-*This space is reserved for the backend API implementation that will power the My Flow application's core functionality.*
+## Available Scripts
+
+### Development
+```bash
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Testing
+```bash
+uv run pytest                    # Run all tests
+uv run pytest --cov=src          # Run with coverage
+```
+
+### Code Quality
+```bash
+uv run ruff check src/           # Lint code
+uv run ruff format src/          # Format code
+uv run mypy src/                 # Type check
+```
+
+## API Documentation
+
+- **Swagger UI**: http://localhost:8000/api/v1/docs
+- **ReDoc**: http://localhost:8000/api/v1/redoc
+- **OpenAPI JSON**: http://localhost:8000/api/v1/openapi.json
+
+## Support
+
+Refer to the [root README](../README.md) for overall project documentation.

@@ -1,5 +1,6 @@
 ### NEXT.JS FRONTEND ###
 # Dependencies
+node_modules/
 my_flow_client/node_modules/
 my_flow_client/.pnp
 my_flow_client/.pnp.js
@@ -130,11 +131,24 @@ docker-compose.override.yml
 *.bk
 backup/
 
-# Lock files (optional - some teams commit these)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-# poetry.lock
+# Lock files (keep for reproducibility)
+# Note: bun.lockb and uv.lock should be committed for reproducible builds
+
+# Environment templates (ALLOW these in Git)
+!.env.template
+!.env.example
+
+# Python caching
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
 
 # BMAD (local only)
 .bmad-core/
