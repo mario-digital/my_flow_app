@@ -139,3 +139,6 @@ backup/
 .bmad-core/
 .bmad-*/
 AGENTS.md
+.docs
+.cursor/rules/bmad
+.claude/commands/BMad
