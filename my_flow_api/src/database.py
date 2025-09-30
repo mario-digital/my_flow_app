@@ -9,15 +9,15 @@ client: AsyncIOMotorClient | None = None
 db: AsyncIOMotorDatabase | None = None
 
 
-async def connect_to_mongo():
+async def connect_to_mongo() -> None:
     """Establish connection to MongoDB."""
     global client, db
     client = AsyncIOMotorClient(settings.MONGODB_URI)
     db = client[settings.DATABASE_NAME]
 
 
-async def close_mongo_connection():
+async def close_mongo_connection() -> None:
     """Close MongoDB connection."""
-    global client
+    # No global needed - we're only reading the module variable
     if client:
         client.close()

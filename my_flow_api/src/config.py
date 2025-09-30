@@ -1,8 +1,5 @@
 """Application configuration using Pydantic Settings."""
 
-from typing import List
-
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +18,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "MyFlow API"
 
     # CORS Configuration
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     # Database Configuration (placeholder - will be configured in later stories)
     MONGODB_URI: str = "mongodb://localhost:27017"
