@@ -3,6 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from src.config import settings
 from src.main import app
 
 
@@ -15,7 +16,8 @@ def client():
 def test_app_creation():
     """Test that the FastAPI app can be created."""
     assert app is not None
-    assert app.title == "MyFlow API"
+    assert app.title == settings.PROJECT_NAME
+    assert app.version == settings.VERSION
 
 
 def test_health_check(client):
@@ -25,7 +27,7 @@ def test_health_check(client):
     data = response.json()
     assert data["status"] == "ok"
     assert data["service"] == "my-flow-api"
-    assert data["version"] == "0.1.0"
+    assert data["version"] == settings.VERSION
 
 
 def test_root_endpoint(client):
@@ -34,4 +36,5 @@ def test_root_endpoint(client):
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
-    assert "MyFlow API" in data["message"]
+    assert settings.PROJECT_NAME in data["message"]
+    assert settings.API_V1_STR in data["message"]

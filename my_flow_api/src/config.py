@@ -1,5 +1,6 @@
 """Application configuration using Pydantic Settings."""
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,9 +14,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # API Configuration
+    # Application Configuration
+    VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "MyFlow API"
+    ENV: str = "development"  # development, staging, production
 
     # CORS Configuration
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
@@ -33,6 +36,21 @@ class Settings(BaseSettings):
     # AI Configuration (placeholder - will be configured in later stories)
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+
+    @model_validator(mode="after")
+    def validate_production_secrets(self) -> "Settings":
+        """Validate that required secrets are set in production environment."""
+        if self.ENV == "production":
+            if not self.OPENAI_API_KEY:
+                msg = "OPENAI_API_KEY is required in production"
+                raise ValueError(msg)
+            if not self.ANTHROPIC_API_KEY:
+                msg = "ANTHROPIC_API_KEY is required in production"
+                raise ValueError(msg)
+            if not self.LOGTO_ENDPOINT or not self.LOGTO_APP_ID or not self.LOGTO_APP_SECRET:
+                msg = "Logto configuration is required in production"
+                raise ValueError(msg)
+        return self
 
 
 # Global settings instance

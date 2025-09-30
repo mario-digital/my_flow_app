@@ -60,6 +60,7 @@ ignore = [
     "ANN101",  # Missing type annotation for self
     "ANN102",  # Missing type annotation for cls
     "PLW0603", # Allow global statement for database connection pattern
+    "PLR2004", # Allow magic values in tests
 ]
 
 # Allow unused variables when they start with underscore

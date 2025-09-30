@@ -3,32 +3,35 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.config import settings
+
 app = FastAPI(
-    title="MyFlow API",
+    title=settings.PROJECT_NAME,
     description="Backend API for MyFlow - Context-based flow management system",
-    version="0.1.0",
-    docs_url="/api/v1/docs",
-    redoc_url="/api/v1/redoc",
-    openapi_url="/api/v1/openapi.json",
+    version=settings.VERSION,
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
-# CORS configuration (will be loaded from settings in later stories)
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.get("/api/v1/health")
+@app.get(f"{settings.API_V1_STR}/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
-    return {"status": "ok", "service": "my-flow-api", "version": "0.1.0"}
+    return {"status": "ok", "service": "my-flow-api", "version": settings.VERSION}
 
 
 @app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint."""
-    return {"message": "MyFlow API - Navigate to /api/v1/docs for documentation"}
+    docs_url = f"{settings.API_V1_STR}/docs"
+    return {"message": f"{settings.PROJECT_NAME} - Navigate to {docs_url} for documentation"}
