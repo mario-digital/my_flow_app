@@ -27,11 +27,11 @@ class Settings(BaseSettings):
     MONGODB_URI: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "myflow_dev"
 
-    # Auth Configuration (placeholder - will be configured in later stories)
-    LOGTO_ENDPOINT: str = ""
-    LOGTO_APP_ID: str = ""
-    LOGTO_APP_SECRET: str = ""
-    LOGTO_RESOURCE: str = ""
+    # Logto Authentication Configuration
+    LOGTO_ENDPOINT: str
+    LOGTO_APP_ID: str
+    LOGTO_APP_SECRET: str
+    LOGTO_RESOURCE: str | None = None
 
     # AI Configuration (placeholder - will be configured in later stories)
     OPENAI_API_KEY: str = ""

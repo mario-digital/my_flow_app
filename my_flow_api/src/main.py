@@ -1,9 +1,12 @@
 """FastAPI main application entry point."""
 
-from fastapi import FastAPI
+from datetime import UTC, datetime
+
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
+from src.middleware.auth import get_current_user
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -35,3 +38,13 @@ async def root() -> dict[str, str]:
     """Root endpoint."""
     docs_url = f"{settings.API_V1_STR}/docs"
     return {"message": f"{settings.PROJECT_NAME} - Navigate to {docs_url} for documentation"}
+
+
+@app.get(f"{settings.API_V1_STR}/protected", tags=["Auth"])
+async def protected_route(user_id: str = Depends(get_current_user)) -> dict[str, str]:
+    """Protected endpoint that requires valid JWT authentication."""
+    return {
+        "message": "This is a protected route",
+        "user_id": user_id,
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
