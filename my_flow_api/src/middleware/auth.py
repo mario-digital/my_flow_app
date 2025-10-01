@@ -96,11 +96,10 @@ def get_logto_jwks(request_id: str, *, force_refresh: bool = False) -> dict[str,
 
     if not force_refresh:
         with _JWKS_LOCK:
-            use_cache = False
-            if _JWKS_CACHE is not None and (ttl < 0 or (ttl > 0 and now - _JWKS_CACHE_TS < ttl)):
-                use_cache = True
-            if use_cache:
-                return _JWKS_CACHE
+            cached = _JWKS_CACHE
+            cache_age = now - _JWKS_CACHE_TS
+            if cached is not None and (ttl < 0 or (ttl > 0 and cache_age < ttl)):
+                return cached
 
     jwks = _fetch_jwks(request_id)
 
