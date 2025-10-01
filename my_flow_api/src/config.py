@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     LOGTO_APP_ID: str = ""
     LOGTO_APP_SECRET: str = ""
     LOGTO_RESOURCE: str | None = None
+    LOGTO_JWKS_TIMEOUT_SECONDS: float = 5.0
+    LOGTO_JWKS_CACHE_TTL_SECONDS: float = 3600.0
 
     # AI Configuration (placeholder - will be configured in later stories)
     OPENAI_API_KEY: str = ""
@@ -65,5 +67,6 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-# Pydantic Settings loads required fields from environment variables
+# Pydantic Settings loads required fields from environment variables at import time.
+# mypy lacks context that BaseSettings handles env parsing, so suppress the false positive.
 settings = Settings()  # type: ignore[call-arg]

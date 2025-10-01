@@ -74,6 +74,9 @@ class TestProtectedEndpoint:
             )
 
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            data = response.json()
+            assert data["detail"]["message"].startswith("Invalid or expired token")
+            assert "request_id" in data["detail"]
 
     def test_protected_endpoint_with_valid_token(self, client, mock_jwks):
         """Test protected endpoint with mocked valid token."""
@@ -134,4 +137,5 @@ class TestProtectedEndpoint:
 
             assert response.status_code == status.HTTP_401_UNAUTHORIZED
             data = response.json()
-            assert "missing user ID" in data["detail"]
+            assert "missing user ID" in data["detail"]["message"]
+            assert "request_id" in data["detail"]
