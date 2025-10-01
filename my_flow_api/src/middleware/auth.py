@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from threading import RLock
 from typing import Any
 from uuid import uuid4
-
-import logging
 
 import httpx
 from fastapi import Depends, HTTPException, Request, status
