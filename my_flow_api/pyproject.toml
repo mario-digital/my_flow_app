@@ -22,6 +22,7 @@ dev = [
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
     "ruff>=0.13.2",
+    "types-python-jose>=3.5.0.20250531",
 ]
 
 [tool.ruff]
