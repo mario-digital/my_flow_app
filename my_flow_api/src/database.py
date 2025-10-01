@@ -1,12 +1,15 @@
 """MongoDB database connection and utilities."""
 
+from collections.abc import Mapping
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.config import settings
 
 # Database client (will be initialized in later stories)
-client: AsyncIOMotorClient | None = None
-db: AsyncIOMotorDatabase | None = None
+MongoDocument = Mapping[str, object]
+client: AsyncIOMotorClient[MongoDocument] | None = None
+db: AsyncIOMotorDatabase[MongoDocument] | None = None
 
 
 async def connect_to_mongo() -> None:

@@ -1,5 +1,7 @@
 """Application configuration using Pydantic Settings."""
 
+from typing import ClassVar
+
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -7,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    model_config = SettingsConfigDict(
+    model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -68,5 +70,4 @@ class Settings(BaseSettings):
 
 # Global settings instance
 # Pydantic Settings loads required fields from environment variables at import time.
-# mypy lacks context that BaseSettings handles env parsing, so suppress the false positive.
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()
