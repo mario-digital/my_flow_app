@@ -1,4 +1,10 @@
-"""Logto JWT authentication middleware."""
+"""Logto JWT authentication middleware.
+
+This module includes a lightweight, per-process JWKS cache to minimise calls to
+Logto during token validation. For multi-worker deployments (e.g., Gunicorn or
+Uvicorn with multiple workers), replace the in-memory cache with a shared cache
+such as Redis to keep key material in sync across processes.
+"""
 
 from __future__ import annotations
 
@@ -214,7 +220,12 @@ async def get_current_user(
             request_id,
         ) from exc
 def _token_has_required_resource(payload: dict[str, Any]) -> bool:
-    """Return True when payload includes configured resource claim."""
+    """Return True when payload includes configured resource claim.
+
+    Logto tokens may expose the API audience via either a singular ``resource``
+    claim or a plural ``resources`` claim (occasionally a list). We inspect both
+    to avoid false negatives when Logto toggles claim formats.
+    """
 
     expected_resource = settings.LOGTO_RESOURCE
     if not expected_resource:
