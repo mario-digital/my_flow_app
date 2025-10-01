@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import time
 from threading import RLock
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import httpx
@@ -103,20 +103,18 @@ def get_logto_jwks(request_id: str, *, force_refresh: bool = False) -> dict[str,
     ttl = settings.LOGTO_JWKS_CACHE_TTL_SECONDS
     now = time.monotonic()
 
-    if not force_refresh:
-        with _JWKS_LOCK:
-            cached = _JWKS_CACHE
-            cache_age = now - _JWKS_CACHE_TS
-            if cached is not None and (ttl < 0 or (ttl > 0 and cache_age < ttl)):
-                return cached
-
-    jwks = _fetch_jwks(request_id)
-
     with _JWKS_LOCK:
+        cached = _JWKS_CACHE
+        cache_age = now - _JWKS_CACHE_TS
+        cache_valid = cached is not None and (ttl < 0 or (ttl > 0 and cache_age < ttl))
+
+        if cache_valid and not force_refresh:
+            return cast(dict[str, Any], cached)
+
+        jwks = _fetch_jwks(request_id)
         _JWKS_CACHE = jwks
         _JWKS_CACHE_TS = time.monotonic()
-
-    return jwks
+        return jwks
 
 
 def clear_jwks_cache() -> None:
@@ -209,6 +207,15 @@ async def get_current_user(
                 request_id,
             )
 
+        logger.info(
+            "JWT validated",
+            extra={
+                "request_id": request_id,
+                "user_id": user_id,
+                "resource": payload.get("resource") or payload.get("resources"),
+            },
+        )
+
         return user_id
 
     except JWTError as exc:
@@ -219,6 +226,8 @@ async def get_current_user(
             status.HTTP_401_UNAUTHORIZED,
             request_id,
         ) from exc
+
+
 def _token_has_required_resource(payload: dict[str, Any]) -> bool:
     """Return True when payload includes configured resource claim.
 
