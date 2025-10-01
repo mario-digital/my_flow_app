@@ -1,13 +1,12 @@
 """Unit tests for Logto JWT authentication middleware."""
 
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
-from jose import jwt
+from jose import ExpiredSignatureError, JWTError
 
 from src.middleware.auth import get_current_user, get_logto_jwks
 
@@ -155,8 +154,6 @@ class TestGetCurrentUser:
             patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
             patch("src.middleware.auth.jwt.decode") as mock_decode,
         ):
-            from jose import JWTError
-
             mock_header.return_value = {"kid": "test-key-id"}
             mock_decode.side_effect = JWTError("Invalid signature")
 
@@ -183,8 +180,6 @@ class TestGetCurrentUser:
             patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
             patch("src.middleware.auth.jwt.decode") as mock_decode,
         ):
-            from jose import ExpiredSignatureError
-
             mock_header.return_value = {"kid": "test-key-id"}
             mock_decode.side_effect = ExpiredSignatureError("Token expired")
 

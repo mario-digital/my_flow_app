@@ -49,7 +49,7 @@ def get_logto_jwks() -> dict[str, Any]:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
 ) -> str:
     """
     Validate Logto JWT token and extract user_id.

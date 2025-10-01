@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from jose import JWTError
 
 from src.main import app
 
@@ -64,8 +65,6 @@ class TestProtectedEndpoint:
             patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
             patch("src.middleware.auth.jwt.decode") as mock_decode,
         ):
-            from jose import JWTError
-
             mock_header.return_value = {"kid": "test-key-id"}
             mock_decode.side_effect = JWTError("Invalid signature")
 
