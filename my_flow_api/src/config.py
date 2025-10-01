@@ -28,9 +28,10 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "myflow_dev"
 
     # Logto Authentication Configuration
-    LOGTO_ENDPOINT: str
-    LOGTO_APP_ID: str
-    LOGTO_APP_SECRET: str
+    # Defaults allow tests and local development without secrets; production validator enforces real values
+    LOGTO_ENDPOINT: str = ""
+    LOGTO_APP_ID: str = ""
+    LOGTO_APP_SECRET: str = ""
     LOGTO_RESOURCE: str | None = None
 
     # AI Configuration (placeholder - will be configured in later stories)

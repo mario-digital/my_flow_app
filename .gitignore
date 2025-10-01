@@ -62,6 +62,9 @@ my_flow_api/.env
 my_flow_api/.env.*
 my_flow_api/*.env
 
+# uv cache
+.uv-cache/
+
 # uvicorn
 my_flow_api/*.pid
 
