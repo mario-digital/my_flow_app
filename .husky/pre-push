@@ -2,6 +2,12 @@
 
 echo "🧪 Running pre-push checks..."
 
+# Git hygiene checks
+if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+  echo "❌ Detected tracked .env file. Remove it before pushing."
+  exit 1
+fi
+
 # Frontend checks
 echo "🔍 Linting frontend..."
 (cd my_flow_client && bun run lint) || { echo "❌ Frontend linting failed"; exit 1; }
