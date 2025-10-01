@@ -58,6 +58,7 @@ my_flow_api/*.egg-info/
 my_flow_api/.eggs/
 
 # Environment variables
+.env
 my_flow_api/.env
 my_flow_api/.env.*
 my_flow_api/*.env
