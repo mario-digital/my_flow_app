@@ -97,8 +97,8 @@ async def get_current_user(
         )
 
         # Extract user_id from sub claim
-        user_id: str = payload.get("sub")
-        if not user_id:
+        user_id = payload.get("sub")
+        if not user_id or not isinstance(user_id, str):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token: missing user ID",
