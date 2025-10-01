@@ -33,7 +33,12 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_settings_defaults(clean_env: None) -> None:
     """Test that settings have correct default values."""
-    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        LOGTO_ENDPOINT="https://test.logto.app",
+        LOGTO_APP_ID="test-app-id",
+        LOGTO_APP_SECRET="test-secret",
+    )
     assert settings.VERSION == "0.1.0"
     assert settings.PROJECT_NAME == "MyFlow API"
     assert settings.ENV == "development"
@@ -86,6 +91,8 @@ def test_production_validation_fails_without_logto_config(clean_env: None) -> No
             OPENAI_API_KEY="test-key",
             ANTHROPIC_API_KEY="test-key",
             LOGTO_ENDPOINT="",
+            LOGTO_APP_ID="test-app-id",
+            LOGTO_APP_SECRET="test-secret",
         )
 
 
@@ -110,11 +117,17 @@ def test_production_validation_passes_with_all_secrets(clean_env: None) -> None:
 
 @pytest.mark.unit
 def test_development_environment_allows_empty_secrets(clean_env: None) -> None:
-    """Test that development environment allows empty API keys."""
-    settings = Settings(_env_file=None, ENV="development")  # type: ignore[call-arg]
+    """Test that development environment allows empty AI API keys but requires Logto config."""
+    settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        ENV="development",
+        LOGTO_ENDPOINT="https://test.logto.app",
+        LOGTO_APP_ID="test-app-id",
+        LOGTO_APP_SECRET="test-secret",
+    )
     assert settings.OPENAI_API_KEY == ""
     assert settings.ANTHROPIC_API_KEY == ""
-    assert settings.LOGTO_ENDPOINT == ""
+    assert settings.LOGTO_ENDPOINT == "https://test.logto.app"
 
 
 
@@ -122,15 +135,36 @@ def test_development_environment_allows_empty_secrets(clean_env: None) -> None:
 def test_mongodb_uri_validation_development(clean_env: None) -> None:
     """Test that development environment validates MongoDB URI format."""
     with pytest.raises(ValidationError, match="Invalid MongoDB URI format"):
-        Settings(_env_file=None, ENV="development", MONGODB_URI="invalid-uri")  # type: ignore[call-arg]
+        Settings(
+            _env_file=None,  # type: ignore[call-arg]
+            ENV="development",
+            MONGODB_URI="invalid-uri",
+            LOGTO_ENDPOINT="https://test.logto.app",
+            LOGTO_APP_ID="test-app-id",
+            LOGTO_APP_SECRET="test-secret",
+        )
 
 
 
 @pytest.mark.unit
 def test_mongodb_uri_validation_allows_valid_uri(clean_env: None) -> None:
     """Test that valid MongoDB URIs are accepted."""
-    settings = Settings(_env_file=None, ENV="development", MONGODB_URI="mongodb://localhost:27017")  # type: ignore[call-arg]
+    settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        ENV="development",
+        MONGODB_URI="mongodb://localhost:27017",
+        LOGTO_ENDPOINT="https://test.logto.app",
+        LOGTO_APP_ID="test-app-id",
+        LOGTO_APP_SECRET="test-secret",
+    )
     assert settings.MONGODB_URI == "mongodb://localhost:27017"
 
-    settings_srv = Settings(_env_file=None, ENV="development", MONGODB_URI="mongodb+srv://cluster.mongodb.net")  # type: ignore[call-arg]
+    settings_srv = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        ENV="development",
+        MONGODB_URI="mongodb+srv://cluster.mongodb.net",
+        LOGTO_ENDPOINT="https://test.logto.app",
+        LOGTO_APP_ID="test-app-id",
+        LOGTO_APP_SECRET="test-secret",
+    )
     assert settings_srv.MONGODB_URI == "mongodb+srv://cluster.mongodb.net"
