@@ -6,7 +6,8 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+# Pydantic's BaseSettings inherits from BaseModel[Any]; targeted ignore keeps strict mypy happy.
+class Settings(BaseSettings):  # type: ignore[explicit-any]
     """Application settings loaded from environment variables."""
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
