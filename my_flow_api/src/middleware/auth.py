@@ -7,6 +7,8 @@ from threading import RLock
 from typing import Any
 from uuid import uuid4
 
+import logging
+
 import httpx
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -16,11 +18,13 @@ from src.config import settings
 
 # HTTPBearer security scheme for extracting Bearer tokens
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 _JWKS_CACHE: dict[str, Any] | None = None
 _JWKS_CACHE_TS: float = 0.0
 _JWKS_LOCK = RLock()
+# NOTE: Cache is per-process; multi-worker deployments should use a shared cache (e.g., Redis).
 
 
 def _auth_error(message: str, status_code: int, request_id: str) -> HTTPException:
@@ -141,8 +145,7 @@ async def get_current_user(
     request_id = _extract_request_id(request)
 
     try:
-        # Get unverified header to find the correct signing key
-        jwks = get_logto_jwks(request_id)
+        # Extract header first to fail fast if token lacks metadata
         unverified_header = jwt.get_unverified_header(token)
         kid = unverified_header.get("kid")
         if not kid:
@@ -152,6 +155,8 @@ async def get_current_user(
                 status.HTTP_401_UNAUTHORIZED,
                 request_id,
             )
+
+        jwks = get_logto_jwks(request_id)
 
         # Find the signing key that matches the token's kid
         signing_key = next(
@@ -181,28 +186,13 @@ async def get_current_user(
             issuer=f"{settings.LOGTO_ENDPOINT}/oidc",
         )
 
-        if settings.LOGTO_RESOURCE:
-            resource_claim = payload.get("resource")
-            resources_claim = payload.get("resources")
-
-            resource_matches = False
-            if isinstance(resource_claim, str):
-                resource_matches = resource_claim == settings.LOGTO_RESOURCE
-            elif isinstance(resource_claim, list):
-                resource_matches = settings.LOGTO_RESOURCE in resource_claim
-            elif isinstance(resources_claim, (list, str)):
-                if isinstance(resources_claim, str):
-                    resource_matches = resources_claim == settings.LOGTO_RESOURCE
-                else:
-                    resource_matches = settings.LOGTO_RESOURCE in resources_claim
-
-            if not resource_matches:
-                msg = "Invalid token: missing required resource claim"
-                raise _auth_error(
-                    msg,
-                    status.HTTP_401_UNAUTHORIZED,
-                    request_id,
-                )
+        if not _token_has_required_resource(payload):
+            msg = "Invalid token: missing required resource claim"
+            raise _auth_error(
+                msg,
+                status.HTTP_401_UNAUTHORIZED,
+                request_id,
+            )
 
         # Extract user_id from sub claim
         user_id = payload.get("sub")
@@ -216,10 +206,33 @@ async def get_current_user(
 
         return user_id
 
-    except JWTError as e:
-        msg = f"Invalid or expired token: {e!s}"
+    except JWTError as exc:
+        logger.info("JWT validation failed", exc_info=exc, extra={"request_id": request_id})
+        msg = "Invalid or expired token"
         raise _auth_error(
             msg,
             status.HTTP_401_UNAUTHORIZED,
             request_id,
-        ) from e
+        ) from exc
+def _token_has_required_resource(payload: dict[str, Any]) -> bool:
+    """Return True when payload includes configured resource claim."""
+
+    expected_resource = settings.LOGTO_RESOURCE
+    if not expected_resource:
+        return True
+
+    claim_values: list[str] = []
+    resource_claim = payload.get("resource")
+    resources_claim = payload.get("resources")
+
+    if isinstance(resource_claim, str):
+        claim_values.append(resource_claim)
+    elif isinstance(resource_claim, list):
+        claim_values.extend(str(item) for item in resource_claim if isinstance(item, str))
+
+    if isinstance(resources_claim, str):
+        claim_values.append(resources_claim)
+    elif isinstance(resources_claim, list):
+        claim_values.extend(str(item) for item in resources_claim if isinstance(item, str))
+
+    return expected_resource in claim_values

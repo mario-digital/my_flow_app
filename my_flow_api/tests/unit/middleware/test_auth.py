@@ -214,4 +214,22 @@ class TestGetCurrentUser:
                 await get_current_user(request_mock, credentials)
 
             assert exc_info.value.detail["request_id"] == "req-204"
-            assert "Invalid or expired token" in exc_info.value.detail["message"]
+            assert exc_info.value.detail["message"] == "Invalid or expired token"
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_missing_kid_fails_fast(
+        self, mock_settings, mock_jwks, credentials
+    ) -> None:
+        """Missing kid should fail before performing JWKS lookup."""
+        request_mock = Mock()
+        with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-205"),
+            patch("src.middleware.auth.jwt.get_unverified_header", return_value={}),
+            patch("src.middleware.auth.get_logto_jwks") as mock_jwks_fn,
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(request_mock, credentials)
+
+            assert exc_info.value.detail["message"] == "Invalid token: missing key identifier"
+            assert exc_info.value.detail["request_id"] == "req-205"
+            mock_jwks_fn.assert_not_called()
