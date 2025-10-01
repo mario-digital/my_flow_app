@@ -20,6 +20,6 @@ echo "🐍 Type checking backend..."
 (cd my_flow_api && uv run mypy src/) || { echo "❌ Backend type check failed"; exit 1; }
 
 echo "🐍 Running backend tests..."
-PYTHONPATH=./my_flow_api uv run --project my_flow_api pytest || { echo "❌ Backend tests failed"; exit 1; }
+./scripts/run_backend_tests.sh || { echo "❌ Backend tests failed"; exit 1; }
 
 echo "✅ All checks passed! Pushing..."
