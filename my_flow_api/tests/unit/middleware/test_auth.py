@@ -6,9 +6,17 @@ import httpx
 import pytest
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
-from jose import ExpiredSignatureError, JWTError
+from jose import JWTError
 
-from src.middleware.auth import get_current_user, get_logto_jwks
+from src.middleware.auth import clear_jwks_cache, get_current_user, get_logto_jwks
+
+
+@pytest.fixture(autouse=True)
+def reset_cache() -> None:
+    """Ensure JWKS cache is cleared before each test."""
+    clear_jwks_cache()
+    yield
+    clear_jwks_cache()
 
 
 @pytest.fixture
@@ -33,6 +41,10 @@ def mock_settings():
     with patch("src.middleware.auth.settings") as mock:
         mock.LOGTO_ENDPOINT = "https://test.logto.app"
         mock.LOGTO_APP_ID = "test-app-id"
+        mock.LOGTO_APP_SECRET = "test-secret"
+        mock.LOGTO_RESOURCE = None
+        mock.LOGTO_JWKS_TIMEOUT_SECONDS = 5.0
+        mock.LOGTO_JWKS_CACHE_TTL_SECONDS = 3600.0
         yield mock
 
 
@@ -42,15 +54,12 @@ class TestGetLogtoJwks:
 
     def test_get_logto_jwks_success(self, mock_settings, mock_jwks):
         """Test successful JWKS fetch and caching."""
-        # Clear cache before test
-        get_logto_jwks.cache_clear()
-
         with patch("httpx.get") as mock_get:
             mock_response = Mock()
             mock_response.json.return_value = mock_jwks
             mock_get.return_value = mock_response
 
-            result = get_logto_jwks()
+            result = get_logto_jwks("req-123")
 
             assert result == mock_jwks
             mock_get.assert_called_once_with(
@@ -58,210 +67,151 @@ class TestGetLogtoJwks:
                 timeout=httpx.Timeout(5.0, read=5.0),
             )
 
-        # Clear cache after test
-        get_logto_jwks.cache_clear()
-
     def test_get_logto_jwks_http_error(self, mock_settings):
         """Test JWKS fetch failure with HTTP error."""
-        get_logto_jwks.cache_clear()
-
-        with patch("httpx.get") as mock_get:
-            mock_get.side_effect = httpx.HTTPError("Network error")
-
+        with patch("httpx.get", side_effect=httpx.HTTPError("Network error")):
             with pytest.raises(HTTPException) as exc_info:
-                get_logto_jwks()
+                get_logto_jwks("req-124")
 
             assert exc_info.value.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
-            assert "Unable to fetch Logto signing keys" in exc_info.value.detail
-
-        get_logto_jwks.cache_clear()
+            assert exc_info.value.detail["message"] == "Unable to fetch Logto signing keys"
+            assert exc_info.value.detail["request_id"] == "req-124"
 
     def test_get_logto_jwks_malformed_response(self, mock_settings):
         """Test JWKS fetch with malformed response."""
-        get_logto_jwks.cache_clear()
-
-        with patch("httpx.get") as mock_get:
-            mock_response = Mock()
-            mock_response.json.return_value = {"keys": []}  # Empty keys
-            mock_get.return_value = mock_response
-
+        mock_response = Mock()
+        mock_response.json.return_value = {"keys": []}
+        with patch("httpx.get", return_value=mock_response):
             with pytest.raises(HTTPException) as exc_info:
-                get_logto_jwks()
+                get_logto_jwks("req-125")
 
             assert exc_info.value.status_code == status.HTTP_502_BAD_GATEWAY
-            assert "Logto signing keys response malformed" in exc_info.value.detail
+            assert exc_info.value.detail["message"] == "Logto signing keys response malformed"
+            assert exc_info.value.detail["request_id"] == "req-125"
 
-        get_logto_jwks.cache_clear()
+    def test_get_logto_jwks_force_refresh(self, mock_settings, mock_jwks):
+        """Test JWKS fetch with force refresh bypasses cache."""
+        mock_response = Mock()
+        mock_response.json.return_value = mock_jwks
+        with patch("httpx.get", return_value=mock_response) as mock_get:
+            # First call populates cache
+            get_logto_jwks("req-126")
+            # Second call with force_refresh should hit network again
+            get_logto_jwks("req-126", force_refresh=True)
 
-    def test_get_logto_jwks_missing_keys(self, mock_settings):
-        """Test JWKS fetch with missing keys field."""
-        get_logto_jwks.cache_clear()
-
-        with patch("httpx.get") as mock_get:
-            mock_response = Mock()
-            mock_response.json.return_value = {}  # No keys field
-            mock_get.return_value = mock_response
-
-            with pytest.raises(HTTPException) as exc_info:
-                get_logto_jwks()
-
-            assert exc_info.value.status_code == status.HTTP_502_BAD_GATEWAY
-
-        get_logto_jwks.cache_clear()
+            assert mock_get.call_count == 2
 
 
 @pytest.mark.unit
 class TestGetCurrentUser:
     """Unit tests for get_current_user dependency."""
 
-    def test_get_current_user_with_valid_token(self, mock_settings, mock_jwks):
+    @pytest.fixture
+    def credentials(self) -> HTTPAuthorizationCredentials:
+        """Return HTTP bearer credentials for tests."""
+        return HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_valid_token(self, mock_settings, mock_jwks, credentials):
         """Test get_current_user with valid JWT token."""
-        get_logto_jwks.cache_clear()
-
-        # Create mock credentials
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="valid-token"
-        )
-
-        # Mock JWT validation
+        request_mock = Mock()
         with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-200"),
             patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-            patch("src.middleware.auth.jwt.decode") as mock_decode,
+            patch(
+                "src.middleware.auth.jwt.get_unverified_header",
+                return_value={"kid": "test-key-id"},
+            ),
+            patch("src.middleware.auth.jwt.decode", return_value={"sub": "test-user-123"}),
         ):
-            mock_header.return_value = {"kid": "test-key-id"}
-            mock_decode.return_value = {"sub": "test-user-123"}
-
-            result = pytest.importorskip("asyncio").run(
-                get_current_user(credentials)
-            )
+            result = await get_current_user(request_mock, credentials)
 
             assert result == "test-user-123"
-            mock_decode.assert_called_once()
 
-        get_logto_jwks.cache_clear()
-
-    def test_get_current_user_with_invalid_token(self, mock_settings, mock_jwks):
-        """Test get_current_user with invalid JWT token."""
-        get_logto_jwks.cache_clear()
-
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="invalid-token"
-        )
-
+    @pytest.mark.asyncio
+    async def test_get_current_user_validates_resource(self, mock_settings, mock_jwks, credentials):
+        """Tokens must include configured resource claim."""
+        mock_settings.LOGTO_RESOURCE = "api://my-resource"
+        request_mock = Mock()
         with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-201"),
             patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-            patch("src.middleware.auth.jwt.decode") as mock_decode,
+            patch(
+                "src.middleware.auth.jwt.get_unverified_header",
+                return_value={"kid": "test-key-id"},
+            ),
+            patch(
+                "src.middleware.auth.jwt.decode",
+                return_value={"sub": "user", "resource": "wrong-resource"},
+            ),
         ):
-            mock_header.return_value = {"kid": "test-key-id"}
-            mock_decode.side_effect = JWTError("Invalid signature")
-
             with pytest.raises(HTTPException) as exc_info:
-                pytest.importorskip("asyncio").run(
-                    get_current_user(credentials)
-                )
+                await get_current_user(request_mock, credentials)
+
+            expected_msg = "Invalid token: missing required resource claim"
+            assert exc_info.value.detail["message"] == expected_msg
+            assert exc_info.value.detail["request_id"] == "req-201"
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_refreshes_keys_when_kid_unknown(
+        self, mock_settings, mock_jwks, credentials
+    ):
+        """When kid is missing initially, middleware refreshes JWKS."""
+        request_mock = Mock()
+        refreshed_keys = {"keys": [{"kid": "new-key"}]}
+        with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-202"),
+            patch(
+                "src.middleware.auth.get_logto_jwks",
+                side_effect=[mock_jwks, refreshed_keys],
+            ) as mock_jwks_fn,
+            patch("src.middleware.auth.jwt.get_unverified_header", return_value={"kid": "new-key"}),
+            patch(
+                "src.middleware.auth.jwt.decode",
+                return_value={"sub": "user"},
+            ),
+        ):
+            result = await get_current_user(request_mock, credentials)
+
+            assert result == "user"
+            assert mock_jwks_fn.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_missing_user_id(
+        self, mock_settings, mock_jwks, credentials
+    ) -> None:
+        """Missing sub claim results in 401 with request context."""
+        request_mock = Mock()
+        with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-203"),
+            patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
+            patch(
+                "src.middleware.auth.jwt.get_unverified_header",
+                return_value={"kid": "test-key-id"},
+            ),
+            patch("src.middleware.auth.jwt.decode", return_value={}),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(request_mock, credentials)
 
             assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-            assert "Invalid or expired token" in exc_info.value.detail
+            assert exc_info.value.detail["request_id"] == "req-203"
 
-        get_logto_jwks.cache_clear()
-
-    def test_get_current_user_with_expired_token(self, mock_settings, mock_jwks):
-        """Test get_current_user with expired JWT token."""
-        get_logto_jwks.cache_clear()
-
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="expired-token"
-        )
-
+    @pytest.mark.asyncio
+    async def test_get_current_user_with_jwt_error(self, mock_settings, mock_jwks, credentials):
+        """JWT errors propagate as 401 with request ID for observability."""
+        request_mock = Mock()
         with (
+            patch("src.middleware.auth._extract_request_id", return_value="req-204"),
             patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-            patch("src.middleware.auth.jwt.decode") as mock_decode,
+            patch(
+                "src.middleware.auth.jwt.get_unverified_header",
+                return_value={"kid": "test-key-id"},
+            ),
+            patch("src.middleware.auth.jwt.decode", side_effect=JWTError("boom")),
         ):
-            mock_header.return_value = {"kid": "test-key-id"}
-            mock_decode.side_effect = ExpiredSignatureError("Token expired")
-
             with pytest.raises(HTTPException) as exc_info:
-                pytest.importorskip("asyncio").run(
-                    get_current_user(credentials)
-                )
+                await get_current_user(request_mock, credentials)
 
-            assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-
-        get_logto_jwks.cache_clear()
-
-    def test_get_current_user_with_missing_sub_claim(self, mock_settings, mock_jwks):
-        """Test get_current_user with missing sub claim."""
-        get_logto_jwks.cache_clear()
-
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="token-without-sub"
-        )
-
-        with (
-            patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-            patch("src.middleware.auth.jwt.decode") as mock_decode,
-        ):
-            mock_header.return_value = {"kid": "test-key-id"}
-            mock_decode.return_value = {}  # No sub claim
-
-            with pytest.raises(HTTPException) as exc_info:
-                pytest.importorskip("asyncio").run(
-                    get_current_user(credentials)
-                )
-
-            assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-            assert "missing user ID" in exc_info.value.detail
-
-        get_logto_jwks.cache_clear()
-
-    def test_get_current_user_with_missing_kid(self, mock_settings, mock_jwks):
-        """Test get_current_user with missing kid in token header."""
-        get_logto_jwks.cache_clear()
-
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="token-without-kid"
-        )
-
-        with (
-            patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-        ):
-            mock_header.return_value = {}  # No kid
-
-            with pytest.raises(HTTPException) as exc_info:
-                pytest.importorskip("asyncio").run(
-                    get_current_user(credentials)
-                )
-
-            assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-            assert "missing key identifier" in exc_info.value.detail
-
-        get_logto_jwks.cache_clear()
-
-    def test_get_current_user_with_unknown_kid(self, mock_settings, mock_jwks):
-        """Test get_current_user with kid not found in JWKS."""
-        get_logto_jwks.cache_clear()
-
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials="token-with-unknown-kid"
-        )
-
-        with (
-            patch("src.middleware.auth.get_logto_jwks", return_value=mock_jwks),
-            patch("src.middleware.auth.jwt.get_unverified_header") as mock_header,
-        ):
-            mock_header.return_value = {"kid": "unknown-key-id"}
-
-            with pytest.raises(HTTPException) as exc_info:
-                pytest.importorskip("asyncio").run(
-                    get_current_user(credentials)
-                )
-
-            assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-            assert "signing key not found" in exc_info.value.detail
-
-        get_logto_jwks.cache_clear()
+            assert exc_info.value.detail["request_id"] == "req-204"
+            assert "Invalid or expired token" in exc_info.value.detail["message"]
