@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping, MutableMapping, Sequence
 from threading import RLock
-from typing import Any, cast
+from typing import cast
 from uuid import uuid4
 
 import httpx
@@ -26,7 +27,11 @@ security = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 
-_JWKS_CACHE: dict[str, Any] | None = None
+JWKSResponse = dict[str, object]
+JWKSKey = Mapping[str, object]
+JWTClaims = MutableMapping[str, object]
+
+_JWKS_CACHE: JWKSResponse | None = None
 _JWKS_CACHE_TS: float = 0.0
 _JWKS_LOCK = RLock()
 # NOTE: Cache is per-process; multi-worker deployments should use a shared cache (e.g., Redis).
@@ -57,7 +62,7 @@ def _extract_request_id(request: Request) -> str:
     return generated
 
 
-def _fetch_jwks(request_id: str) -> dict[str, Any]:
+def _fetch_jwks(request_id: str) -> JWKSResponse:
     """Fetch JWKS payload from Logto and return parsed JSON."""
 
     timeout_seconds = settings.LOGTO_JWKS_TIMEOUT_SECONDS
@@ -67,7 +72,7 @@ def _fetch_jwks(request_id: str) -> dict[str, Any]:
             timeout=httpx.Timeout(timeout_seconds, read=timeout_seconds),
         )
         response.raise_for_status()
-        jwks = response.json()
+        jwks = cast(JWKSResponse, response.json())
     except httpx.HTTPError as exc:
         msg = "Unable to fetch Logto signing keys"
         raise _auth_error(
@@ -77,7 +82,10 @@ def _fetch_jwks(request_id: str) -> dict[str, Any]:
         ) from exc
 
     keys = jwks.get("keys")
-    if not isinstance(keys, list) or not keys:
+    malformed_keys = not isinstance(keys, list) or not keys or not all(
+        isinstance(item, Mapping) for item in keys
+    )
+    if malformed_keys:
         msg = "Logto signing keys response malformed"
         raise _auth_error(
             msg,
@@ -88,7 +96,7 @@ def _fetch_jwks(request_id: str) -> dict[str, Any]:
     return jwks
 
 
-def get_logto_jwks(request_id: str, *, force_refresh: bool = False) -> dict[str, Any]:
+def get_logto_jwks(request_id: str, *, force_refresh: bool = False) -> JWKSResponse:
     """
     Fetch and cache Logto JWKS (public keys).
 
@@ -108,8 +116,8 @@ def get_logto_jwks(request_id: str, *, force_refresh: bool = False) -> dict[str,
         cache_age = now - _JWKS_CACHE_TS
         cache_valid = cached is not None and (ttl < 0 or (ttl > 0 and cache_age < ttl))
 
-        if cache_valid and not force_refresh:
-            return cast(dict[str, Any], cached)
+        if cache_valid and not force_refresh and cached is not None:
+            return cached
 
         jwks = _fetch_jwks(request_id)
         _JWKS_CACHE = jwks
@@ -160,18 +168,14 @@ async def get_current_user(
             )
 
         jwks = get_logto_jwks(request_id)
+        jwks_keys = cast(Sequence[JWKSKey], jwks["keys"])
 
         # Find the signing key that matches the token's kid
-        signing_key = next(
-            (key for key in jwks["keys"] if key.get("kid") == kid),
-            None,
-        )
+        signing_key = next((key for key in jwks_keys if key.get("kid") == kid), None)
         if not signing_key:
             jwks = get_logto_jwks(request_id, force_refresh=True)
-            signing_key = next(
-                (key for key in jwks["keys"] if key.get("kid") == kid),
-                None,
-            )
+            jwks_keys = cast(Sequence[JWKSKey], jwks["keys"])
+            signing_key = next((key for key in jwks_keys if key.get("kid") == kid), None)
             if not signing_key:
                 msg = "Invalid token: signing key not found"
                 raise _auth_error(
@@ -181,12 +185,15 @@ async def get_current_user(
                 )
 
         # Decode and verify JWT using the matching signing key
-        payload = jwt.decode(
-            token,
-            key=signing_key,
-            algorithms=["RS256"],
-            audience=settings.LOGTO_APP_ID,
-            issuer=f"{settings.LOGTO_ENDPOINT}/oidc",
+        payload = cast(
+            JWTClaims,
+            jwt.decode(
+                token,
+                key=dict(signing_key),
+                algorithms=["RS256"],
+                audience=settings.LOGTO_APP_ID,
+                issuer=f"{settings.LOGTO_ENDPOINT}/oidc",
+            ),
         )
 
         if not _token_has_required_resource(payload):
@@ -228,7 +235,7 @@ async def get_current_user(
         ) from exc
 
 
-def _token_has_required_resource(payload: dict[str, Any]) -> bool:
+def _token_has_required_resource(payload: Mapping[str, object]) -> bool:
     """Return True when payload includes configured resource claim.
 
     Logto tokens may expose the API audience via either a singular ``resource``
