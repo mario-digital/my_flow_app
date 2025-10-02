@@ -10,7 +10,8 @@ describe('getApiAccessToken', () => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     // Set up environment variable for tests
-    process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] = 'https://api.myflow.example.com';
+    process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] =
+      'https://api.myflow.example.com';
   });
 
   it('should return null when NEXT_PUBLIC_LOGTO_RESOURCE is not configured', async () => {
@@ -18,11 +19,15 @@ describe('getApiAccessToken', () => {
 
     const token = await getApiAccessToken();
     expect(token).toBeNull();
-    expect(console.error).toHaveBeenCalledWith('NEXT_PUBLIC_LOGTO_RESOURCE is not configured');
+    expect(console.error).toHaveBeenCalledWith(
+      'NEXT_PUBLIC_LOGTO_RESOURCE is not configured'
+    );
   });
 
   it('should return access token when successful', async () => {
-    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
+    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue(
+      'mock-token'
+    );
 
     const token = await getApiAccessToken();
     expect(token).toBe('mock-token');
@@ -39,7 +44,10 @@ describe('getApiAccessToken', () => {
 
     const token = await getApiAccessToken();
     expect(token).toBeNull();
-    expect(console.error).toHaveBeenCalledWith('Failed to get access token:', expect.any(Error));
+    expect(console.error).toHaveBeenCalledWith(
+      'Failed to get access token:',
+      expect.any(Error)
+    );
   });
 });
 
@@ -47,12 +55,15 @@ describe('apiRequest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] = 'https://api.myflow.example.com';
+    process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] =
+      'https://api.myflow.example.com';
     process.env['NEXT_PUBLIC_API_URL'] = 'http://localhost:8000';
   });
 
   it('should include Authorization header when token exists', async () => {
-    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
+    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue(
+      'mock-token'
+    );
     const mockResponse: Response = {
       ok: true,
       json: async () => ({ data: 'test' }),
@@ -65,7 +76,7 @@ describe('apiRequest', () => {
       'http://localhost:8000/test',
       expect.objectContaining({
         headers: expect.objectContaining({
-          'Authorization': 'Bearer mock-token',
+          Authorization: 'Bearer mock-token',
           'Content-Type': 'application/json',
         }) as Record<string, string>,
       }) as RequestInit
@@ -88,25 +99,31 @@ describe('apiRequest', () => {
       'http://localhost:8000/test',
       expect.objectContaining({
         headers: expect.not.objectContaining({
-          'Authorization': expect.anything() as string,
+          Authorization: expect.anything() as string,
         }) as Record<string, string>,
       }) as RequestInit
     );
   });
 
   it('should throw error when fetch fails', async () => {
-    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
+    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue(
+      'mock-token'
+    );
     const mockResponse: Response = {
       ok: false,
       statusText: 'Not Found',
     } as Response;
     vi.mocked(fetch).mockResolvedValue(mockResponse);
 
-    await expect(apiRequest('/test')).rejects.toThrow('API request failed: Not Found');
+    await expect(apiRequest('/test')).rejects.toThrow(
+      'API request failed: Not Found'
+    );
   });
 
   it('should return parsed JSON response', async () => {
-    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
+    vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue(
+      'mock-token'
+    );
     const mockData = { id: 1, name: 'Test' };
     const mockResponse: Response = {
       ok: true,

@@ -20,7 +20,8 @@ vi.mock('next/navigation', () => ({
 
 // Mock Navigation component (async server component)
 vi.mock('@/components/navigation', () => ({
-  Navigation: () => React.createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
+  Navigation: () =>
+    React.createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
 }));
 
 // Mock Next.js fonts

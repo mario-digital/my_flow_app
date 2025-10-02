@@ -35,7 +35,9 @@ import type { IdTokenClaims } from '@logto/next';
  * }
  * ```
  */
-export async function requireAuth(): Promise<IdTokenClaims | undefined | never> {
+export async function requireAuth(): Promise<
+  IdTokenClaims | undefined | never
+> {
   const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
   if (!isAuthenticated) {

@@ -16,7 +16,9 @@ export async function Navigation(): Promise<JSX.Element> {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <span className="text-sm text-muted-foreground">{claims?.email}</span>
+              <span className="text-sm text-muted-foreground">
+                {claims?.email}
+              </span>
               <form
                 action={async () => {
                   'use server';
