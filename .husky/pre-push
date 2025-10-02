@@ -18,6 +18,18 @@ echo "📝 Type checking frontend..."
 echo "🔬 Running frontend tests..."
 bun --cwd my_flow_client test || { echo "❌ Frontend tests failed"; exit 1; }
 
+# Production build check with secrets (if 1Password CLI is available)
+if command -v op >/dev/null 2>&1; then
+  echo "🏗️ Building frontend with injected secrets..."
+  (cd my_flow_client && op run --env-file=../.env.template -- bun run build) || {
+    echo "❌ Frontend build failed";
+    exit 1;
+  }
+else
+  echo "⚠️ Skipping secret-injected frontend build (1Password CLI not detected)."
+  echo "   Install 1Password CLI and sign in to run the production build before pushing."
+fi
+
 # Backend checks
 echo "🐍 Linting backend..."
 (cd my_flow_api && uv run ruff check .) || { echo "❌ Backend linting failed"; exit 1; }
