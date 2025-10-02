@@ -5,6 +5,10 @@ echo "🔍 Running pre-commit checks..."
 # Run lint-staged for file-level checks
 bunx lint-staged || { echo "❌ lint-staged failed"; exit 1; }
 
+# Run full frontend lint to catch unstaged issues
+echo "🧹 Linting frontend..."
+bun run lint:frontend || { echo "❌ Frontend lint failed"; exit 1; }
+
 # Type check frontend (quick check)
 echo "📝 Type checking frontend..."
 (cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
