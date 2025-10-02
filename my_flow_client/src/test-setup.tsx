@@ -4,6 +4,25 @@ import { vi } from 'vitest';
 // Mock CSS imports to prevent PostCSS/Tailwind errors in tests
 vi.mock('./app/globals.css', () => ({}));
 
+// Mock Next.js navigation
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT: ${url}`);
+  }),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  })),
+  usePathname: vi.fn(() => '/'),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
+
+// Mock Navigation component (async server component)
+vi.mock('@/components/navigation', () => ({
+  Navigation: () => React.createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
+}));
+
 // Mock Next.js fonts
 vi.mock('next/font/google', () => ({
   Geist: () => ({ variable: '--font-geist-sans' }),

@@ -10,6 +10,11 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.tsx'],
     include: ['**/*.test.{ts,tsx}'],
     css: false,
+    server: {
+      deps: {
+        inline: ['@logto/next'],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -20,6 +25,7 @@ export default defineConfig({
         '**/test-setup.tsx',
         '**/*.config.{ts,js,mjs}',
         '**/types/**',
+        '**/components/ui/**', // Exclude shadcn UI components
       ],
       thresholds: {
         lines: 80,
