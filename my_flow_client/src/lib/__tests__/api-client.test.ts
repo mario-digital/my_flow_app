@@ -84,7 +84,7 @@ describe('apiRequest', () => {
       'http://localhost:8000/test',
       expect.objectContaining({
         headers: expect.not.objectContaining({
-          'Authorization': expect.anything(),
+          'Authorization': expect.anything() as string,
         }) as Record<string, string>,
       }) as RequestInit
     );
