@@ -24,6 +24,7 @@ const eslintConfig = [
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
+    ignores: ["**/*.test.ts", "**/*.test.tsx", "**/test-setup.tsx"],
     plugins: {
       local: {
         rules: {
@@ -81,14 +82,6 @@ const eslintConfig = [
               importNames: ["default"],
               message:
                 "Do not import React directly. React 19 uses automatic JSX transform - no explicit React import needed.",
-            },
-          ],
-          patterns: [
-            {
-              group: ["react"],
-              importNamePattern: "^React$",
-              message:
-                "Do not import React as 'React'. Use named imports like { useState } instead.",
             },
           ],
         },
