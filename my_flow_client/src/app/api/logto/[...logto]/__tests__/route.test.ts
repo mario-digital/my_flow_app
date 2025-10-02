@@ -18,7 +18,7 @@ describe('Logto Route Handler', () => {
 
     try {
       await GET(mockRequest);
-    } catch (e) {
+    } catch {
       // Expected redirect error
     }
 

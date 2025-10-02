@@ -1,6 +1,7 @@
+import type { JSX } from 'react';
 import { requireAuth } from '@/lib/auth';
 
-export default async function DashboardPage() {
+export default async function DashboardPage(): Promise<JSX.Element> {
   const claims = await requireAuth();
 
   return (
