@@ -63,8 +63,8 @@ describe('apiRequest', () => {
         headers: expect.objectContaining({
           'Authorization': 'Bearer mock-token',
           'Content-Type': 'application/json',
-        }),
-      })
+        }) as Record<string, string>,
+      }) as RequestInit
     );
   });
 
@@ -85,8 +85,8 @@ describe('apiRequest', () => {
       expect.objectContaining({
         headers: expect.not.objectContaining({
           'Authorization': expect.anything(),
-        }),
-      })
+        }) as Record<string, string>,
+      }) as RequestInit
     );
   });
 
