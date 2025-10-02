@@ -15,6 +15,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_LOGTO_ENDPOINT: ${{ secrets.NEXT_PUBLIC_LOGTO_ENDPOINT }}
+      NEXT_PUBLIC_LOGTO_APP_ID: ${{ secrets.NEXT_PUBLIC_LOGTO_APP_ID }}
+      LOGTO_APP_SECRET: ${{ secrets.LOGTO_APP_SECRET }}
+      LOGTO_COOKIE_SECRET: ${{ secrets.LOGTO_COOKIE_SECRET }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:8000' }}
+      NEXT_PUBLIC_LOGTO_RESOURCE: ${{ secrets.NEXT_PUBLIC_LOGTO_RESOURCE }}
 
     steps:
       - name: Checkout code
@@ -44,6 +52,10 @@ jobs:
         run: |
           cd my_flow_client
           bun run test -- --coverage
+
+      - name: Verify Logto secrets are present
+        run: |
+          node -e "const required=['LOGTO_COOKIE_SECRET','LOGTO_APP_SECRET','NEXT_PUBLIC_LOGTO_ENDPOINT','NEXT_PUBLIC_LOGTO_APP_ID']; const optional=['NEXT_PUBLIC_LOGTO_RESOURCE','NEXT_PUBLIC_BASE_URL','NEXT_PUBLIC_API_URL']; const missing=required.filter((key)=>!process.env[key]); if(missing.length){throw new Error('Missing required secrets: '+missing.join(', '));} const skipped=optional.filter((key)=>!process.env[key]); if(skipped.length){console.log('⚠️ Optional secrets not set: '+skipped.join(', '));}"
 
       - name: Build verification
         run: |
