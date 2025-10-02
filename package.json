@@ -38,8 +38,8 @@
   },
   "lint-staged": {
     "my_flow_client/**/*.{ts,tsx,mjs}": [
-      "bun --cwd my_flow_client run format",
-      "bun --cwd my_flow_client run lint:fix"
+      "sh -c 'cd my_flow_client && bun run format'",
+      "sh -c 'cd my_flow_client && bun run lint:fix'"
     ],
     "my_flow_api/src/**/*.py": [
       "uv run --project my_flow_api ruff format",

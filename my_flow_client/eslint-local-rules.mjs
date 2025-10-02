@@ -24,10 +24,6 @@ export const useClientDirectivePosition = {
   create(context) {
     return {
       Program(node) {
-        const sourceCode = context.sourceCode || context.getSourceCode();
-        const firstToken = sourceCode.getFirstToken(node);
-        const comments = sourceCode.getAllComments();
-
         // Find 'use client' directive
         let useClientDirective = null;
         let useClientIndex = -1;
