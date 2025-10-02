@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: 'Your workflow management platform',
 };
 
+// Force dynamic rendering to prevent build-time static generation
+// This is required because Navigation component accesses Logto session data
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{
