@@ -43,4 +43,8 @@ export const logtoConfig = {
 
   /** API resources that require access tokens */
   resources: resource ? [resource] : [],
+
+  /** URL to redirect to after sign-out */
+  postLogoutRedirectUri:
+    process.env['NEXT_PUBLIC_BASE_URL'] || 'http://localhost:3000',
 };
