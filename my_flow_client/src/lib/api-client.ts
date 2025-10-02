@@ -3,6 +3,24 @@ import { logtoConfig } from './logto';
 
 const API_BASE_URL = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8000';
 
+/**
+ * Retrieves an API access token for the configured Logto resource.
+ *
+ * This server action fetches a valid access token from Logto for making
+ * authenticated API requests. The token is scoped to the resource specified
+ * in the `NEXT_PUBLIC_LOGTO_RESOURCE` environment variable.
+ *
+ * @returns {Promise<string | null>} The access token, or null if unavailable
+ *
+ * @example
+ * ```typescript
+ * 'use server';
+ * const token = await getApiAccessToken();
+ * if (token) {
+ *   // Use token for API request
+ * }
+ * ```
+ */
 export async function getApiAccessToken(): Promise<string | null> {
   'use server';
   try {
@@ -20,6 +38,37 @@ export async function getApiAccessToken(): Promise<string | null> {
   }
 }
 
+/**
+ * Makes an authenticated API request to the backend.
+ *
+ * This server action is a centralized wrapper for all backend API calls.
+ * It automatically:
+ * - Retrieves the access token from Logto
+ * - Adds the Authorization header with the Bearer token
+ * - Sets Content-Type to application/json
+ * - Handles errors and throws descriptive error messages
+ *
+ * @template T - The expected response type
+ * @param {string} endpoint - The API endpoint path (e.g., `/api/flows`)
+ * @param {RequestInit} [options={}] - Fetch options (method, body, headers, etc.)
+ * @returns {Promise<T>} The parsed JSON response
+ * @throws {Error} If the API request fails or returns a non-ok status
+ *
+ * @example
+ * ```typescript
+ * 'use server';
+ * import type { ProtectedResponse } from '@/types/api';
+ *
+ * // GET request
+ * const data = await apiRequest<ProtectedResponse>('/protected');
+ *
+ * // POST request
+ * const result = await apiRequest<Flow>('/flows', {
+ *   method: 'POST',
+ *   body: JSON.stringify({ name: 'New Flow' }),
+ * });
+ * ```
+ */
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}

@@ -8,6 +8,7 @@ global.fetch = vi.fn();
 describe('getApiAccessToken', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     // Set up environment variable for tests
     process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] = 'https://api.myflow.example.com';
   });
@@ -17,6 +18,7 @@ describe('getApiAccessToken', () => {
 
     const token = await getApiAccessToken();
     expect(token).toBeNull();
+    expect(console.error).toHaveBeenCalledWith('NEXT_PUBLIC_LOGTO_RESOURCE is not configured');
   });
 
   it('should return access token when successful', async () => {
@@ -37,12 +39,14 @@ describe('getApiAccessToken', () => {
 
     const token = await getApiAccessToken();
     expect(token).toBeNull();
+    expect(console.error).toHaveBeenCalledWith('Failed to get access token:', expect.any(Error));
   });
 });
 
 describe('apiRequest', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     process.env['NEXT_PUBLIC_LOGTO_RESOURCE'] = 'https://api.myflow.example.com';
     process.env['NEXT_PUBLIC_API_URL'] = 'http://localhost:8000';
   });
