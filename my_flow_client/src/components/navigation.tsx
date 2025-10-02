@@ -1,9 +1,10 @@
+import type { JSX } from 'react';
 import Link from 'next/link';
 import { getLogtoContext, signOut } from '@logto/next/server-actions';
 import { logtoConfig } from '@/lib/logto';
 import { Button } from '@/components/ui/button';
 
-export async function Navigation() {
+export async function Navigation(): Promise<JSX.Element> {
   const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
   return (

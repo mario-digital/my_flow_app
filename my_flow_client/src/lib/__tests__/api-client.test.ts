@@ -49,10 +49,11 @@ describe('apiRequest', () => {
 
   it('should include Authorization header when token exists', async () => {
     vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
-    vi.mocked(fetch).mockResolvedValue({
+    const mockResponse: Response = {
       ok: true,
       json: async () => ({ data: 'test' }),
-    } as Response);
+    } as Response;
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await apiRequest('/test');
 
@@ -71,10 +72,11 @@ describe('apiRequest', () => {
     vi.mocked(logtoServerActions.getAccessToken).mockRejectedValue(
       new Error('No token')
     );
-    vi.mocked(fetch).mockResolvedValue({
+    const mockResponse: Response = {
       ok: true,
       json: async () => ({ data: 'test' }),
-    } as Response);
+    } as Response;
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await apiRequest('/test');
 
@@ -90,10 +92,11 @@ describe('apiRequest', () => {
 
   it('should throw error when fetch fails', async () => {
     vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
-    vi.mocked(fetch).mockResolvedValue({
+    const mockResponse: Response = {
       ok: false,
       statusText: 'Not Found',
-    } as Response);
+    } as Response;
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await expect(apiRequest('/test')).rejects.toThrow('API request failed: Not Found');
   });
@@ -101,10 +104,11 @@ describe('apiRequest', () => {
   it('should return parsed JSON response', async () => {
     vi.mocked(logtoServerActions.getAccessToken).mockResolvedValue('mock-token');
     const mockData = { id: 1, name: 'Test' };
-    vi.mocked(fetch).mockResolvedValue({
+    const mockResponse: Response = {
       ok: true,
       json: async () => mockData,
-    } as Response);
+    } as Response;
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     const result = await apiRequest('/test');
     expect(result).toEqual(mockData);

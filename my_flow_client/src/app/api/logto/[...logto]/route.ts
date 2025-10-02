@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<never> {
   const searchParams = request.nextUrl.searchParams;
 
   await handleSignIn(logtoConfig, searchParams);

@@ -30,7 +30,7 @@ describe('LoginPage', () => {
 
     try {
       await LoginPage();
-    } catch (e) {
+    } catch {
       // Expected redirect error
     }
 

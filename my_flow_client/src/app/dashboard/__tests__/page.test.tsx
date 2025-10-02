@@ -31,7 +31,7 @@ describe('DashboardPage', () => {
 
     try {
       await DashboardPage();
-    } catch (e) {
+    } catch {
       // Expected redirect error
     }
 

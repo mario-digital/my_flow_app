@@ -1,16 +1,17 @@
+import type { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { getLogtoContext, signIn } from '@logto/next/server-actions';
 import { logtoConfig } from '@/lib/logto';
 import { SignIn } from './sign-in';
 
-export default async function LoginPage() {
+export default async function LoginPage(): Promise<JSX.Element | never> {
   const { isAuthenticated } = await getLogtoContext(logtoConfig);
 
   if (isAuthenticated) {
     redirect('/dashboard');
   }
 
-  async function handleSignIn() {
+  async function handleSignIn(): Promise<void> {
     'use server';
     await signIn(logtoConfig);
   }

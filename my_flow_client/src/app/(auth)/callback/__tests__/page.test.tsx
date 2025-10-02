@@ -30,7 +30,7 @@ describe('CallbackPage', () => {
 
     try {
       await CallbackPage();
-    } catch (e) {
+    } catch {
       // Expected redirect error
     }
 
@@ -47,7 +47,7 @@ describe('CallbackPage', () => {
 
     try {
       await CallbackPage();
-    } catch (e) {
+    } catch {
       // Expected redirect error
     }
 
