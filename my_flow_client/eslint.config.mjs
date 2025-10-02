@@ -1,6 +1,7 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
+import { useClientDirectivePosition } from "./eslint-local-rules.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,6 +24,13 @@ const eslintConfig = [
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
+    plugins: {
+      local: {
+        rules: {
+          "use-client-directive-position": useClientDirectivePosition,
+        },
+      },
+    },
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.json",
@@ -61,6 +69,37 @@ const eslintConfig = [
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/await-thenable": "error",
       "@typescript-eslint/no-misused-promises": "error",
+
+      // React 19/Next.js 15 rules
+      // Disallow importing React (automatic JSX transform handles it)
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react",
+              importNames: ["default"],
+              message:
+                "Do not import React directly. React 19 uses automatic JSX transform - no explicit React import needed.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["react"],
+              importNamePattern: "^React$",
+              message:
+                "Do not import React as 'React'. Use named imports like { useState } instead.",
+            },
+          ],
+        },
+      ],
+
+      // Disable the old React-in-JSX-scope rule (not needed in React 17+)
+      "react/react-in-jsx-scope": "off",
+
+      // Custom local rules
+      // Enforce 'use client' directive position
+      "local/use-client-directive-position": "error",
     },
   },
 ];
