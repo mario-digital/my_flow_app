@@ -6,7 +6,9 @@ import type { IdTokenClaims } from '@logto/next';
 
 vi.mock('@logto/next/server-actions');
 
-const createMockClaims = (overrides?: Partial<IdTokenClaims>): IdTokenClaims => ({
+const createMockClaims = (
+  overrides?: Partial<IdTokenClaims>
+): IdTokenClaims => ({
   sub: 'user123',
   email: 'test@example.com',
   iss: 'https://logto.example.com',
