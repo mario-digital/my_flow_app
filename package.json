@@ -28,6 +28,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.3"
   },

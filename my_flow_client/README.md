@@ -47,11 +47,71 @@ LOGTO_COOKIE_SECRET=<your-cookie-secret>
 op run --env-file=../.env.template -- bun dev
 ```
 
+## Authentication Setup
+
+This application uses **Logto** for authentication. Follow these steps to configure it:
+
+### 1. Create a Logto Application
+
+1. Go to [Logto Cloud Console](https://cloud.logto.io/)
+2. Create a new **Single Page Application (SPA)**
+3. Note the following credentials from Logto Console:
+   - **App ID** (NEXT_PUBLIC_LOGTO_APP_ID)
+   - **App Secret** (LOGTO_APP_SECRET)
+   - **Endpoint** (NEXT_PUBLIC_LOGTO_ENDPOINT)
+   - **Cookie Secret** (LOGTO_COOKIE_SECRET) - provided by Logto
+
+### 2. Configure Redirect URIs
+
+In your Logto application settings, add these redirect URIs:
+- **Sign-in redirect**: `http://localhost:3000/callback`
+- **Sign-out redirect**: `http://localhost:3000`
+- **Post sign-out redirect**: `http://localhost:3000`
+
+For production, add your production URLs (e.g., `https://yourdomain.com/callback`)
+
+### 3. Environment Variables
+
+**Option A: Using 1Password CLI (Recommended)**
+
+Store secrets in 1Password and use the template:
+
+```bash
+bun run dev  # Automatically uses: op run --env-file=../.env.template -- next dev
+```
+
+**Option B: Using .env.local**
+
+Create `my_flow_client/.env.local`:
+
+```bash
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_LOGTO_RESOURCE=https://api.myflow.dev  # Your API identifier
+
+# Logto Authentication (Get these from Logto Console)
+NEXT_PUBLIC_LOGTO_ENDPOINT=https://YOUR_TENANT.logto.app
+NEXT_PUBLIC_LOGTO_APP_ID=your_app_id_here
+LOGTO_APP_SECRET=your_app_secret_here
+LOGTO_COOKIE_SECRET=your_cookie_secret_from_logto
+
+# Base URL
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 4. Test Authentication
+
+1. Start the dev server: `bun run dev`
+2. Visit `http://localhost:3000`
+3. Click "Sign In" - should redirect to Logto
+4. Sign in with a test account
+5. Should redirect back to `/callback` then to `/dashboard`
+
 ## Available Scripts
 
 ### Development
 ```bash
-bun dev              # Start development server (http://localhost:3000)
+bun dev              # Start development server with 1Password secrets
 ```
 
 ### Building
@@ -62,9 +122,15 @@ bun start            # Start production server
 
 ### Testing
 ```bash
-bun test             # Run tests with Vitest
+# Unit Tests (Vitest)
+bun test             # Run all unit tests
 bun test:watch       # Run tests in watch mode
-bun test:coverage    # Run tests with coverage report
+bun test:coverage    # Run tests with coverage report (≥80% required)
+
+# E2E Tests (Playwright)
+bun test:e2e         # Run E2E tests in headless mode
+bun test:e2e:ui      # Run E2E tests with UI mode
+bun test:e2e:debug   # Run E2E tests in debug mode
 ```
 
 ### Code Quality
