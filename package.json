@@ -37,7 +37,7 @@
     "python": ">=3.12"
   },
   "lint-staged": {
-    "my_flow_client/src/**/*.{ts,tsx}": [
+    "my_flow_client/**/*.{ts,tsx,mjs}": [
       "bun --cwd my_flow_client run format",
       "bun --cwd my_flow_client run lint:fix"
     ],
