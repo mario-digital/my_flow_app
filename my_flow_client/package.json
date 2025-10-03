@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "op run --env-file=../.env.template -- next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start",
+    "start": "op run --env-file=../.env.template -- next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
