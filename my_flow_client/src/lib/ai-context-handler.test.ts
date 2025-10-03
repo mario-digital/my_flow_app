@@ -1,0 +1,210 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  handleAIContextSuggestion,
+  showContextSwitchNotification,
+} from './ai-context-handler';
+import { getCurrentContext } from './context-theme';
+import type { AIContextSuggestion } from '@/types/ai-context';
+
+describe('handleAIContextSuggestion', () => {
+  beforeEach(() => {
+    document.documentElement.removeAttribute('data-context');
+    document.documentElement.removeAttribute('style');
+  });
+
+  describe('manual mode', () => {
+    it('should never auto-switch in manual mode', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.95, // High confidence
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'manual', 'work');
+
+      expect(result).toBe(false);
+      expect(getCurrentContext()).toBeNull(); // No context set
+    });
+  });
+
+  describe('suggest mode', () => {
+    it('should auto-switch when confidence > 80%', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0.85,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+
+      expect(result).toBe(true);
+      expect(getCurrentContext()).toBe('rest');
+    });
+
+    it('should not auto-switch when confidence <= 80%', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.8,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+
+      expect(result).toBe(false);
+      expect(getCurrentContext()).toBeNull();
+    });
+
+    it('should not switch when confidence is low', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'social',
+        confidence: 0.5,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('auto mode', () => {
+    it('should auto-switch when confidence > 60%', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'social',
+        confidence: 0.65,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+
+      expect(result).toBe(true);
+      expect(getCurrentContext()).toBe('social');
+    });
+
+    it('should auto-switch with high confidence', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0.95,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+
+      expect(result).toBe(true);
+      expect(getCurrentContext()).toBe('rest');
+    });
+
+    it('should not auto-switch when confidence <= 60%', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.6,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+
+      expect(result).toBe(false);
+      expect(getCurrentContext()).toBeNull();
+    });
+
+    it('should not switch when confidence is very low', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'social',
+        confidence: 0.3,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('context matching', () => {
+    it('should not switch if already in suggested context', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'work',
+        confidence: 0.95,
+      };
+
+      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+
+      expect(result).toBe(false);
+    });
+
+    it('should not switch in suggest mode if contexts match', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.9,
+      };
+
+      const result = handleAIContextSuggestion(
+        suggestion,
+        'suggest',
+        'personal'
+      );
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle exact confidence thresholds', () => {
+      // Suggest mode: exactly 0.8 should NOT switch (> not >=)
+      const suggestionSuggest: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0.8,
+      };
+      expect(
+        handleAIContextSuggestion(suggestionSuggest, 'suggest', 'work')
+      ).toBe(false);
+
+      // Auto mode: exactly 0.6 should NOT switch (> not >=)
+      const suggestionAuto: AIContextSuggestion = {
+        suggestedContext: 'social',
+        confidence: 0.6,
+      };
+      expect(handleAIContextSuggestion(suggestionAuto, 'auto', 'work')).toBe(
+        false
+      );
+    });
+
+    it('should handle minimum and maximum confidence values', () => {
+      const minConfidence: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0,
+      };
+      expect(handleAIContextSuggestion(minConfidence, 'auto', 'work')).toBe(
+        false
+      );
+
+      const maxConfidence: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 1,
+      };
+      expect(handleAIContextSuggestion(maxConfidence, 'auto', 'work')).toBe(
+        true
+      );
+    });
+  });
+});
+
+describe('showContextSwitchNotification', () => {
+  it('should log context switch information', () => {
+    const consoleSpy = vi.spyOn(console, 'log');
+
+    showContextSwitchNotification('work', 'personal', 'Detected personal task');
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Context switched: work → personal',
+      'Detected personal task'
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  it('should work without a reason', () => {
+    const consoleSpy = vi.spyOn(console, 'log');
+
+    showContextSwitchNotification('rest', 'social');
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Context switched: rest → social',
+      undefined
+    );
+
+    consoleSpy.mockRestore();
+  });
+});
