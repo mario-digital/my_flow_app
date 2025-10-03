@@ -1,0 +1,129 @@
+:root {
+  /* ========================================
+     PRIMITIVE COLORS (Layer 1)
+     ======================================== */
+
+  /* Neutrals */
+  --primitive-black-900: #0a0a0a;
+  --primitive-black-800: #1a1a1a;
+  --primitive-black-700: #2a2a2a;
+  --primitive-neutral-600: #404040;
+  --primitive-neutral-500: #525252;
+  --primitive-neutral-400: #a3a3a3;
+  --primitive-white: #fafafa;
+
+  /* Context Colors (with hover/active states for full browser compatibility) */
+  --primitive-work: #3b82f6;
+  --primitive-work-hover: #60a5fa; /* 10% lighter for hover */
+  --primitive-work-active: #93c5fd; /* 20% lighter for active */
+
+  --primitive-personal: #f97316;
+  --primitive-personal-hover: #fb923c; /* 10% lighter for hover */
+  --primitive-personal-active: #fdba74; /* 20% lighter for active */
+
+  --primitive-rest: #a855f7;
+  --primitive-rest-hover: #c084fc; /* 10% lighter for hover */
+  --primitive-rest-active: #d8b4fe; /* 20% lighter for active */
+
+  --primitive-social: #10b981;
+  --primitive-social-hover: #34d399; /* 10% lighter for hover */
+  --primitive-social-active: #6ee7b7; /* 20% lighter for active */
+
+  /* Semantic Colors (with hover states) */
+  --primitive-success: #22c55e;
+  --primitive-warning: #eab308;
+  --primitive-error: #ef4444;
+  --primitive-error-hover: #f87171; /* 10% lighter for hover */
+  --primitive-error-active: #fca5a5; /* 20% lighter for active */
+
+  /* ========================================
+     SEMANTIC COLORS (Layer 2)
+     ======================================== */
+
+  /* Backgrounds */
+  --color-bg-primary: var(--primitive-black-900);
+  --color-bg-secondary: var(--primitive-black-800);
+  --color-bg-tertiary: var(--primitive-black-700);
+  --color-bg-overlay: rgba(10, 10, 10, 0.6); /* 60% opacity for modals */
+
+  /* Text */
+  --color-text-primary: var(--primitive-white);
+  --color-text-secondary: var(--primitive-neutral-400);
+  --color-text-muted: var(--primitive-neutral-500);
+  --color-text-disabled: var(--primitive-neutral-600);
+  --color-text-inverse: var(--primitive-black-900); /* For light backgrounds */
+
+  /* Borders */
+  --color-border: var(--primitive-neutral-600);
+  --color-border-hover: var(--primitive-neutral-500);
+  --color-border-focus: var(--color-context-current);
+
+  /* Context - Dynamic (controlled via JavaScript) */
+  --color-context-current: var(--primitive-work); /* Default to Work */
+  --color-context-current-hover: var(--primitive-work-hover);
+  --color-context-current-active: var(--primitive-work-active);
+
+  --color-context-work: var(--primitive-work);
+  --color-context-personal: var(--primitive-personal);
+  --color-context-rest: var(--primitive-rest);
+  --color-context-social: var(--primitive-social);
+
+  /* Semantic Feedback */
+  --color-success: var(--primitive-success);
+  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-warning: var(--primitive-warning);
+  --color-warning-bg: rgba(234, 179, 8, 0.1);
+  --color-error: var(--primitive-error);
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+
+  /* ========================================
+     COMPONENT COLORS (Layer 3)
+     ======================================== */
+
+  /* Buttons - Using pre-calculated hover/active colors for full browser compatibility */
+  --button-bg-primary: var(--color-context-current);
+  --button-bg-primary-hover: var(--color-context-current-hover);
+  --button-bg-primary-active: var(--color-context-current-active);
+  --button-text-primary: var(--primitive-white);
+
+  --button-bg-secondary: transparent;
+  --button-border-secondary: var(--color-border);
+  --button-border-secondary-hover: var(--color-context-current);
+  --button-text-secondary: var(--color-text-primary);
+
+  --button-bg-ghost: transparent;
+  --button-text-ghost: var(--color-text-secondary);
+  --button-text-ghost-hover: var(--color-text-primary);
+
+  --button-bg-danger: var(--color-error);
+  --button-bg-danger-hover: var(--primitive-error-hover);
+  --button-bg-danger-active: var(--primitive-error-active);
+  --button-text-danger: var(--primitive-white);
+
+  /* Inputs */
+  --input-bg: var(--color-bg-secondary);
+  --input-border: var(--color-border);
+  --input-border-hover: var(--color-border-hover);
+  --input-border-focus: var(--color-context-current);
+  --input-text: var(--color-text-primary);
+  --input-placeholder: var(--color-text-muted);
+
+  /* Cards */
+  --card-bg: var(--color-bg-secondary);
+  --card-bg-hover: var(--color-bg-tertiary);
+  --card-border: var(--color-border);
+  --card-border-active: var(--color-context-current);
+
+  /* Flow Cards */
+  --flow-bg: var(--card-bg);
+  --flow-bg-hover: var(--card-bg-hover);
+  --flow-border-left: var(--color-context-current); /* 3px accent border */
+  --flow-text-completed: var(--color-text-muted);
+
+  /* Message Bubbles */
+  --message-bg-user: var(--color-context-current);
+  --message-bg-ai: var(--color-bg-secondary);
+  --message-bg-system: var(--color-bg-tertiary);
+  --message-text-user: var(--primitive-white);
+  --message-text-ai: var(--color-text-primary);
+}
