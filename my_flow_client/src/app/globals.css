@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Design Tokens */
+@import './styles/tokens/colors.css';
+@import './styles/tokens/typography.css';
+@import './styles/tokens/spacing.css';
+@import './styles/tokens/effects.css';
+@import './styles/tokens/animation.css';
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

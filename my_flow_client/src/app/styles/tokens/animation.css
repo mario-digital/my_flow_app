@@ -1,0 +1,26 @@
+:root {
+  /* Duration - Consistent semantic naming */
+  --anim-duration-instant: 100ms; /* Immediate feedback (button press) */
+  --anim-duration-fast: 200ms; /* Quick transitions (hover, focus) */
+  --anim-duration-normal: 300ms; /* Standard transitions (modal, drawer) */
+  --anim-duration-slow: 400ms; /* Emphasized transitions (context switch) */
+  --anim-duration-slowest: 600ms; /* Long transitions (page transitions) */
+
+  /* Component-specific durations */
+  --anim-duration-button: var(--anim-duration-instant);
+  --anim-duration-modal: var(--anim-duration-normal);
+  --anim-duration-context-switch: var(--anim-duration-slow);
+
+  /* Easing functions */
+  --anim-ease-linear: linear;
+  --anim-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --anim-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --anim-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --anim-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --anim-ease-spring: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Component-specific easing */
+  --anim-ease-button: var(--anim-ease-out);
+  --anim-ease-modal: var(--anim-ease-out);
+  --anim-ease-flow-appear: var(--anim-ease-bounce);
+}
