@@ -1,50 +1,33 @@
 export type ContextType = 'work' | 'personal' | 'rest' | 'social';
 
-interface ContextColorSet {
-  base: string;
-  hover: string;
-  active: string;
-}
-
-const CONTEXT_COLORS: Record<ContextType, ContextColorSet> = {
-  work: {
-    base: '#3B82F6',
-    hover: '#60A5FA',
-    active: '#93C5FD',
-  },
-  personal: {
-    base: '#F97316',
-    hover: '#FB923C',
-    active: '#FDBA74',
-  },
-  rest: {
-    base: '#A855F7',
-    hover: '#C084FC',
-    active: '#D8B4FE',
-  },
-  social: {
-    base: '#10B981',
-    hover: '#34D399',
-    active: '#6EE7B7',
-  },
-};
-
 /**
- * Sets the active context theme by updating CSS custom properties
+ * Sets the active context theme by reading from CSS custom properties
+ * and updating the current context colors.
+ *
+ * This eliminates hardcoded color duplication - colors are defined once in
+ * colors.css and read dynamically at runtime.
+ *
  * @param context - The context type to activate
  */
 export function setContextTheme(context: ContextType): void {
   if (typeof document === 'undefined') return; // Guard for SSR
 
   const root = document.documentElement;
-  const colors = CONTEXT_COLORS[context];
+  const styles = getComputedStyle(root);
+
+  // Read color values from CSS custom properties (single source of truth)
+  const base = styles.getPropertyValue(`--primitive-${context}`).trim();
+  const hover = styles.getPropertyValue(`--primitive-${context}-hover`).trim();
+  const active = styles
+    .getPropertyValue(`--primitive-${context}-active`)
+    .trim();
 
   // Update current context colors (base, hover, active)
-  root.style.setProperty('--color-context-current', colors.base);
-  root.style.setProperty('--color-context-current-hover', colors.hover);
-  root.style.setProperty('--color-context-current-active', colors.active);
+  root.style.setProperty('--color-context-current', base);
+  root.style.setProperty('--color-context-current-hover', hover);
+  root.style.setProperty('--color-context-current-active', active);
 
-  // Optional: Add data attribute for additional CSS targeting
+  // Add data attribute for additional CSS targeting
   root.setAttribute('data-context', context);
 }
 

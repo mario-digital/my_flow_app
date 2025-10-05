@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   setContextTheme,
   getCurrentContext,
@@ -17,9 +17,37 @@ import {
  */
 
 describe('useContextTheme behavior', () => {
+  // Mock CSS custom properties that would be defined in colors.css
+  const mockCssProperties: Record<string, string> = {
+    '--primitive-work': '#3B82F6',
+    '--primitive-work-hover': '#60A5FA',
+    '--primitive-work-active': '#93C5FD',
+    '--primitive-personal': '#F97316',
+    '--primitive-personal-hover': '#FB923C',
+    '--primitive-personal-active': '#FDBA74',
+    '--primitive-rest': '#A855F7',
+    '--primitive-rest-hover': '#C084FC',
+    '--primitive-rest-active': '#D8B4FE',
+    '--primitive-social': '#10B981',
+    '--primitive-social-hover': '#34D399',
+    '--primitive-social-active': '#6EE7B7',
+  };
+
   beforeEach(() => {
     document.documentElement.removeAttribute('data-context');
     document.documentElement.removeAttribute('style');
+
+    // Mock getComputedStyle to return our CSS custom properties
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(
+      () =>
+        ({
+          getPropertyValue: (prop: string) => mockCssProperties[prop] || '',
+        }) as CSSStyleDeclaration
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should set context theme', () => {
