@@ -1,61 +1,92 @@
 # Frontend Architecture
 
-This section provides Next.js 15-specific architecture details, focusing on React Server Components, client-side state management, and CSS design token implementation.
+This document provides Next.js 15-specific architecture details for the My Flow application, focusing on React Server Components, authentication patterns, and CSS design token implementation.
 
 ## Component Organization
 
+**Current Implementation:**
+
 ```
 my_flow_client/src/
-├── app/                          # Next.js 15 App Router
-│   ├── layout.tsx               # Root layout (Server Component)
-│   ├── page.tsx                 # Home page (Server Component)
-│   ├── globals.css              # CSS Design Tokens + Tailwind
-│   ├── (auth)/                  # Route group for auth pages
+├── app/                                    # Next.js 15 App Router
+│   ├── layout.tsx                         # Root layout with Navigation (Server Component)
+│   ├── page.tsx                           # Home page (Server Component)
+│   ├── globals.css                        # Tailwind 4.x import + design token layers
+│   │
+│   ├── styles/tokens/                     # CSS Design Tokens (3-layer architecture)
+│   │   ├── colors.css                     # Primitive → Semantic → Component colors
+│   │   ├── typography.css                 # Font families, sizes, weights, line heights
+│   │   ├── spacing.css                    # Spacing scale (4px base unit)
+│   │   ├── effects.css                    # Shadows, borders, radius, z-index
+│   │   └── animation.css                  # Transition durations and easings
+│   │
+│   ├── (auth)/                            # Auth route group (unauthenticated)
 │   │   ├── login/
-│   │   │   └── page.tsx         # Login page (Logto redirect)
+│   │   │   ├── page.tsx                   # Login page (Server Component)
+│   │   │   ├── sign-in.tsx                # Sign-in button (Client Component)
+│   │   │   └── __tests__/                 # Vitest unit tests
 │   │   └── callback/
-│   │       └── page.tsx         # OAuth callback handler
-│   └── contexts/                # Context-aware routes
-│       └── [context_id]/
-│           ├── page.tsx         # Context detail view (Server)
-│           └── flows/
-│               ├── page.tsx     # Flow list (Server)
-│               └── [flow_id]/
-│                   └── page.tsx # Flow detail (Server + Client islands)
+│   │       ├── page.tsx                   # OAuth callback handler (Server Component)
+│   │       └── __tests__/
+│   │
+│   ├── dashboard/                          # Protected dashboard route
+│   │   ├── page.tsx                       # Dashboard page (Server Component)
+│   │   └── __tests__/
+│   │
+│   └── api/
+│       └── logto/[...logto]/              # Logto authentication API routes
+│           ├── route.ts                   # Dynamic Logto route handler
+│           └── __tests__/
 │
-├── components/                   # Reusable components
-│   ├── ui/                      # shadcn/ui primitives
-│   │   ├── button.tsx
-│   │   ├── dialog.tsx
-│   │   ├── dropdown-menu.tsx
-│   │   ├── calendar.tsx
-│   │   └── ... (other shadcn components)
-│   ├── context-switcher.tsx    # Client Component
-│   ├── context-provider.tsx     # React Context wrapper (Client)
+├── components/                             # Reusable components
+│   ├── ui/                                # shadcn/ui primitives
+│   │   ├── button.tsx                     # Button component (Client)
+│   │   └── __tests__/
+│   │
+│   ├── navigation.tsx                      # App navigation bar (Server Component)
+│   └── __tests__/                         # Component tests
+│
+├── lib/                                    # Utilities and configs
+│   ├── api-client.ts                      # Fetch wrapper (future backend integration)
+│   ├── auth.ts                            # Authentication helpers (requireAuth)
+│   ├── logto.ts                           # Logto SDK configuration
+│   ├── utils.ts                           # Helper functions (cn, etc.)
+│   ├── context-theme.ts                   # Context theming utilities (future)
+│   ├── ai-context-handler.ts              # AI context management (future)
+│   └── __tests__/
+│
+├── hooks/                                  # Custom React hooks
+│   ├── use-context-theme.ts               # Context theme hook (future)
+│   └── __tests__/
+│
+└── types/                                  # TypeScript type definitions
+    ├── api.ts                             # API request/response types
+    ├── context.ts                         # Context data types (future)
+    └── ai-context.ts                      # AI context types (future)
+```
+
+**Future Expansion (Story 1.6+):**
+```
+├── app/contexts/[context_id]/             # Context-specific routes
+│   ├── page.tsx                          # Context detail view
 │   └── flows/
-│       ├── flow-list.tsx        # Server Component
-│       ├── flow-list-interactive.tsx  # Client Component
-│       ├── flow-card.tsx        # Server Component
-│       └── flow-edit-form.tsx   # Client Component
+│       ├── page.tsx                      # Flow list
+│       └── [flow_id]/page.tsx           # Flow detail
 │
-├── lib/                         # Utilities and configs
-│   ├── api-client.ts           # Fetch wrapper with auth
-│   ├── query-client.ts         # TanStack Query config
-│   ├── utils.ts                # Helper functions (cn, date formatting)
-│   └── logto.ts                # Logto SDK configuration
+├── components/
+│   ├── contexts/
+│   │   ├── context-switcher.tsx         # Context switcher (Client)
+│   │   └── context-provider.tsx         # React Context wrapper (Client)
+│   └── flows/
+│       ├── flow-list.tsx                # Server Component
+│       ├── flow-list-interactive.tsx    # Client Component
+│       ├── flow-card.tsx                # Server Component
+│       └── flow-edit-form.tsx           # Client Component
 │
-├── hooks/                       # Custom React hooks
-│   ├── use-contexts.ts         # TanStack Query hook for contexts
-│   ├── use-flows.ts            # TanStack Query hook for flows
-│   ├── use-current-context.ts  # React Context hook for active context
-│   └── use-preferences.ts      # TanStack Query hook for preferences
-│
-├── styles/
-│   └── tokens.css              # CSS Custom Properties (Design Tokens)
-│
-└── types/                       # TypeScript type definitions
-    ├── api.ts                  # API request/response types
-    └── models.ts               # Data model interfaces (Context, Flow, etc.)
+└── hooks/
+    ├── use-contexts.ts                   # TanStack Query for contexts
+    ├── use-flows.ts                      # TanStack Query for flows
+    └── use-current-context.ts            # React Context for active context
 ```
 
 ## React Server Components Strategy
@@ -79,25 +110,88 @@ All components are Server Components by default unless they require:
 - File name convention: `-interactive.tsx` suffix for clarity
 - Keep Client Components small and focused (islands architecture)
 
-**Example: Flow List (Hybrid Pattern)**
+**Current Implementation Example: Navigation (Server Component with Server Actions)**
 
 ```typescript
-// flow-list.tsx (Server Component)
+// components/navigation.tsx (Server Component)
+import Link from 'next/link';
+import { getLogtoContext, signOut } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
+import { Button } from '@/components/ui/button';
+
+export async function Navigation() {
+  // Server-side auth context fetching (no client JS needed)
+  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+
+  return (
+    <nav className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <Link href="/" className="text-xl font-bold text-[var(--color-text-primary)]">
+          MyFlow
+        </Link>
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <>
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                {claims?.email}
+              </span>
+              {/* Server Action for sign-out (no API route needed) */}
+              <form action={async () => {
+                'use server';
+                await signOut(logtoConfig);
+              }}>
+                <Button variant="outline" type="submit">Sign Out</Button>
+              </form>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button>Sign In</Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+```
+
+**Current Implementation Example: Protected Dashboard (Server Component)**
+
+```typescript
+// app/dashboard/page.tsx (Server Component)
+import { requireAuth } from '@/lib/auth';
+
+export default async function DashboardPage() {
+  // Server-side authentication check with redirect
+  const claims = await requireAuth();
+
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
+        Dashboard
+      </h1>
+      <div className="mt-4 rounded-lg border bg-[var(--card-bg)] p-4">
+        <p className="text-sm text-[var(--color-text-secondary)]">User ID:</p>
+        <p className="font-mono text-[var(--color-text-primary)]">{claims?.sub}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+**Future Pattern: Flow List (Hybrid Server/Client)**
+
+```typescript
+// flow-list.tsx (Server Component - future)
 import { apiClient } from '@/lib/api-client';
 import { FlowListInteractive } from './flow-list-interactive';
 
-interface FlowListProps {
-  contextId: string;
-}
-
-export async function FlowList({ contextId }: FlowListProps) {
-  // Server-side data fetching (no client JS needed)
+export async function FlowList({ contextId }: { contextId: string }) {
   const flows = await apiClient.get<Flow[]>(`/api/v1/contexts/${contextId}/flows`);
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Flows</h2>
-      {/* Pass server-fetched data to client component */}
       <FlowListInteractive initialFlows={flows} contextId={contextId} />
     </div>
   );
@@ -105,26 +199,24 @@ export async function FlowList({ contextId }: FlowListProps) {
 ```
 
 ```typescript
-// flow-list-interactive.tsx (Client Component)
+// flow-list-interactive.tsx (Client Component - future)
 'use client';
 
 import { useFlows } from '@/hooks/use-flows';
 import { FlowCard } from './flow-card';
 
-interface FlowListInteractiveProps {
+export function FlowListInteractive({
+  initialFlows,
+  contextId
+}: {
   initialFlows: Flow[];
   contextId: string;
-}
-
-export function FlowListInteractive({ initialFlows, contextId }: FlowListInteractiveProps) {
-  // Client-side query with server data as initial state
-  const { data: flows, isLoading } = useFlows(contextId, { initialData: initialFlows });
+}) {
+  const { data: flows } = useFlows(contextId, { initialData: initialFlows });
 
   return (
     <div className="space-y-2">
-      {flows?.map((flow) => (
-        <FlowCard key={flow.id} flow={flow} />
-      ))}
+      {flows?.map((flow) => <FlowCard key={flow.id} flow={flow} />)}
     </div>
   );
 }
@@ -132,9 +224,15 @@ export function FlowListInteractive({ initialFlows, contextId }: FlowListInterac
 
 ## State Management Architecture
 
-**Two-Layer State Strategy:**
+**Current Implementation Status:**
 
-### 1. Server State (TanStack Query)
+The application currently uses **Server Components** for all data fetching and state management, eliminating the need for client-side state management libraries in Phase 1. Authentication state is managed server-side via Logto session cookies.
+
+**Future Two-Layer State Strategy (Story 1.6+):**
+
+When interactive features are added (context switching, flow management), the application will adopt a two-layer state management approach:
+
+### 1. Server State (TanStack Query) - Future
 
 **Purpose:** All data from API (contexts, flows, preferences)
 
@@ -249,104 +347,211 @@ Our app has minimal client state requirements:
 
 ## CSS Design Tokens Implementation
 
-**Token Definition (styles/tokens.css):**
+**Three-Layer Token Architecture:**
+
+The design system uses a **three-layer token architecture** for maximum flexibility and maintainability:
+
+1. **Layer 1: Primitives** - Raw color values, fixed scales
+2. **Layer 2: Semantic** - Purpose-based tokens (e.g., `--color-bg-primary`)
+3. **Layer 3: Component-specific** - Component-level tokens (e.g., `--button-bg-primary`)
+
+**Token Organization (app/styles/tokens/):**
+
+```
+tokens/
+├── colors.css       # 3-layer color system (primitives → semantic → component)
+├── typography.css   # Font families, sizes, weights, line heights
+├── spacing.css      # Spacing scale (4px base unit)
+├── effects.css      # Shadows, borders, radius, z-index
+└── animation.css    # Transition durations and easings
+```
+
+**Example: colors.css (3-Layer System)**
+
 ```css
 :root {
-  /* Base Color Palette */
-  --color-background: #0a0a0a;
-  --color-foreground: #fafafa;
-  --color-muted: #27272a;
-  --color-border: #3f3f46;
+  /* ========================================
+     LAYER 1: PRIMITIVE COLORS
+     ======================================== */
 
-  /* Context Accent Colors (Static Definitions) */
-  --color-accent-work: #3b82f6;
-  --color-accent-personal: #10b981;
-  --color-accent-rest: #8b5cf6;
-  --color-accent-social: #f59e0b;
+  /* Neutrals */
+  --primitive-black-900: #0a0a0a;
+  --primitive-black-800: #1a1a1a;
+  --primitive-neutral-600: #404040;
+  --primitive-white: #fafafa;
 
-  /* Dynamic Current Context Color (Set by JavaScript) */
-  --color-accent-current: var(--color-accent-work); /* Default */
+  /* Context Colors (with hover states for full browser compatibility) */
+  --primitive-work: #3b82f6;
+  --primitive-work-hover: #60a5fa;
+  --primitive-personal: #f97316;
+  --primitive-rest: #a855f7;
+  --primitive-social: #10b981;
 
-  /* Spacing Scale */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+  /* Semantic Feedback */
+  --primitive-success: #22c55e;
+  --primitive-warning: #eab308;
+  --primitive-error: #ef4444;
 
-  /* Typography */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
+  /* ========================================
+     LAYER 2: SEMANTIC COLORS
+     ======================================== */
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  /* Backgrounds */
+  --color-bg-primary: var(--primitive-black-900);
+  --color-bg-secondary: var(--primitive-black-800);
+  --color-bg-tertiary: var(--primitive-black-700);
+
+  /* Text */
+  --color-text-primary: var(--primitive-white);
+  --color-text-secondary: var(--primitive-neutral-400);
+  --color-text-muted: var(--primitive-neutral-500);
+
+  /* Borders */
+  --color-border: var(--primitive-neutral-600);
+  --color-border-hover: var(--primitive-neutral-500);
+
+  /* Context - Dynamic (controlled via JavaScript) */
+  --color-context-current: var(--primitive-work); /* Default to Work */
+  --color-context-current-hover: var(--primitive-work-hover);
+  --color-context-work: var(--primitive-work);
+  --color-context-personal: var(--primitive-personal);
+  --color-context-rest: var(--primitive-rest);
+  --color-context-social: var(--primitive-social);
+
+  /* ========================================
+     LAYER 3: COMPONENT COLORS
+     ======================================== */
+
+  /* Buttons */
+  --button-bg-primary: var(--color-context-current);
+  --button-bg-primary-hover: var(--color-context-current-hover);
+  --button-text-primary: var(--primitive-white);
+
+  --button-bg-secondary: transparent;
+  --button-border-secondary: var(--color-border);
+  --button-text-secondary: var(--color-text-primary);
+
+  /* Cards */
+  --card-bg: var(--color-bg-secondary);
+  --card-bg-hover: var(--color-bg-tertiary);
+  --card-border: var(--color-border);
+  --card-border-active: var(--color-context-current);
+
+  /* Input Fields */
+  --input-bg: var(--color-bg-secondary);
+  --input-border: var(--color-border);
+  --input-border-focus: var(--color-context-current);
+}
+```
+
+**Token Import via @layer (globals.css):**
+
+```css
+/* Tailwind CSS v4.x import */
+@import 'tailwindcss';
+
+/* Design Tokens - Layer ensures proper import order */
+@layer tokens {
+  @import './styles/tokens/colors.css' layer(tokens.colors);
+  @import './styles/tokens/typography.css' layer(tokens.typography);
+  @import './styles/tokens/spacing.css' layer(tokens.spacing);
+  @import './styles/tokens/effects.css' layer(tokens.effects);
+  @import './styles/tokens/animation.css' layer(tokens.animation);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
 }
 ```
 
 **Tailwind Configuration (tailwind.config.ts):**
-```typescript
-import type { Config } from 'tailwindcss';
 
-export default {
-  content: ['./src/**/*.{ts,tsx}'],
+The Tailwind configuration maps CSS design tokens to Tailwind utility classes, enabling usage like `bg-bg-primary`, `text-text-secondary`, `border-context`, etc.
+
+```typescript
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  darkMode: 'class',
+  content: [
+    './src/pages/**/*.{ts,tsx}',
+    './src/components/**/*.{ts,tsx}',
+    './src/app/**/*.{ts,tsx}',
+  ],
   theme: {
     extend: {
       colors: {
-        background: 'var(--color-background)',
-        foreground: 'var(--color-foreground)',
-        muted: 'var(--color-muted)',
-        border: 'var(--color-border)',
-        accent: {
-          work: 'var(--color-accent-work)',
-          personal: 'var(--color-accent-personal)',
-          rest: 'var(--color-accent-rest)',
-          social: 'var(--color-accent-social)',
-          current: 'var(--color-accent-current)', // Dynamic!
-        },
+        // Backgrounds
+        'bg-primary': 'var(--color-bg-primary)',
+        'bg-secondary': 'var(--color-bg-secondary)',
+        'bg-tertiary': 'var(--color-bg-tertiary)',
+
+        // Text
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-muted': 'var(--color-text-muted)',
+
+        // Borders
+        'border': 'var(--color-border)',
+        'border-hover': 'var(--color-border-hover)',
+
+        // Context (dynamic)
+        'context': 'var(--color-context-current)',
+        'context-work': 'var(--color-context-work)',
+        'context-personal': 'var(--color-context-personal)',
+        'context-rest': 'var(--color-context-rest)',
+        'context-social': 'var(--color-context-social)',
+
+        // Component-specific
+        'button-primary': 'var(--button-bg-primary)',
+        'card': 'var(--card-bg)',
+        'input': 'var(--input-bg)',
       },
+
+      // Spacing maps to default Tailwind scale + custom tokens
       spacing: {
-        xs: 'var(--spacing-xs)',
-        sm: 'var(--spacing-sm)',
-        md: 'var(--spacing-md)',
-        lg: 'var(--spacing-lg)',
-        xl: 'var(--spacing-xl)',
+        '32': 'var(--space-32)', // 128px
+        '40': 'var(--space-40)', // 160px
+        '48': 'var(--space-48)', // 192px
+      },
+
+      // Font configuration
+      fontSize: {
+        'tiny': 'var(--font-size-tiny)',     // 12px
+        'small': 'var(--font-size-small)',   // 14px
+        'body': 'var(--font-size-body)',     // 16px
+        'h3': 'var(--font-size-h3)',         // 20px
+        'h2': 'var(--font-size-h2)',         // 24px
+        'h1': 'var(--font-size-h1)',         // 32px
+      },
+
+      // Shadows, radius, z-index, animations all mapped similarly
+      boxShadow: {
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
       },
     },
   },
   plugins: [],
-} satisfies Config;
-```
-
-**Dynamic Context Theming (layout.tsx):**
-```typescript
-// app/layout.tsx (Server Component)
-import { ContextProvider } from '@/components/context-provider';
-import { ThemeApplier } from '@/components/theme-applier';
-import '@/styles/tokens.css';
-import '@/app/globals.css';
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <ContextProvider>
-          <ThemeApplier />
-          {children}
-        </ContextProvider>
-      </body>
-    </html>
-  );
 }
+
+export default config
 ```
 
+**Dynamic Context Theming (Future Implementation):**
+
+When context switching is implemented (Story 1.6+), the following pattern will enable dynamic theming:
+
 ```typescript
-// components/theme-applier.tsx (Client Component)
+// components/theme-applier.tsx (Client Component - future)
 'use client';
 
 import { useEffect } from 'react';
@@ -363,82 +568,158 @@ export function ThemeApplier() {
     const context = contexts.find((c) => c.id === currentContextId);
     if (!context) return;
 
-    // Dynamically update CSS custom property
-    document.documentElement.style.setProperty('--color-accent-current', context.color);
+    // Dynamically update CSS custom properties for current context
+    const root = document.documentElement;
+    root.style.setProperty('--color-context-current', context.color);
+    root.style.setProperty('--color-context-current-hover', context.colorHover);
   }, [currentContextId, contexts]);
 
   return null; // No visual output, just side effects
 }
 ```
 
-**Usage in Components:**
+This approach allows all components using `var(--color-context-current)` to automatically update when the context changes, without prop drilling or context API complexity.
+
+**Usage in Components (CSS Custom Properties):**
+
+The design token approach allows direct usage of CSS custom properties via Tailwind utility classes or direct CSS variable references:
+
 ```tsx
-// Any component can use the current context color
-<button className="bg-accent-current text-white hover:opacity-90 px-4 py-2 rounded">
+// Current implementation - direct CSS variable usage
+<div className="border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+  <span className="text-[var(--color-text-primary)]">Content</span>
+</div>
+
+// Future - Tailwind utility mapping (cleaner syntax)
+<button className="bg-context text-white hover:opacity-90 px-4 py-2 rounded">
   Create Flow
 </button>
 
-// Static context colors also available
-<div className="border-l-4 border-accent-work pl-4">
+// Static context colors always available
+<div className="border-l-4 border-context-work pl-4">
   Work context item
 </div>
 ```
+
+**Benefits of this approach:**
+- Single source of truth for all design values
+- Runtime theme switching without React re-renders
+- Framework-agnostic (works with any UI library)
+- AI agents can modify tokens without touching component code
+- Design system evolution doesn't require component updates
 
 ## Routing and Navigation
 
 **File-Based Routing (Next.js App Router):**
 
+**Current Routes:**
 ```
 app/
-├── page.tsx                     # / (Home - redirects to first context)
-├── layout.tsx                   # Root layout with nav
-├── (auth)/
-│   ├── login/page.tsx          # /login (Logto OAuth start)
-│   └── callback/page.tsx       # /callback (Logto OAuth callback)
+├── page.tsx                      # / (Home page)
+├── layout.tsx                    # Root layout with Navigation component
+├── (auth)/                       # Auth route group (unauthenticated layout)
+│   ├── login/page.tsx           # /login (Logto sign-in)
+│   └── callback/page.tsx        # /callback (OAuth callback handler)
+├── dashboard/page.tsx            # /dashboard (Protected, requires auth)
+└── api/
+    └── logto/[...logto]/        # /api/logto/* (Logto API routes)
+        └── route.ts             # Dynamic Logto route handler
+```
+
+**Future Routes (Story 1.6+):**
+```
+app/
 └── contexts/
     └── [context_id]/
-        ├── page.tsx            # /contexts/:id (Context detail)
+        ├── page.tsx            # /contexts/:id (Context overview)
         └── flows/
             ├── page.tsx        # /contexts/:id/flows (Flow list)
             └── [flow_id]/
                 └── page.tsx    # /contexts/:id/flows/:id (Flow detail)
 ```
 
-**Navigation Component:**
+**Authentication & Navigation Pattern:**
+
+The application uses **Server Components** for navigation with Logto's server-side authentication:
+
 ```typescript
-// components/nav.tsx (Client Component)
-'use client';
-
+// components/navigation.tsx (Current Implementation - Server Component)
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useCurrentContext } from './context-provider';
+import { getLogtoContext, signOut } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
+import { Button } from '@/components/ui/button';
 
-export function Nav() {
-  const pathname = usePathname();
-  const { currentContextId } = useCurrentContext();
+export async function Navigation() {
+  // Server-side authentication check (no client JS needed)
+  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
   return (
-    <nav className="flex gap-4 border-b border-border px-4 py-3">
-      <Link
-        href={currentContextId ? `/contexts/${currentContextId}` : '/'}
-        className={pathname === '/contexts/[context_id]' ? 'text-accent-current' : ''}
-      >
-        Overview
-      </Link>
-      <Link
-        href={currentContextId ? `/contexts/${currentContextId}/flows` : '/'}
-        className={pathname.includes('/flows') ? 'text-accent-current' : ''}
-      >
-        Flows
-      </Link>
+    <nav className="border-b border-[var(--color-border)]">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <Link href="/" className="text-xl font-bold">MyFlow</Link>
+
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <>
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                {claims?.email}
+              </span>
+              <form action={async () => {
+                'use server';
+                await signOut(logtoConfig);
+              }}>
+                <Button variant="outline" type="submit">Sign Out</Button>
+              </form>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button>Sign In</Button>
+            </Link>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }
 ```
 
-**Server Action Example (Alternative to API Routes):**
+**Protected Route Pattern:**
+
 ```typescript
-// app/actions.ts (Server-side only)
+// lib/auth.ts (Authentication helper)
+import { redirect } from 'next/navigation';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from './logto';
+
+export async function requireAuth() {
+  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+
+  if (!isAuthenticated) {
+    redirect('/login');
+  }
+
+  return claims;
+}
+```
+
+**Server Action Pattern (Current Implementation):**
+
+Server Actions are used for mutations (sign-out) without needing dedicated API routes:
+
+```typescript
+// Example: Sign-out action embedded in Navigation component
+<form action={async () => {
+  'use server';
+  await signOut(logtoConfig);
+}}>
+  <Button type="submit">Sign Out</Button>
+</form>
+```
+
+**Future Server Actions (Story 1.6+):**
+
+```typescript
+// app/actions.ts (Future implementation)
 'use server';
 
 import { apiClient } from '@/lib/api-client';
@@ -453,6 +734,7 @@ export async function createFlow(formData: FormData) {
     title,
   });
 
+  // Revalidate the cache for this page
   revalidatePath(`/contexts/${contextId}/flows`);
 }
 ```
@@ -592,36 +874,75 @@ export function Dialog({ isOpen }: { isOpen: boolean }) {
 
 ## Frontend Build Configuration
 
-**next.config.js:**
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
+**Current Configuration:**
 
-  // Environment variables
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_LOGTO_ENDPOINT: process.env.NEXT_PUBLIC_LOGTO_ENDPOINT,
-  },
+```typescript
+// next.config.ts (Current implementation - minimal config)
+import type { NextConfig } from "next";
 
-  // Image domains (if using external images)
-  images: {
-    domains: ['avatars.githubusercontent.com'],
-  },
-
-  // Redirects
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/contexts',
-        permanent: false,
-      },
-    ];
-  },
+const nextConfig: NextConfig = {
+  /* Intentionally minimal - Next.js 15 defaults are production-ready */
 };
 
-module.exports = nextConfig;
+export default nextConfig;
+```
+
+**Key Build Features:**
+- **Turbopack**: Enabled in development via `--turbopack` flag (3x faster than Webpack)
+- **React 19**: Using latest stable React with improved Server Components
+- **TypeScript 5.x**: Strict mode enabled for type safety
+- **Tailwind CSS 4.x**: Native CSS v4 with improved performance
+- **Bun**: Package manager and test runner (faster than npm/yarn)
+
+**Development Scripts:**
+
+```json
+{
+  "dev": "next dev --turbopack",
+  "build": "next build --turbopack",
+  "start": "next start",
+  "test": "vitest run",
+  "test:e2e": "playwright test",
+  "lint": "eslint . --max-warnings=0",
+  "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+  "typecheck": "tsc --noEmit"
+}
+```
+
+**Environment Variables:**
+
+All secrets are managed via **1Password CLI** with references in `.env.template`:
+
+```bash
+# Frontend environment variables (managed by 1Password)
+NEXT_PUBLIC_API_URL="op://MyFlow Development/MyFlow Backend/api_url"
+NEXT_PUBLIC_LOGTO_ENDPOINT="op://MyFlow Development/MyFlow Logto Frontend/endpoint"
+NEXT_PUBLIC_LOGTO_APP_ID="op://MyFlow Development/MyFlow Logto Frontend/app_id"
+LOGTO_APP_SECRET="op://MyFlow Development/MyFlow Logto Frontend/app_secret"
+LOGTO_COOKIE_SECRET="op://MyFlow Development/MyFlow Logto Frontend/cookie_secret"
+```
+
+**Testing Configuration:**
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.tsx'],
+    globals: true,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
 ```
 
 ---

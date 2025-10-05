@@ -2,29 +2,34 @@
 
 ## Technical Summary
 
-My Flow is a context-aware task management application built as a modern fullstack monorepo. The architecture leverages **Next.js 15 React Server Components** for optimal performance and minimal client-side JavaScript, with a **FastAPI Python backend** providing RESTful APIs and AI integration. The system uses **MongoDB** for flexible document storage, **Logto** for authentication, and **OpenAI/Anthropic** for conversational AI capabilities.
+My Flow is a context-aware task management application built as a modern fullstack monorepo. The architecture leverages **Next.js 15 with React 19 Server Components** for optimal performance and minimal client-side JavaScript, with a **FastAPI Python backend** providing RESTful APIs and AI integration. The system uses **MongoDB** (Motor async driver) for flexible document storage, **Logto** for authentication via OAuth 2.0 + JWT, and **OpenAI/Anthropic** for conversational AI capabilities (to be integrated).
 
-The frontend adopts a **server-first rendering strategy**, where all components default to Server Components unless interactivity or browser APIs require client-side execution. This reduces bundle size, improves initial load performance, and keeps sensitive logic server-side. Client Components are strategically used only for state management (context switching, real-time chat updates) and interactive UI elements (forms, modals, animations).
+The frontend adopts a **server-first rendering strategy** using Next.js App Router, where all components default to Server Components unless interactivity or browser APIs require client-side execution. This reduces bundle size, improves initial load performance, and keeps sensitive logic server-side. The application currently implements authentication flows, protected routes, and a foundational dashboard with user session management.
 
-**CSS design tokens** (custom properties) form the foundation of the theming system, with context-specific accent colors dynamically applied at runtime. Tailwind CSS consumes these tokens, enabling consistent styling while maintaining the flexibility to theme contexts programmatically.
+**CSS design tokens** (custom properties) form the foundation of the theming system, organized in a **three-layer architecture** (primitives → semantic → component-specific). Context-specific accent colors are dynamically applied at runtime through CSS custom properties. **Tailwind CSS 4.x** consumes these tokens, enabling consistent styling while maintaining the flexibility to theme contexts programmatically. The design system includes comprehensive token files for colors, typography, spacing, effects, and animations.
 
-The backend follows a **layered architecture** (routers → services → repositories) with async MongoDB operations via Motor. AI flow extraction happens server-side with streaming responses delivered to the frontend via Server-Sent Events (SSE) or WebSockets.
+The backend follows a **layered architecture** with FastAPI as the application framework, implementing JWT authentication middleware that validates Logto-issued tokens. The system uses async MongoDB operations via Motor driver with proper connection lifecycle management (startup/shutdown). The architecture supports health checks with database connectivity validation.
 
 ## Platform and Infrastructure Choice
 
-**Platform:** Vercel + Railway + MongoDB Atlas
-**Key Services:**
-- **Frontend:** Vercel (Next.js hosting, CDN, edge functions)
-- **Backend:** Railway (FastAPI container, persistent processes)
-- **Database:** MongoDB Atlas M0 (512MB free tier)
-- **Auth:** Logto Cloud (managed identity provider)
-- **AI:** OpenAI API or Anthropic Claude API (streaming capable)
-- **Secrets:** 1Password CLI (`op`) for environment variable management
+**Platform:** Vercel (Planned) + Railway (Planned) + MongoDB Atlas
+**Current Development Infrastructure:**
+- **Frontend:** Local development with Next.js 15 dev server (Turbopack enabled)
+- **Backend:** Local FastAPI server with uvicorn (auto-reload enabled)
+- **Database:** MongoDB Atlas (free tier M0) or local MongoDB instance
+- **Auth:** Logto Cloud (OAuth 2.0 + JWT)
+- **Secrets:** 1Password CLI (`op`) for secure local environment variable management
+- **Build Tools:** Bun 1.x (frontend), uv (backend Python package manager)
 
-**Deployment Host and Regions:**
-- Vercel: Global CDN with edge functions (automatic region selection)
-- Railway: US-West or US-East (select closest to primary user base)
-- MongoDB Atlas: Same region as Railway for minimal latency
+**Planned Production Services:**
+- **Frontend:** Vercel (Next.js hosting, CDN, edge functions)
+- **Backend:** Railway (FastAPI container deployment)
+- **AI:** OpenAI API or Anthropic Claude API (to be integrated)
+
+**Deployment Regions (Planned):**
+- Vercel: Global CDN with automatic region selection
+- Railway: US-West or US-East
+- MongoDB Atlas: Same region as Railway backend
 
 ## Repository Structure
 
@@ -34,15 +39,58 @@ The backend follows a **layered architecture** (routers → services → reposit
 
 ```
 my_flow_app/
-├── my_flow_client/          # Next.js 15 frontend (workspace)
-├── my_flow_api/             # FastAPI backend (workspace)
-├── packages/
-│   └── shared-types/        # Shared TypeScript types (future)
-├── docs/                    # PRD, architecture, specs
-├── scripts/                 # Deployment and utility scripts
-├── .github/                 # CI/CD workflows
-├── bun.lockb               # Bun lock file
-└── package.json            # Root workspace config
+├── my_flow_client/                      # Next.js 15 frontend (Bun workspace)
+│   ├── src/
+│   │   ├── app/                        # Next.js App Router
+│   │   │   ├── (auth)/                 # Auth routes (login, callback)
+│   │   │   ├── api/logto/              # Logto API routes
+│   │   │   ├── dashboard/              # Protected dashboard
+│   │   │   ├── styles/tokens/          # CSS design tokens
+│   │   │   ├── globals.css             # Global styles + Tailwind import
+│   │   │   ├── layout.tsx              # Root layout
+│   │   │   └── page.tsx                # Home page
+│   │   ├── components/
+│   │   │   ├── ui/                     # shadcn/ui components (Button, etc)
+│   │   │   └── navigation.tsx          # App navigation (Server Component)
+│   │   ├── lib/                        # Utilities, API client, auth helpers
+│   │   ├── hooks/                      # Custom React hooks
+│   │   └── types/                      # TypeScript type definitions
+│   ├── tests/                          # Vitest unit tests
+│   ├── e2e/                            # Playwright E2E tests
+│   ├── tailwind.config.ts              # Tailwind 4.x configuration
+│   ├── next.config.ts                  # Next.js configuration
+│   └── package.json
+│
+├── my_flow_api/                         # FastAPI backend (Python uv project)
+│   ├── src/
+│   │   ├── main.py                     # FastAPI app + lifespan events
+│   │   ├── config.py                   # Pydantic Settings
+│   │   ├── database.py                 # MongoDB connection (Motor)
+│   │   ├── middleware/
+│   │   │   └── auth.py                 # Logto JWT authentication
+│   │   ├── models/                     # Pydantic schemas (future)
+│   │   ├── routers/                    # API endpoints (future)
+│   │   ├── services/                   # Business logic (future)
+│   │   ├── repositories/               # Data access layer (future)
+│   │   └── adapters/                   # External integrations (future)
+│   ├── tests/
+│   │   ├── unit/                       # Unit tests (pytest)
+│   │   └── integration/                # Integration tests
+│   ├── pyproject.toml                  # uv project config
+│   └── .venv/                          # Python virtual environment
+│
+├── packages/                            # Shared packages (future expansion)
+├── docs/                                # Documentation
+│   ├── prd.md                          # Product Requirements Document
+│   ├── architecture/                   # Architecture documentation
+│   └── stories/                        # User stories (Story 1.1-1.5)
+├── scripts/                             # Utility scripts
+├── .github/                             # CI/CD workflows (future)
+├── .husky/                              # Git hooks (lint-staged)
+├── .env.template                        # Environment variable template (1Password refs)
+├── bun.lockb                            # Bun lockfile
+├── package.json                         # Root workspace configuration
+└── README.md                            # Project documentation
 ```
 
 ## High Level Architecture Diagram
@@ -99,8 +147,10 @@ graph TB
 
 - **Service Layer (Backend):** Business logic resides in service classes (`ContextService`, `FlowService`, `AIService`) that orchestrate repository calls and external API interactions. _Rationale:_ Separates business rules from HTTP concerns, reusable across different API endpoints, testable independently.
 
-- **CSS Design Tokens Foundation:** All visual properties (colors, spacing, typography, shadows) defined as CSS custom properties in `:root`. Tailwind CSS configured to consume these tokens. _Rationale:_ Enables dynamic theming (context accent colors), consistent design system, single source of truth for styling, AI agents can modify tokens without touching component code.
+- **CSS Design Tokens Foundation:** Three-layer token architecture (primitives → semantic → component-specific) defined as CSS custom properties. Tokens organized in separate files (`colors.css`, `typography.css`, `spacing.css`, `effects.css`, `animation.css`) and imported via `@layer` for proper cascade control. Tailwind CSS 4.x configured to consume these tokens. _Rationale:_ Enables dynamic theming (context accent colors), consistent design system, single source of truth for styling, maintainable style evolution.
 
-- **Optimistic UI Updates:** Client-side mutations update UI immediately using TanStack Query's optimistic update hooks, rollback on API error. _Rationale:_ Meets PRD requirement for instant feedback (NFR-2: <500ms context switching), improves perceived performance, reduces user frustration.
+- **Server Actions Pattern:** Next.js Server Actions used for form submissions and server-side mutations (e.g., sign-out functionality). _Rationale:_ Eliminates need for API routes for simple mutations, maintains server-side execution, progressive enhancement support.
 
-- **Streaming AI Responses:** AI inference results streamed from FastAPI backend to frontend via Server-Sent Events (SSE) or WebSocket, rendered incrementally in Client Component. _Rationale:_ Meets PRD requirement for real-time streaming (NFR-1: <2s latency), provides natural conversational feel, reduces perceived wait time.
+- **Optimistic UI Updates (Future):** Client-side mutations will update UI immediately using TanStack Query's optimistic update hooks with rollback on error. _Rationale:_ Will meet PRD requirement for instant feedback (NFR-2: <500ms context switching), improves perceived performance.
+
+- **Streaming AI Responses (Future):** AI inference results will stream from FastAPI backend to frontend via Server-Sent Events (SSE), rendered incrementally in Client Component. _Rationale:_ Will meet PRD requirement for real-time streaming (NFR-1: <2s latency), provides natural conversational feel.
