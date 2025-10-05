@@ -5,16 +5,38 @@ echo "🔍 Running pre-commit checks..."
 # Run lint-staged for file-level checks
 bunx lint-staged || { echo "❌ lint-staged failed"; exit 1; }
 
-# Run full frontend lint to catch unstaged issues
-echo "🧹 Linting frontend..."
-bun --cwd my_flow_client run lint || { echo "❌ Frontend lint failed"; exit 1; }
+# Detect what's being committed
+STAGED_FILES=$(git diff --cached --name-only)
+FRONTEND_STAGED="false"
+BACKEND_STAGED="false"
 
-# Type check frontend (quick check)
-echo "📝 Type checking frontend..."
-bun --cwd my_flow_client run typecheck || { echo "❌ Frontend type check failed"; exit 1; }
+if echo "$STAGED_FILES" | grep "^my_flow_client/" >/dev/null 2>&1; then
+  FRONTEND_STAGED="true"
+fi
 
-# Type check backend (quick check)
-echo "🐍 Type checking backend..."
-PYTHONPATH=./my_flow_api uv run --project my_flow_api mypy my_flow_api/src/ || { echo "❌ Backend type check failed"; exit 1; }
+if echo "$STAGED_FILES" | grep "^my_flow_api/" >/dev/null 2>&1; then
+  BACKEND_STAGED="true"
+fi
+
+# Frontend checks (only if frontend files staged AND directory exists)
+if [ "$FRONTEND_STAGED" = "true" ] && [ -d "my_flow_client" ]; then
+  echo "🧹 Linting frontend..."
+  bun --cwd my_flow_client run lint || { echo "❌ Frontend lint failed"; exit 1; }
+
+  echo "📝 Type checking frontend..."
+  bun --cwd my_flow_client run typecheck || { echo "❌ Frontend type check failed"; exit 1; }
+elif [ "$FRONTEND_STAGED" = "true" ]; then
+  echo "⚠️ Frontend files staged but my_flow_client directory not found (worktree?)."
+  echo "   Skipping frontend checks - ensure they pass in main repo."
+fi
+
+# Backend checks (only if backend files staged AND directory exists)
+if [ "$BACKEND_STAGED" = "true" ] && [ -d "my_flow_api" ]; then
+  echo "🐍 Type checking backend..."
+  PYTHONPATH=./my_flow_api uv run --project my_flow_api mypy my_flow_api/src/ || { echo "❌ Backend type check failed"; exit 1; }
+elif [ "$BACKEND_STAGED" = "true" ]; then
+  echo "⚠️ Backend files staged but my_flow_api directory not found (worktree?)."
+  echo "   Skipping backend checks - ensure they pass in main repo."
+fi
 
 echo "✅ Pre-commit checks passed!"

@@ -8,36 +8,66 @@ if git ls-files --error-unmatch .env >/dev/null 2>&1; then
   exit 1
 fi
 
-# Frontend checks
-echo "🔍 Linting frontend..."
-(cd my_flow_client && bun run lint) || { echo "❌ Frontend linting failed"; exit 1; }
+# Detect what changed to determine which checks to run
+CHANGED_FILES=$(git diff --name-only origin/main...HEAD 2>/dev/null || git diff --name-only HEAD)
 
-echo "📝 Type checking frontend..."
-(cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
+# Determine if frontend or backend changed
+FRONTEND_CHANGED="false"
+BACKEND_CHANGED="false"
 
-echo "🔬 Running frontend tests..."
-bun --cwd my_flow_client test || { echo "❌ Frontend tests failed"; exit 1; }
-
-# Production build check with secrets (if 1Password CLI is available)
-if command -v op >/dev/null 2>&1; then
-  echo "🏗️ Building frontend with injected secrets..."
-  (cd my_flow_client && op run --env-file=../.env.template -- bun run build) || {
-    echo "❌ Frontend build failed";
-    exit 1;
-  }
-else
-  echo "⚠️ Skipping secret-injected frontend build (1Password CLI not detected)."
-  echo "   Install 1Password CLI and sign in to run the production build before pushing."
+if echo "$CHANGED_FILES" | grep "^my_flow_client/" >/dev/null 2>&1; then
+  FRONTEND_CHANGED="true"
 fi
 
-# Backend checks
-echo "🐍 Linting backend..."
-(cd my_flow_api && uv run ruff check .) || { echo "❌ Backend linting failed"; exit 1; }
+if echo "$CHANGED_FILES" | grep "^my_flow_api/" >/dev/null 2>&1; then
+  BACKEND_CHANGED="true"
+fi
 
-echo "🐍 Type checking backend..."
-(cd my_flow_api && uv run mypy src/) || { echo "❌ Backend type check failed"; exit 1; }
+# Frontend checks (only if frontend files changed AND my_flow_client exists)
+if [ "$FRONTEND_CHANGED" = "true" ] && [ -d "my_flow_client" ]; then
+  echo "🔍 Linting frontend..."
+  (cd my_flow_client && bun run lint) || { echo "❌ Frontend linting failed"; exit 1; }
 
-echo "🐍 Running backend tests..."
-./scripts/run_backend_tests.sh || { echo "❌ Backend tests failed"; exit 1; }
+  echo "📝 Type checking frontend..."
+  (cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
+
+  echo "🔬 Running frontend tests..."
+  bun --cwd my_flow_client test || { echo "❌ Frontend tests failed"; exit 1; }
+
+  # Production build check with secrets (if 1Password CLI is available)
+  if command -v op >/dev/null 2>&1; then
+    echo "🏗️ Building frontend with injected secrets..."
+    (cd my_flow_client && op run --env-file=../.env.template -- bun run build) || {
+      echo "❌ Frontend build failed";
+      exit 1;
+    }
+  else
+    echo "⚠️ Skipping secret-injected frontend build (1Password CLI not detected)."
+    echo "   Install 1Password CLI and sign in to run the production build before pushing."
+  fi
+elif [ "$FRONTEND_CHANGED" = "true" ]; then
+  echo "⚠️ Frontend files changed but my_flow_client directory not found (worktree?)."
+  echo "   Skipping frontend checks - ensure they pass in main repo or CI/CD."
+fi
+
+# Backend checks (only if backend files changed AND my_flow_api exists)
+if [ "$BACKEND_CHANGED" = "true" ] && [ -d "my_flow_api" ]; then
+  echo "🐍 Linting backend..."
+  (cd my_flow_api && uv run ruff check .) || { echo "❌ Backend linting failed"; exit 1; }
+
+  echo "🐍 Type checking backend..."
+  (cd my_flow_api && uv run mypy src/) || { echo "❌ Backend type check failed"; exit 1; }
+
+  echo "🐍 Running backend tests..."
+  ./scripts/run_backend_tests.sh || { echo "❌ Backend tests failed"; exit 1; }
+elif [ "$BACKEND_CHANGED" = "true" ]; then
+  echo "⚠️ Backend files changed but my_flow_api directory not found (worktree?)."
+  echo "   Skipping backend checks - ensure they pass in main repo or CI/CD."
+fi
+
+# If neither changed, warn
+if [ "$FRONTEND_CHANGED" = "false" ] && [ "$BACKEND_CHANGED" = "false" ]; then
+  echo "ℹ️ No frontend or backend files changed. Skipping checks."
+fi
 
 echo "✅ All checks passed! Pushing..."

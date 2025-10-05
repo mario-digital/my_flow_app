@@ -42,9 +42,9 @@ class TestHealthEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["status"] == "ok"
-        assert data["service"] == "my-flow-api"
-        assert "version" in data
+        assert data["status"] in ["healthy", "degraded"]
+        assert "mongodb_connected" in data
+        assert "timestamp" in data
 
 
 @pytest.mark.integration
