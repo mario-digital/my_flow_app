@@ -1,12 +1,14 @@
 /* Tailwind CSS v4.x import syntax */
 @import 'tailwindcss';
 
-/* Design Tokens */
-@import './styles/tokens/colors.css';
-@import './styles/tokens/typography.css';
-@import './styles/tokens/spacing.css';
-@import './styles/tokens/effects.css';
-@import './styles/tokens/animation.css';
+/* Design Tokens - Layer ensures proper import order and failure detection */
+@layer tokens {
+  @import './styles/tokens/colors.css' layer(tokens.colors);
+  @import './styles/tokens/typography.css' layer(tokens.typography);
+  @import './styles/tokens/spacing.css' layer(tokens.spacing);
+  @import './styles/tokens/effects.css' layer(tokens.effects);
+  @import './styles/tokens/animation.css' layer(tokens.animation);
+}
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
