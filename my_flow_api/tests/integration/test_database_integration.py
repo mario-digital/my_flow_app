@@ -32,6 +32,11 @@ async def test_indexes_created() -> None:
     with patch("src.database.AsyncIOMotorClient") as mock_client:
         mock_db = MagicMock()
 
+        # Mock create_index calls for each collection
+        mock_db.contexts.create_index = AsyncMock()
+        mock_db.flows.create_index = AsyncMock()
+        mock_db.user_preferences.create_index = AsyncMock()
+
         # Mock index lists for each collection
         mock_contexts_cursor = MagicMock()
         mock_contexts_cursor.to_list = AsyncMock(return_value=[
@@ -59,6 +64,15 @@ async def test_indexes_created() -> None:
         mock_client.return_value.__getitem__.return_value = mock_db
 
         await connect_to_mongo()
+
+        # Verify create_index was called for contexts
+        assert mock_db.contexts.create_index.call_count >= 2
+
+        # Verify create_index was called for flows
+        assert mock_db.flows.create_index.call_count >= 2
+
+        # Verify create_index was called for user_preferences
+        assert mock_db.user_preferences.create_index.call_count >= 1
 
         # Get indexes for contexts collection
         contexts_indexes = await db_instance.db.contexts.list_indexes().to_list(length=None)
