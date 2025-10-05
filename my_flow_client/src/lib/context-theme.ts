@@ -90,7 +90,11 @@ export function showContextSwitchNotification(context: ContextType): void {
     social: 'Social',
   };
 
-  toast.success(`Switched to ${contextLabels[context]} context`, {
+  const toastFn = toast as {
+    success: (message: string, options?: { duration?: number }) => void;
+  };
+
+  toastFn.success(`Switched to ${contextLabels[context]} context`, {
     duration: 2000,
   });
 }

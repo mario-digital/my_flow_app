@@ -5,21 +5,21 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-context-current)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-context focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-[var(--button-bg-primary)] text-[var(--button-text-primary)] shadow-[var(--shadow-sm)] hover:bg-[var(--button-bg-primary-hover)] active:bg-[var(--button-bg-primary-active)]',
+          'bg-button-primary text-button-text-primary shadow-sm hover:bg-button-primary-hover active:bg-button-primary-active',
         destructive:
-          'bg-[var(--button-bg-danger)] text-[var(--button-text-danger)] shadow-[var(--shadow-sm)] hover:bg-[var(--button-bg-danger-hover)] active:bg-[var(--button-bg-danger-active)]',
+          'bg-button-danger text-button-text-danger shadow-sm hover:bg-button-danger-hover active:bg-button-danger-active',
         outline:
-          'border-2 border-[var(--button-border-secondary)] bg-[var(--button-bg-secondary)] shadow-[var(--shadow-sm)] hover:border-[var(--button-border-secondary-hover)] text-[var(--button-text-secondary)]',
+          'border-2 border-button-border-secondary bg-button-secondary shadow-sm hover:border-button-border-secondary-hover text-button-text-secondary',
         secondary:
-          'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] shadow-[var(--shadow-sm)] hover:bg-[var(--color-bg-tertiary)]',
+          'bg-bg-secondary text-text-primary shadow-sm hover:bg-bg-tertiary',
         ghost:
-          'bg-[var(--button-bg-ghost)] text-[var(--button-text-ghost)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--button-text-ghost-hover)]',
-        link: 'text-[var(--color-context-current)] underline-offset-4 hover:underline',
+          'bg-button-ghost text-button-text-ghost hover:bg-bg-tertiary hover:text-button-text-ghost-hover',
+        link: 'text-context underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',
