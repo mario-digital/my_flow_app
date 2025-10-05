@@ -10,7 +10,7 @@ from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.main import app
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 async def test_db() -> AsyncGenerator[AsyncIOMotorDatabase, None]:
     """Fixture for test database connection."""
     await connect_to_mongo()

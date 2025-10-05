@@ -17,7 +17,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "PROJECT_NAME",
         "CORS_ORIGINS",
         "MONGODB_URI",
-        "DATABASE_NAME",
+        "MONGODB_DB_NAME",
         "LOGTO_ENDPOINT",
         "LOGTO_APP_ID",
         "LOGTO_APP_SECRET",
@@ -47,7 +47,7 @@ def test_settings_defaults(clean_env: None) -> None:
     assert settings.API_V1_STR == "/api/v1"
     assert settings.CORS_ORIGINS == ["http://localhost:3000"]
     assert settings.MONGODB_URI == "mongodb://localhost:27017"
-    assert settings.DATABASE_NAME == "myflow_dev"
+    assert settings.MONGODB_DB_NAME == "myflow_dev"
     assert settings.LOGTO_JWKS_TIMEOUT_SECONDS == 5.0
     assert settings.LOGTO_JWKS_CACHE_TTL_SECONDS == 3600.0
 

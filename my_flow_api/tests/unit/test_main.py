@@ -27,9 +27,9 @@ def test_health_check(client):
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "ok"
-    assert data["service"] == "my-flow-api"
-    assert data["version"] == settings.VERSION
+    assert data["status"] in ["healthy", "degraded"]
+    assert "mongodb_connected" in data
+    assert "timestamp" in data
 
 
 @pytest.mark.unit
