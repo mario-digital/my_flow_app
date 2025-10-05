@@ -5,17 +5,28 @@ import type {
 } from '@/types/ai-context';
 
 /**
+ * Configuration for context switching behavior
+ */
+export interface ContextSwitchConfig {
+  mode: ContextSwitchMode;
+  suggestThreshold?: number; // Default: 0.8
+  autoThreshold?: number; // Default: 0.6
+}
+
+/**
  * Handles AI-triggered context switches based on user preferences
  * @param suggestion - AI context suggestion from chat response
- * @param mode - Context switch mode (manual/suggest/auto)
+ * @param config - Context switch configuration including mode and thresholds
  * @param currentContext - Current active context
  * @returns Whether to proceed with context switch
  */
 export function handleAIContextSuggestion(
   suggestion: AIContextSuggestion,
-  mode: ContextSwitchMode,
+  config: ContextSwitchConfig,
   currentContext: ContextType
 ): boolean {
+  const { mode, suggestThreshold = 0.8, autoThreshold = 0.6 } = config;
+
   // Don't switch if already in suggested context
   if (suggestion.suggestedContext === currentContext) {
     return false;
@@ -27,16 +38,16 @@ export function handleAIContextSuggestion(
       return false;
 
     case 'suggest':
-      // Auto-switch only if high confidence (>80%)
-      if (suggestion.confidence > 0.8) {
+      // Auto-switch only if high confidence (>threshold)
+      if (suggestion.confidence > suggestThreshold) {
         setContextTheme(suggestion.suggestedContext);
         return true;
       }
       return false;
 
     case 'auto':
-      // Auto-switch for medium-high confidence (>60%)
-      if (suggestion.confidence > 0.6) {
+      // Auto-switch for medium-high confidence (>threshold)
+      if (suggestion.confidence > autoThreshold) {
         setContextTheme(suggestion.suggestedContext);
         return true;
       }

@@ -47,7 +47,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.95, // High confidence
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'manual', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'manual' },
+        'work'
+      );
 
       expect(result).toBe(false);
       expect(getCurrentContext()).toBeNull(); // No context set
@@ -61,7 +65,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.85,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'suggest' },
+        'work'
+      );
 
       expect(result).toBe(true);
       expect(getCurrentContext()).toBe('rest');
@@ -73,7 +81,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.8,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'suggest' },
+        'work'
+      );
 
       expect(result).toBe(false);
       expect(getCurrentContext()).toBeNull();
@@ -85,7 +97,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.5,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'suggest', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'suggest' },
+        'work'
+      );
 
       expect(result).toBe(false);
     });
@@ -98,7 +114,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.65,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto' },
+        'work'
+      );
 
       expect(result).toBe(true);
       expect(getCurrentContext()).toBe('social');
@@ -110,7 +130,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.95,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto' },
+        'work'
+      );
 
       expect(result).toBe(true);
       expect(getCurrentContext()).toBe('rest');
@@ -122,7 +146,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.6,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto' },
+        'work'
+      );
 
       expect(result).toBe(false);
       expect(getCurrentContext()).toBeNull();
@@ -134,7 +162,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.3,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto' },
+        'work'
+      );
 
       expect(result).toBe(false);
     });
@@ -147,7 +179,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.95,
       };
 
-      const result = handleAIContextSuggestion(suggestion, 'auto', 'work');
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto' },
+        'work'
+      );
 
       expect(result).toBe(false);
     });
@@ -160,7 +196,7 @@ describe('handleAIContextSuggestion', () => {
 
       const result = handleAIContextSuggestion(
         suggestion,
-        'suggest',
+        { mode: 'suggest' },
         'personal'
       );
 
@@ -176,7 +212,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.8,
       };
       expect(
-        handleAIContextSuggestion(suggestionSuggest, 'suggest', 'work')
+        handleAIContextSuggestion(
+          suggestionSuggest,
+          { mode: 'suggest' },
+          'work'
+        )
       ).toBe(false);
 
       // Auto mode: exactly 0.6 should NOT switch (> not >=)
@@ -184,9 +224,9 @@ describe('handleAIContextSuggestion', () => {
         suggestedContext: 'social',
         confidence: 0.6,
       };
-      expect(handleAIContextSuggestion(suggestionAuto, 'auto', 'work')).toBe(
-        false
-      );
+      expect(
+        handleAIContextSuggestion(suggestionAuto, { mode: 'auto' }, 'work')
+      ).toBe(false);
     });
 
     it('should handle minimum and maximum confidence values', () => {
@@ -194,17 +234,96 @@ describe('handleAIContextSuggestion', () => {
         suggestedContext: 'rest',
         confidence: 0,
       };
-      expect(handleAIContextSuggestion(minConfidence, 'auto', 'work')).toBe(
-        false
-      );
+      expect(
+        handleAIContextSuggestion(minConfidence, { mode: 'auto' }, 'work')
+      ).toBe(false);
 
       const maxConfidence: AIContextSuggestion = {
         suggestedContext: 'rest',
         confidence: 1,
       };
-      expect(handleAIContextSuggestion(maxConfidence, 'auto', 'work')).toBe(
-        true
+      expect(
+        handleAIContextSuggestion(maxConfidence, { mode: 'auto' }, 'work')
+      ).toBe(true);
+    });
+  });
+
+  describe('custom thresholds', () => {
+    it('should respect custom suggestThreshold', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.7,
+      };
+
+      // With custom threshold of 0.65, confidence 0.7 should trigger switch
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'suggest', suggestThreshold: 0.65 },
+        'work'
       );
+
+      expect(result).toBe(true);
+      expect(getCurrentContext()).toBe('personal');
+    });
+
+    it('should respect custom autoThreshold', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'social',
+        confidence: 0.5,
+      };
+
+      // With custom threshold of 0.4, confidence 0.5 should trigger switch
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'auto', autoThreshold: 0.4 },
+        'work'
+      );
+
+      expect(result).toBe(true);
+      expect(getCurrentContext()).toBe('social');
+    });
+
+    it('should use default thresholds when not specified', () => {
+      const suggestionSuggest: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0.75,
+      };
+
+      // Should not switch (default suggest threshold is 0.8)
+      expect(
+        handleAIContextSuggestion(
+          suggestionSuggest,
+          { mode: 'suggest' },
+          'work'
+        )
+      ).toBe(false);
+
+      const suggestionAuto: AIContextSuggestion = {
+        suggestedContext: 'personal',
+        confidence: 0.55,
+      };
+
+      // Should not switch (default auto threshold is 0.6)
+      expect(
+        handleAIContextSuggestion(suggestionAuto, { mode: 'auto' }, 'work')
+      ).toBe(false);
+    });
+
+    it('should handle higher custom thresholds', () => {
+      const suggestion: AIContextSuggestion = {
+        suggestedContext: 'rest',
+        confidence: 0.85,
+      };
+
+      // With high threshold of 0.9, confidence 0.85 should NOT trigger switch
+      const result = handleAIContextSuggestion(
+        suggestion,
+        { mode: 'suggest', suggestThreshold: 0.9 },
+        'work'
+      );
+
+      expect(result).toBe(false);
+      expect(getCurrentContext()).toBeNull();
     });
   });
 });

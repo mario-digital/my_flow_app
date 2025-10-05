@@ -54,6 +54,9 @@ const config: Config = {
       spacing: {
         // Tailwind's default scale is perfect, but we can add custom ones
         // 0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24 already map to our tokens
+        '32': 'var(--space-32)', // 128px - Large section spacing
+        '40': 'var(--space-40)', // 160px - Extra large sections
+        '48': 'var(--space-48)', // 192px - Hero sections, large layouts
       },
 
       // Border Radius
