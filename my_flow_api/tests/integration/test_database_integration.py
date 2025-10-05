@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.main import app
 
 
@@ -15,8 +16,6 @@ async def test_database_connection_lifecycle() -> None:
         mock_db = AsyncMock()
         mock_db.command = AsyncMock(return_value={"ok": 1.0})
         mock_client.return_value.__getitem__.return_value = mock_db
-
-        from src.database import close_mongo_connection, connect_to_mongo
 
         await connect_to_mongo()
 
@@ -59,8 +58,6 @@ async def test_indexes_created() -> None:
 
         mock_client.return_value.__getitem__.return_value = mock_db
 
-        from src.database import close_mongo_connection, connect_to_mongo, db_instance
-
         await connect_to_mongo()
 
         # Get indexes for contexts collection
@@ -96,8 +93,6 @@ async def test_health_endpoint_mongodb_status() -> None:
         mock_db = AsyncMock()
         mock_db.command = AsyncMock(return_value={"ok": 1.0})
         mock_client.return_value.__getitem__.return_value = mock_db
-
-        from src.database import close_mongo_connection, connect_to_mongo
 
         await connect_to_mongo()
 
@@ -147,8 +142,6 @@ async def test_database_operations() -> None:
 
         mock_db.test_collection = mock_collection
         mock_client.return_value.__getitem__.return_value = mock_db
-
-        from src.database import close_mongo_connection, connect_to_mongo, db_instance
 
         await connect_to_mongo()
 
