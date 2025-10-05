@@ -32,9 +32,11 @@ export default async function CallbackPage({
 
   // Auto-submit form to process OAuth callback
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
       <div className="text-center">
-        <h2 className="text-2xl font-semibold">Completing sign in...</h2>
+        <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          Completing sign in...
+        </h2>
         <form action={processCallback} id="callback-form">
           {Object.entries(params).map(([key, value]) => (
             <input

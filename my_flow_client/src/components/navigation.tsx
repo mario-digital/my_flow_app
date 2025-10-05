@@ -8,15 +8,18 @@ export async function Navigation(): Promise<JSX.Element> {
   const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
   return (
-    <nav className="border-b border-border bg-background">
+    <nav className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold text-foreground">
+        <Link
+          href="/"
+          className="text-xl font-bold text-[var(--color-text-primary)]"
+        >
           MyFlow
         </Link>
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-[var(--color-text-secondary)]">
                 {claims?.email}
               </span>
               <form

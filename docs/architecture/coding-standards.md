@@ -294,4 +294,6 @@ from src.middleware.auth import get_current_user
 
 7. **Consistent Naming Conventions:** Reduces cognitive load for AI agents. `snake_case` for Python/DB, `camelCase` for JS functions, `PascalCase` for classes/components.
 
+8. **CSS Design Tokens System:** All colors, spacing, typography, and effects use CSS custom properties in a 3-layer hierarchy (Primitive → Semantic → Component). This ensures consistent theming, enables dynamic context switching, and prevents hardcoded values. **CRITICAL:** Never add new tokens without UX approval. See [`docs/ux-design-tokens/css-tokens-usage.md`](../ux-design-tokens/css-tokens-usage.md) for complete usage guide.
+
 ---

@@ -7,10 +7,70 @@ Next.js 15 frontend application for MyFlow - Context-based flow management syste
 - **Framework**: Next.js 15 with App Router
 - **React**: React 19
 - **Language**: TypeScript 5.6+
-- **Styling**: Tailwind CSS 4.x
+- **Styling**: Tailwind CSS 4.x with CSS Design Tokens
 - **UI Components**: shadcn/ui (Radix UI primitives)
+- **Notifications**: Sonner toast library
 - **State Management**: TanStack Query (server state), React Context (local state)
 - **Package Manager**: Bun 1.x
+
+## Key Features
+
+### CSS Design Tokens System
+
+MyFlow uses a comprehensive 3-layer CSS Design Token system for consistent theming and dynamic context switching:
+
+- **Primitive Tokens**: Base color values (`--primitive-work`, `--primitive-personal`, etc.)
+- **Semantic Tokens**: Purpose-driven values (`--color-bg-primary`, `--color-text-primary`)
+- **Component Tokens**: Component-specific values (`--button-bg-primary`, `--card-bg`)
+
+**📖 Complete Usage Guide**: See [`docs/ux-design-tokens/css-tokens-usage.md`](../docs/ux-design-tokens/css-tokens-usage.md)
+
+**🚨 CRITICAL**: Never add new tokens without UX approval. All necessary tokens already exist.
+
+**Token Files Location**: `src/app/styles/tokens/`
+- `colors.css` - Color system with context theming
+- `typography.css` - Font scales and text styles
+- `spacing.css` - Spacing scale
+- `effects.css` - Shadows, borders, blur effects
+- `animation.css` - Animation durations and easings
+
+### Toast Notifications with Sonner
+
+Toast notifications are integrated using [Sonner](https://sonner.emilkowal.ski/) for user feedback:
+
+```typescript
+import { toast } from 'sonner';
+
+// Success notification
+toast.success('Context switched to Work');
+
+// Info notification
+toast.info('Flow created successfully');
+
+// Error notification
+toast.error('Failed to save changes');
+```
+
+The `<Toaster />` component is already configured in `app/layout.tsx` with design token styling.
+
+### Centralized Type Exports
+
+All TypeScript types are centralized in `src/types/` for better discoverability:
+
+```typescript
+// Import context-related types
+import type { ContextType } from '@/types/context';
+import type { AIContextSuggestion, ContextSwitchConfig } from '@/types/ai-context';
+
+// IDE autocomplete works seamlessly
+const context: ContextType = 'work';
+```
+
+**Benefits**:
+- Single import location for all shared types
+- Enhanced IDE autocomplete and IntelliSense
+- Reduced risk of duplicate type definitions
+- Better code navigation
 
 ## Setup
 
