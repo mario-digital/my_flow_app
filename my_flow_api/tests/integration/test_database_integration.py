@@ -30,7 +30,7 @@ async def test_database_connection_lifecycle() -> None:
 async def test_indexes_created() -> None:
     """Test that indexes are created on startup with mocked MongoDB."""
     with patch("src.database.AsyncIOMotorClient") as mock_client:
-        mock_db = AsyncMock()
+        mock_db = MagicMock()
 
         # Mock index lists for each collection
         mock_contexts_cursor = MagicMock()
@@ -39,7 +39,7 @@ async def test_indexes_created() -> None:
             {"name": "user_id_1"},
             {"name": "user_id_1_created_at_-1"}
         ])
-        mock_db.contexts.list_indexes.return_value = mock_contexts_cursor
+        mock_db.contexts.list_indexes = MagicMock(return_value=mock_contexts_cursor)
 
         mock_flows_cursor = MagicMock()
         mock_flows_cursor.to_list = AsyncMock(return_value=[
@@ -47,14 +47,14 @@ async def test_indexes_created() -> None:
             {"name": "context_id_1"},
             {"name": "user_id_1"}
         ])
-        mock_db.flows.list_indexes.return_value = mock_flows_cursor
+        mock_db.flows.list_indexes = MagicMock(return_value=mock_flows_cursor)
 
         mock_prefs_cursor = MagicMock()
         mock_prefs_cursor.to_list = AsyncMock(return_value=[
             {"name": "_id_"},
             {"name": "user_id_1"}
         ])
-        mock_db.user_preferences.list_indexes.return_value = mock_prefs_cursor
+        mock_db.user_preferences.list_indexes = MagicMock(return_value=mock_prefs_cursor)
 
         mock_client.return_value.__getitem__.return_value = mock_db
 
