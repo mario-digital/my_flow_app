@@ -296,4 +296,52 @@ from src.middleware.auth import get_current_user
 
 8. **CSS Design Tokens System:** All colors, spacing, typography, and effects use CSS custom properties in a 3-layer hierarchy (Primitive → Semantic → Component). This ensures consistent theming, enables dynamic context switching, and prevents hardcoded values. **CRITICAL:** Never add new tokens without UX approval. See [`docs/ux-design-tokens/css-tokens-usage.md`](../ux-design-tokens/css-tokens-usage.md) for complete usage guide.
 
+### 8. **Tailwind CSS Variable Usage**
+
+**Rule:** ALWAYS use Tailwind utility classes that map to CSS custom properties. NEVER use arbitrary value syntax `[var(--token)]`.
+
+```typescript
+// ❌ WRONG: Verbose arbitrary value syntax
+<div className="bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-[var(--color-border)]">
+  <button className="bg-[var(--button-bg-primary)] text-[var(--button-text-primary)] shadow-[var(--shadow-sm)]">
+    Click Me
+  </button>
+</div>
+
+// ✅ CORRECT: Use Tailwind utility classes from config
+<div className="bg-bg-primary text-text-primary border-border">
+  <button className="bg-button-primary text-button-text-primary shadow-sm">
+    Click Me
+  </button>
+</div>
+```
+
+**Rationale:**
+- **40-50% shorter class strings** - easier to read and maintain
+- **Proper design token system usage** - leverages configured Tailwind mappings
+- **IntelliSense support** - autocomplete works correctly
+- **Type safety** - Tailwind validates utility names at build time
+- **Consistency** - all components use same styling approach
+
+**Complete Mapping Reference:**
+
+| Tailwind Utility | CSS Custom Property | Usage |
+|-----------------|---------------------|-------|
+| `bg-bg-primary` | `var(--color-bg-primary)` | Primary background |
+| `bg-bg-secondary` | `var(--color-bg-secondary)` | Secondary background |
+| `bg-bg-tertiary` | `var(--color-bg-tertiary)` | Tertiary background |
+| `text-text-primary` | `var(--color-text-primary)` | Primary text |
+| `text-text-secondary` | `var(--color-text-secondary)` | Secondary text |
+| `border-border` | `var(--color-border)` | Standard border |
+| `border-card-border` | `var(--card-border)` | Card borders |
+| `text-context` / `bg-context` | `var(--color-context-current)` | Dynamic context color |
+| `bg-button-primary` | `var(--button-bg-primary)` | Primary button background |
+| `text-button-text-primary` | `var(--button-text-primary)` | Primary button text |
+| `shadow-sm` / `shadow-md` / `shadow-lg` | `var(--shadow-*)` | Box shadows |
+| `bg-card` | `var(--card-bg)` | Card background |
+
+**All mappings are defined in `my_flow_client/tailwind.config.ts` - verify there before using.**
+
+**See [`docs/token-system-update-2.0.md`](../token-system-update-2.0.md) for complete migration guide.**
+
 ---

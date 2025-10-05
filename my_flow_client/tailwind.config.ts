@@ -45,8 +45,22 @@ const config: Config = {
 
         // Component-specific
         'button-primary': 'var(--button-bg-primary)',
+        'button-primary-hover': 'var(--button-bg-primary-hover)',
+        'button-primary-active': 'var(--button-bg-primary-active)',
+        'button-danger': 'var(--button-bg-danger)',
+        'button-danger-hover': 'var(--button-bg-danger-hover)',
+        'button-danger-active': 'var(--button-bg-danger-active)',
         'button-secondary': 'var(--button-bg-secondary)',
+        'button-ghost': 'var(--button-bg-ghost)',
+        'button-text-primary': 'var(--button-text-primary)',
+        'button-text-danger': 'var(--button-text-danger)',
+        'button-text-secondary': 'var(--button-text-secondary)',
+        'button-text-ghost': 'var(--button-text-ghost)',
+        'button-text-ghost-hover': 'var(--button-text-ghost-hover)',
+        'button-border-secondary': 'var(--button-border-secondary)',
+        'button-border-secondary-hover': 'var(--button-border-secondary-hover)',
         'card': 'var(--card-bg)',
+        'card-border': 'var(--card-border)',
         'input': 'var(--input-bg)',
       },
 
