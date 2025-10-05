@@ -10,9 +10,175 @@
   @import './styles/tokens/animation.css' layer(tokens.animation);
 }
 
-@theme inline {
+@theme {
+  /* ========================================
+     FONTS
+     ======================================== */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Font Family - maps to font-sans and font-mono */
+  --font-family-sans: var(--font-family-primary);
+  --font-family-mono: var(--font-family-mono);
+
+  /* Font Sizes - maps to text-* utilities */
+  --font-size-tiny: var(--font-size-tiny);
+  --font-size-small: var(--font-size-small);
+  --font-size-body: var(--font-size-body);
+  --font-size-large: var(--font-size-large);
+  --font-size-h3: var(--font-size-h3);
+  --font-size-h2: var(--font-size-h2);
+  --font-size-h1: var(--font-size-h1);
+
+  /* Font Weights - maps to font-* utilities */
+  --font-weight-regular: var(--font-weight-regular);
+  --font-weight-medium: var(--font-weight-medium);
+  --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
+
+  /* Line Heights - maps to leading-* utilities */
+  --line-height-tight: var(--line-height-tight);
+  --line-height-snug: var(--line-height-snug);
+  --line-height-normal: var(--line-height-normal);
+  --line-height-relaxed: var(--line-height-relaxed);
+  --line-height-loose: var(--line-height-loose);
+
+  /* ========================================
+     COLORS
+     ======================================== */
+  /* Backgrounds - maps to bg-* utilities */
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-bg-tertiary: var(--color-bg-tertiary);
+  --color-bg-overlay: var(--color-bg-overlay);
+
+  /* Text - maps to text-* utilities */
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-disabled: var(--color-text-disabled);
+
+  /* Borders - maps to border-* utilities */
+  --color-border: var(--color-border);
+  --color-border-hover: var(--color-border-hover);
+  --color-border-focus: var(--color-border-focus);
+
+  /* Context - maps to context-* utilities */
+  --color-context: var(--color-context-current);
+  --color-context-work: var(--color-context-work);
+  --color-context-personal: var(--color-context-personal);
+  --color-context-rest: var(--color-context-rest);
+  --color-context-social: var(--color-context-social);
+
+  /* Semantic - maps to success/warning/error utilities */
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
+  --color-warning: var(--color-warning);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+
+  /* Buttons - maps to button-* utilities */
+  --color-button-primary: var(--button-bg-primary);
+  --color-button-primary-hover: var(--button-bg-primary-hover);
+  --color-button-primary-active: var(--button-bg-primary-active);
+  --color-button-danger: var(--button-bg-danger);
+  --color-button-danger-hover: var(--button-bg-danger-hover);
+  --color-button-danger-active: var(--button-bg-danger-active);
+  --color-button-secondary: var(--button-bg-secondary);
+  --color-button-ghost: var(--button-bg-ghost);
+  --color-button-text-primary: var(--button-text-primary);
+  --color-button-text-danger: var(--button-text-danger);
+  --color-button-text-secondary: var(--button-text-secondary);
+  --color-button-text-ghost: var(--button-text-ghost);
+  --color-button-text-ghost-hover: var(--button-text-ghost-hover);
+  --color-button-border-secondary: var(--button-border-secondary);
+  --color-button-border-secondary-hover: var(--button-border-secondary-hover);
+
+  /* Cards - maps to card-* utilities */
+  --color-card: var(--card-bg);
+  --color-card-border: var(--card-border);
+
+  /* Inputs - maps to input utility */
+  --color-input: var(--input-bg);
+
+  /* ========================================
+     SPACING
+     ======================================== */
+  --spacing-32: var(--space-32);
+  --spacing-40: var(--space-40);
+  --spacing-48: var(--space-48);
+
+  /* ========================================
+     BORDER RADIUS
+     ======================================== */
+  --radius-none: var(--radius-none);
+  --radius-sm: var(--radius-sm);
+  --radius: var(--radius-md);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  /* ========================================
+     SHADOWS
+     ======================================== */
+  --shadow-none: var(--shadow-none);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow-md);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-focus: var(--shadow-focus);
+  --shadow-focus-error: var(--shadow-focus-error);
+
+  /* ========================================
+     Z-INDEX
+     ======================================== */
+  --z-base: var(--z-base);
+  --z-dropdown: var(--z-dropdown);
+  --z-sticky: var(--z-sticky);
+  --z-fixed: var(--z-fixed);
+  --z-modal-backdrop: var(--z-modal-backdrop);
+  --z-modal: var(--z-modal);
+  --z-popover: var(--z-popover);
+  --z-tooltip: var(--z-tooltip);
+  --z-notification: var(--z-notification);
+  --z-max: var(--z-max);
+
+  /* ========================================
+     ANIMATIONS
+     ======================================== */
+  /* Duration - maps to duration-* utilities */
+  --duration-instant: var(--anim-duration-instant);
+  --duration-fast: var(--anim-duration-fast);
+  --duration: var(--anim-duration-normal);
+  --duration-normal: var(--anim-duration-normal);
+  --duration-slow: var(--anim-duration-slow);
+  --duration-slowest: var(--anim-duration-slowest);
+
+  /* Easing - maps to ease-* utilities */
+  --ease-linear: var(--anim-ease-linear);
+  --ease-in: var(--anim-ease-in);
+  --ease-out: var(--anim-ease-out);
+  --ease-in-out: var(--anim-ease-in-out);
+  --ease-bounce: var(--anim-ease-bounce);
+  --ease-spring: var(--anim-ease-spring);
+
+  /* ========================================
+     ICON SIZES
+     ======================================== */
+  --width-icon-xs: var(--icon-size-xs);
+  --width-icon-sm: var(--icon-size-sm);
+  --width-icon-md: var(--icon-size-md);
+  --width-icon-lg: var(--icon-size-lg);
+  --width-icon-xl: var(--icon-size-xl);
+
+  --height-icon-xs: var(--icon-size-xs);
+  --height-icon-sm: var(--icon-size-sm);
+  --height-icon-md: var(--icon-size-md);
+  --height-icon-lg: var(--icon-size-lg);
+  --height-icon-xl: var(--icon-size-xl);
 }
 
 body {
