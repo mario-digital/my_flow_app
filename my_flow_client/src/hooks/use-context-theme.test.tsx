@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  setContextTheme,
-  getCurrentContext,
-  type ContextType,
-} from '@/lib/context-theme';
+import { setContextTheme, getCurrentContext } from '@/lib/context-theme';
+import type { ContextType } from '@/types/context';
 
 /**
  * Note: These tests verify the context theming behavior that the useContextTheme hook enables.
