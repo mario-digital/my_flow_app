@@ -1,4 +1,5 @@
-export type ContextType = 'work' | 'personal' | 'rest' | 'social';
+import { toast } from 'sonner';
+import type { ContextType } from '@/types/context';
 
 /**
  * Sets the active context theme by reading from CSS custom properties
@@ -8,6 +9,19 @@ export type ContextType = 'work' | 'personal' | 'rest' | 'social';
  * colors.css and read dynamically at runtime.
  *
  * @param context - The context type to activate
+ *
+ * @example
+ * // Switch to work context (blue theme)
+ * setContextTheme('work');
+ *
+ * @example
+ * // Switch to personal context (orange theme)
+ * setContextTheme('personal');
+ *
+ * @example
+ * // Use with user preference
+ * const userContext = getUserPreference();
+ * setContextTheme(userContext);
  */
 export function setContextTheme(context: ContextType): void {
   if (typeof document === 'undefined') return; // Guard for SSR
@@ -33,6 +47,13 @@ export function setContextTheme(context: ContextType): void {
 
 /**
  * Gets the current active context from DOM
+ *
+ * @example
+ * // Get current context
+ * const currentContext = getCurrentContext();
+ * if (currentContext === 'work') {
+ *   console.log('Currently in work mode');
+ * }
  */
 export function getCurrentContext(): ContextType | null {
   if (typeof document === 'undefined') return null;
@@ -40,4 +61,36 @@ export function getCurrentContext(): ContextType | null {
   return document.documentElement.getAttribute(
     'data-context'
   ) as ContextType | null;
+}
+
+/**
+ * Shows a toast notification when the context switches
+ *
+ * @param context - The new context that was activated
+ *
+ * @example
+ * // Show notification after switching context
+ * setContextTheme('personal');
+ * showContextSwitchNotification('personal');
+ * // Displays: "Switched to Personal context"
+ *
+ * @example
+ * // Combined context switch with notification
+ * function switchContext(newContext: ContextType) {
+ *   setContextTheme(newContext);
+ *   showContextSwitchNotification(newContext);
+ * }
+ * switchContext('work');
+ */
+export function showContextSwitchNotification(context: ContextType): void {
+  const contextLabels: Record<ContextType, string> = {
+    work: 'Work',
+    personal: 'Personal',
+    rest: 'Rest',
+    social: 'Social',
+  };
+
+  toast.success(`Switched to ${contextLabels[context]} context`, {
+    duration: 2000,
+  });
 }

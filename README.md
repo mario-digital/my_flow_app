@@ -166,6 +166,38 @@ All secrets are managed via 1Password CLI. See `.env.template` for the complete 
 
 See [`docs/architecture/tech-stack.md`](docs/architecture/tech-stack.md) for complete details.
 
+## CI/CD Status
+
+**Current Status**: CI pipelines are approximately **70% complete**.
+
+### Implemented
+- ✅ **Frontend Testing**: Vitest unit tests with coverage reporting
+- ✅ **Backend Testing**: pytest with async support
+- ✅ **Type Checking**: TypeScript compiler (frontend), mypy (backend)
+- ✅ **Linting**: ESLint + Prettier (frontend), Ruff (backend)
+- ✅ **Build Validation**: Next.js production builds
+- ✅ **Secret Management**: 1Password CLI integration for local development
+
+### Deferred for Future Stories
+The following deployment workflows are documented but not yet implemented:
+
+- ⏳ **Frontend Deployment** (Vercel)
+  - Automatic preview deployments for PRs
+  - Production deployments on merge to `main`
+  - Environment variable management via Vercel dashboard
+
+- ⏳ **Backend Deployment** (Railway)
+  - Container-based deployment with auto-scaling
+  - MongoDB Atlas integration
+  - Health check endpoints and monitoring
+
+- ⏳ **Static Assets** (AWS S3 + CloudFront)
+  - CDN-backed asset delivery
+  - Automated cache invalidation
+  - Optimized image serving
+
+These deployments will be configured in **Story 2.1: Production Deployment & CI/CD Completion**.
+
 ## API Documentation
 
 When the backend is running, API documentation is available at:

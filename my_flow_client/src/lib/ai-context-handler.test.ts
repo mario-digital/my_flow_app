@@ -1,10 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { handleAIContextSuggestion } from './ai-context-handler';
 import {
-  handleAIContextSuggestion,
+  getCurrentContext,
   showContextSwitchNotification,
-} from './ai-context-handler';
-import { getCurrentContext } from './context-theme';
+} from './context-theme';
+import { toast } from 'sonner';
 import type { AIContextSuggestion } from '@/types/ai-context';
+
+// Mock sonner toast
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe('handleAIContextSuggestion', () => {
   // Mock CSS custom properties that would be defined in colors.css
@@ -329,29 +339,36 @@ describe('handleAIContextSuggestion', () => {
 });
 
 describe('showContextSwitchNotification', () => {
-  it('should log context switch information', () => {
-    const consoleSpy = vi.spyOn(console, 'log');
+  it('should call toast.success with correct message', () => {
+    const toastSpy = vi.spyOn(toast, 'success');
 
-    showContextSwitchNotification('work', 'personal', 'Detected personal task');
+    showContextSwitchNotification('personal');
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Context switched: work → personal',
-      'Detected personal task'
-    );
+    expect(toastSpy).toHaveBeenCalledWith('Switched to Personal context', {
+      duration: 2000,
+    });
 
-    consoleSpy.mockRestore();
+    toastSpy.mockRestore();
   });
 
-  it('should work without a reason', () => {
-    const consoleSpy = vi.spyOn(console, 'log');
+  it('should display correct label for each context type', () => {
+    const toastSpy = vi.spyOn(toast, 'success');
 
-    showContextSwitchNotification('rest', 'social');
+    showContextSwitchNotification('work');
+    expect(toastSpy).toHaveBeenCalledWith('Switched to Work context', {
+      duration: 2000,
+    });
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Context switched: rest → social',
-      undefined
-    );
+    showContextSwitchNotification('rest');
+    expect(toastSpy).toHaveBeenCalledWith('Switched to Rest context', {
+      duration: 2000,
+    });
 
-    consoleSpy.mockRestore();
+    showContextSwitchNotification('social');
+    expect(toastSpy).toHaveBeenCalledWith('Switched to Social context', {
+      duration: 2000,
+    });
+
+    toastSpy.mockRestore();
   });
 });

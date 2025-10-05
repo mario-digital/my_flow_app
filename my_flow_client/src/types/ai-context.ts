@@ -1,4 +1,4 @@
-import type { ContextType } from '@/lib/context-theme';
+import type { ContextType } from './context';
 
 /**
  * AI Context Suggestion
@@ -15,3 +15,12 @@ export interface AIContextSuggestion {
  * Determines how aggressively to auto-switch contexts based on AI suggestions
  */
 export type ContextSwitchMode = 'manual' | 'suggest' | 'auto';
+
+/**
+ * Configuration for context switching behavior
+ */
+export interface ContextSwitchConfig {
+  mode: ContextSwitchMode;
+  suggestThreshold?: number; // Default: 0.8
+  autoThreshold?: number; // Default: 0.6
+}

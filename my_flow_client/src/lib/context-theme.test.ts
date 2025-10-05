@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  setContextTheme,
-  getCurrentContext,
-  type ContextType,
-} from './context-theme';
+import { setContextTheme, getCurrentContext } from './context-theme';
+import type { ContextType } from '@/types/context';
 
 describe('setContextTheme', () => {
   // Mock CSS custom properties that would be defined in colors.css

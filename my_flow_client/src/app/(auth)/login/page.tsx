@@ -17,13 +17,13 @@ export default async function LoginPage(): Promise<JSX.Element | never> {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-8 rounded-lg border border-border bg-card p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
+      <div className="w-full max-w-md space-y-8 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-8 shadow-[var(--shadow-sm)]">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
             Welcome to MyFlow
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
             Sign in to continue
           </p>
         </div>

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { setContextTheme, type ContextType } from '@/lib/context-theme';
+import { setContextTheme } from '@/lib/context-theme';
+import type { ContextType } from '@/types/context';
 
 /**
  * Hook to manage context-based theming
