@@ -9,6 +9,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test-setup.tsx'],
     include: ['**/*.test.{ts,tsx}'],
+    exclude: ['**/e2e/**', 'node_modules/**'],
     css: false,
     server: {
       deps: {

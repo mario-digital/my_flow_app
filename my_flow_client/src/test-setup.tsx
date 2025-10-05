@@ -25,10 +25,18 @@ vi.mock('@/components/navigation', () => ({
     React.createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
 }));
 
-// Mock Next.js fonts
+// Mock Next.js fonts with proper function structure
 vi.mock('next/font/google', () => ({
-  Geist: () => ({ variable: '--font-geist-sans' }),
-  Geist_Mono: () => ({ variable: '--font-geist-mono' }),
+  Geist: vi.fn(() => ({
+    className: 'geist-sans',
+    variable: '--font-geist-sans',
+    style: { fontFamily: 'Geist Sans' },
+  })),
+  Geist_Mono: vi.fn(() => ({
+    className: 'geist-mono',
+    variable: '--font-geist-mono',
+    style: { fontFamily: 'Geist Mono' },
+  })),
 }));
 
 // Mock Next.js Image component for testing
