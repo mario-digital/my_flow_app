@@ -50,13 +50,19 @@ export function handleAIContextSuggestion(
 /**
  * Display AI context switch notification
  * Show user-friendly message when AI switches context
+ *
+ * TODO: Integrate with a toast library (e.g., sonner, react-hot-toast)
+ * Example implementation:
+ * toast.info(`Switched to ${toContext} context`, {
+ *   description: reason || `Detected ${toContext}-related activity`,
+ *   duration: 3000,
+ * });
  */
 export function showContextSwitchNotification(
   fromContext: ContextType,
   toContext: ContextType,
   reason?: string
 ): void {
-  // Implementation: Show toast/notification
-  // Example: "Switched to Work context - detected work-related task"
+  // PLACEHOLDER: Console log until toast library is integrated
   console.log(`Context switched: ${fromContext} → ${toContext}`, reason);
 }

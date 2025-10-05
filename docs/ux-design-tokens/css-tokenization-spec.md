@@ -561,9 +561,7 @@ components/
 │   ├── button.tsx
 │   ├── card.tsx
 │   └── ...
-types/
-└── tailwind-colors.d.ts     # TypeScript type declarations for Tailwind colors
-tailwind.config.ts           # Tailwind theme extension consuming tokens
+tailwind.config.ts           # Tailwind theme extension consuming tokens (provides types automatically in v4.x)
 ```
 
 ### globals.css (Entry Point)
@@ -640,53 +638,19 @@ tailwind.config.ts           # Tailwind theme extension consuming tokens
 
 ## Tailwind CSS 4.x Integration
 
-### types/tailwind-colors.d.ts
+### TypeScript Type Safety
 
-Create a separate type declaration file for Tailwind custom colors. This ensures proper module augmentation and TypeScript autocomplete.
+**Note:** As of Tailwind CSS 4.x, type safety is provided automatically from `tailwind.config.ts`. Manual type declaration files (e.g., `types/tailwind-colors.d.ts`) are **not required** and module augmentation no longer works in v4.x.
 
-```typescript
-// types/tailwind-colors.d.ts
+**How it works:**
+- TypeScript automatically infers types from your `tailwind.config.ts` theme extension
+- Custom color names, spacing values, and other theme tokens get full autocomplete in your IDE
+- No additional configuration needed
 
-// Type-safe custom color names for autocomplete and typo prevention
-declare module 'tailwindcss/types/config' {
-  interface CustomColors {
-    // Backgrounds
-    'bg-primary': string;
-    'bg-secondary': string;
-    'bg-tertiary': string;
-    'bg-overlay': string;
-    // Text
-    'text-primary': string;
-    'text-secondary': string;
-    'text-muted': string;
-    'text-disabled': string;
-    // Borders
-    'border': string;
-    'border-hover': string;
-    'border-focus': string;
-    // Context
-    'context': string;
-    'context-work': string;
-    'context-personal': string;
-    'context-rest': string;
-    'context-social': string;
-    // Semantic
-    'success': string;
-    'success-bg': string;
-    'warning': string;
-    'warning-bg': string;
-    'error': string;
-    'error-bg': string;
-    // Components
-    'button-primary': string;
-    'button-secondary': string;
-    'card': string;
-    'input': string;
-  }
-}
-
-export {} // Make this a module
-```
+**Benefits:**
+- ✅ Autocomplete for all custom Tailwind utilities (e.g., `bg-bg-primary`, `text-context`)
+- ✅ TypeScript errors for typos or non-existent utilities
+- ✅ Zero maintenance - types update automatically when you modify `tailwind.config.ts`
 
 ### tailwind.config.ts
 
@@ -1499,9 +1463,9 @@ Verify:
 
    **Note:** Copy the token definitions from the "Complete Token Definitions" section above into each respective file.
 
-2. **Create TypeScript type declarations**
-   - [ ] Create `types/` directory if it doesn't exist
-   - [ ] Create `types/tailwind-colors.d.ts` with CustomColors interface (see "Tailwind CSS 4.x Integration" section)
+2. **TypeScript type safety** (automatic in Tailwind 4.x)
+   - [ ] ✅ No action required - types are automatically inferred from `tailwind.config.ts`
+   - [ ] Note: Do NOT create `types/tailwind-colors.d.ts` - module augmentation doesn't work in v4.x
 
 3. **Configure Tailwind**
    - [ ] Update `tailwind.config.ts` with token extensions (see "tailwind.config.ts" section)
