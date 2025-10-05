@@ -26,9 +26,9 @@ class Settings(BaseSettings):  # type: ignore[explicit-any]
     # CORS Configuration
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    # Database Configuration (placeholder - will be configured in later stories)
+    # Database Configuration
     MONGODB_URI: str = "mongodb://localhost:27017"
-    DATABASE_NAME: str = "myflow_dev"
+    MONGODB_DB_NAME: str = "myflow_dev"
 
     # Logto Authentication Configuration
     # Defaults let local tests run without secrets; production validator enforces real values
