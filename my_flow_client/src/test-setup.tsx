@@ -49,3 +49,10 @@ vi.mock('next/image', () => ({
     return React.createElement('img', props);
   },
 }));
+
+// Mock ResizeObserver for Headless UI
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
