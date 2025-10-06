@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import type { ContextType } from '@/types/context';
+import type { ToastOptions } from '@/types/toast';
 
 /**
  * Sets the active context theme by reading from CSS custom properties
@@ -90,11 +91,9 @@ export function showContextSwitchNotification(context: ContextType): void {
     social: 'Social',
   };
 
-  const toastFn = toast as {
-    success: (message: string, options?: { duration?: number }) => void;
+  const options: ToastOptions = {
+    duration: 2000,
   };
 
-  toastFn.success(`Switched to ${contextLabels[context]} context`, {
-    duration: 2000,
-  });
+  toast.success(`Switched to ${contextLabels[context]} context`, options);
 }
