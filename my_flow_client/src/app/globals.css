@@ -12,144 +12,172 @@
 
 @theme {
   /* ========================================
-     FONTS
+     TYPOGRAPHY - Reference typography.css tokens
+     Maps to Tailwind's text-*, font-*, leading-* utilities
      ======================================== */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 
-  /* Font Family - maps to font-sans and font-mono */
-  --font-family-sans: var(--font-family-primary);
-  --font-family-mono: var(--font-family-mono);
+  /* Font Families */
+  --font-sans: var(--font-family-primary);
+  --font-mono: var(--font-family-mono);
 
-  /* Font Sizes - maps to text-* utilities */
-  --font-size-tiny: var(--font-size-tiny);
-  --font-size-small: var(--font-size-small);
-  --font-size-body: var(--font-size-body);
-  --font-size-large: var(--font-size-large);
-  --font-size-h3: var(--font-size-h3);
-  --font-size-h2: var(--font-size-h2);
-  --font-size-h1: var(--font-size-h1);
+  /* Font Sizes - Tailwind expects --text-* namespace */
+  --text-tiny: var(--token-font-size-tiny);
+  --text-small: var(--token-font-size-small);
+  --text-base: var(--token-font-size-body);
+  --text-large: var(--token-font-size-large);
+  --text-h3: var(--token-font-size-h3);
+  --text-h2: var(--token-font-size-h2);
+  --text-h1: var(--token-font-size-h1);
 
-  /* Font Weights - maps to font-* utilities */
-  --font-weight-regular: var(--font-weight-regular);
-  --font-weight-medium: var(--font-weight-medium);
-  --font-weight-semibold: var(--font-weight-semibold);
-  --font-weight-bold: var(--font-weight-bold);
+  /* Font Weights - Tailwind expects specific weight names */
+  --font-weight-normal: var(--token-font-weight-regular);
+  --font-weight-medium: var(--token-font-weight-medium);
+  --font-weight-semibold: var(--token-font-weight-semibold);
+  --font-weight-bold: var(--token-font-weight-bold);
 
-  /* Line Heights - maps to leading-* utilities */
-  --line-height-tight: var(--line-height-tight);
-  --line-height-snug: var(--line-height-snug);
-  --line-height-normal: var(--line-height-normal);
-  --line-height-relaxed: var(--line-height-relaxed);
-  --line-height-loose: var(--line-height-loose);
+  /* Line Heights - Tailwind expects --leading-* namespace */
+  --leading-tight: var(--token-line-height-tight);
+  --leading-snug: var(--token-line-height-snug);
+  --leading-normal: var(--token-line-height-normal);
+  --leading-relaxed: var(--token-line-height-relaxed);
+  --leading-loose: var(--token-line-height-loose);
 
   /* ========================================
-     COLORS
+     COLORS - Reference colors.css tokens
+     Maps to Tailwind's bg-*, text-*, border-* utilities
      ======================================== */
-  /* Backgrounds - maps to bg-* utilities */
-  --color-bg-primary: var(--color-bg-primary);
-  --color-bg-secondary: var(--color-bg-secondary);
-  --color-bg-tertiary: var(--color-bg-tertiary);
-  --color-bg-overlay: var(--color-bg-overlay);
 
-  /* Text - maps to text-* utilities */
-  --color-text-primary: var(--color-text-primary);
-  --color-text-secondary: var(--color-text-secondary);
-  --color-text-muted: var(--color-text-muted);
-  --color-text-disabled: var(--color-text-disabled);
+  /* Backgrounds - Use --color-* namespace */
+  --color-bg-primary: var(--primitive-black-900);
+  --color-bg-secondary: var(--primitive-black-800);
+  --color-bg-tertiary: var(--primitive-black-700);
+  --color-bg-overlay: rgba(10, 10, 10, 0.6);
 
-  /* Borders - maps to border-* utilities */
-  --color-border: var(--color-border);
-  --color-border-hover: var(--color-border-hover);
-  --color-border-focus: var(--color-border-focus);
+  /* Text Colors */
+  --color-text-primary: var(--primitive-white);
+  --color-text-secondary: var(--primitive-neutral-400);
+  --color-text-muted: var(--primitive-neutral-500);
+  --color-text-disabled: var(--primitive-neutral-600);
 
-  /* Context - maps to context-* utilities */
-  --color-context: var(--color-context-current);
-  --color-context-work: var(--color-context-work);
-  --color-context-personal: var(--color-context-personal);
-  --color-context-rest: var(--color-context-rest);
-  --color-context-social: var(--color-context-social);
+  /* Border Colors */
+  --color-border-default: var(--primitive-neutral-600);
+  --color-border-hover: var(--primitive-neutral-500);
+  --color-border-focus: var(--primitive-work);
 
-  /* Semantic - maps to success/warning/error utilities */
-  --color-success: var(--color-success);
-  --color-success-bg: var(--color-success-bg);
-  --color-warning: var(--color-warning);
-  --color-warning-bg: var(--color-warning-bg);
-  --color-error: var(--color-error);
-  --color-error-bg: var(--color-error-bg);
+  /* Context Colors */
+  --color-context-current: var(--primitive-work);
+  --color-context-work: var(--primitive-work);
+  --color-context-personal: var(--primitive-personal);
+  --color-context-rest: var(--primitive-rest);
+  --color-context-social: var(--primitive-social);
 
-  /* Buttons - maps to button-* utilities */
-  --color-button-primary: var(--button-bg-primary);
-  --color-button-primary-hover: var(--button-bg-primary-hover);
-  --color-button-primary-active: var(--button-bg-primary-active);
-  --color-button-danger: var(--button-bg-danger);
-  --color-button-danger-hover: var(--button-bg-danger-hover);
-  --color-button-danger-active: var(--button-bg-danger-active);
-  --color-button-secondary: var(--button-bg-secondary);
-  --color-button-ghost: var(--button-bg-ghost);
-  --color-button-text-primary: var(--button-text-primary);
-  --color-button-text-danger: var(--button-text-danger);
-  --color-button-text-secondary: var(--button-text-secondary);
-  --color-button-text-ghost: var(--button-text-ghost);
-  --color-button-text-ghost-hover: var(--button-text-ghost-hover);
-  --color-button-border-secondary: var(--button-border-secondary);
-  --color-button-border-secondary-hover: var(--button-border-secondary-hover);
+  /* Semantic Colors */
+  --color-success: var(--primitive-success);
+  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-warning: var(--primitive-warning);
+  --color-warning-bg: rgba(234, 179, 8, 0.1);
+  --color-error: var(--primitive-error);
+  --color-error-bg: rgba(239, 68, 68, 0.1);
 
-  /* Cards - maps to card-* utilities */
-  --color-card: var(--card-bg);
-  --color-card-border: var(--card-border);
+  /* Component Colors - Buttons */
+  /* Primary Button */
+  --color-button-primary: var(--primitive-work);
+  --color-button-primary-hover: var(--primitive-work-hover);
+  --color-button-primary-active: var(--primitive-work-active);
+  --color-button-text-primary: var(--primitive-white);
 
-  /* Inputs - maps to input utility */
-  --color-input: var(--input-bg);
+  /* Danger/Destructive Button */
+  --color-button-danger: var(--primitive-error);
+  --color-button-danger-hover: var(--primitive-error-hover);
+  --color-button-danger-active: var(--primitive-error-active);
+  --color-button-text-danger: var(--primitive-white);
+
+  /* Secondary Button */
+  --color-button-secondary: var(--primitive-black-700);
+  --color-button-text-secondary: var(--primitive-white);
+  --color-button-border-secondary: var(--primitive-neutral-500);
+  --color-button-border-secondary-hover: var(--primitive-work);
+
+  /* Ghost Button */
+  --color-button-ghost: transparent;
+  --color-button-text-ghost: var(--primitive-neutral-400);
+  --color-button-text-ghost-hover: var(--primitive-white);
+
+  /* Component Colors - Cards */
+  --color-card-bg: var(--primitive-black-800);
+  --color-card-bg-hover: var(--primitive-black-700);
+  --color-card-border: var(--primitive-neutral-600);
+
+  /* Component Colors - Inputs */
+  --color-input-bg: var(--primitive-black-800);
+  --color-input-border: var(--primitive-neutral-600);
+  --color-input-border-focus: var(--primitive-work);
 
   /* ========================================
-     SPACING
+     SPACING - Reference spacing.css tokens
+     Maps to Tailwind's p-*, m-*, gap-* utilities
      ======================================== */
+  --spacing-0: var(--space-0);
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
   --spacing-32: var(--space-32);
   --spacing-40: var(--space-40);
   --spacing-48: var(--space-48);
 
   /* ========================================
-     BORDER RADIUS
+     BORDER RADIUS - Reference effects.css tokens
+     Maps to Tailwind's rounded-* utilities
      ======================================== */
-  --radius-none: var(--radius-none);
-  --radius-sm: var(--radius-sm);
-  --radius: var(--radius-md);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-full: var(--radius-full);
+  --radius-none: var(--token-radius-none);
+  --radius-sm: var(--token-radius-sm);
+  --radius: var(--token-radius-md);
+  --radius-md: var(--token-radius-md);
+  --radius-lg: var(--token-radius-lg);
+  --radius-full: var(--token-radius-full);
 
   /* ========================================
-     SHADOWS
+     SHADOWS - Reference effects.css tokens
+     Maps to Tailwind's shadow-* utilities
      ======================================== */
-  --shadow-none: var(--shadow-none);
-  --shadow-xs: var(--shadow-xs);
-  --shadow-sm: var(--shadow-sm);
-  --shadow: var(--shadow-md);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
-  --shadow-xl: var(--shadow-xl);
-  --shadow-focus: var(--shadow-focus);
-  --shadow-focus-error: var(--shadow-focus-error);
+  --shadow-none: var(--token-shadow-none);
+  --shadow-xs: var(--token-shadow-xs);
+  --shadow-sm: var(--token-shadow-sm);
+  --shadow: var(--token-shadow-md);
+  --shadow-md: var(--token-shadow-md);
+  --shadow-lg: var(--token-shadow-lg);
+  --shadow-xl: var(--token-shadow-xl);
 
   /* ========================================
-     Z-INDEX
+     Z-INDEX - Reference effects.css tokens
+     No standard Tailwind namespace, use z-* for custom utilities
      ======================================== */
-  --z-base: var(--z-base);
-  --z-dropdown: var(--z-dropdown);
-  --z-sticky: var(--z-sticky);
-  --z-fixed: var(--z-fixed);
-  --z-modal-backdrop: var(--z-modal-backdrop);
-  --z-modal: var(--z-modal);
-  --z-popover: var(--z-popover);
-  --z-tooltip: var(--z-tooltip);
-  --z-notification: var(--z-notification);
-  --z-max: var(--z-max);
+  --z-0: var(--token-z-base);
+  --z-dropdown: var(--token-z-dropdown);
+  --z-sticky: var(--token-z-sticky);
+  --z-fixed: var(--token-z-fixed);
+  --z-modal-backdrop: var(--token-z-modal-backdrop);
+  --z-modal: var(--token-z-modal);
+  --z-popover: var(--token-z-popover);
+  --z-tooltip: var(--token-z-tooltip);
+  --z-notification: var(--token-z-notification);
+  --z-max: var(--token-z-max);
 
   /* ========================================
-     ANIMATIONS
+     ANIMATIONS - Reference animation.css tokens
+     Maps to Tailwind's duration-* and ease-* utilities
      ======================================== */
-  /* Duration - maps to duration-* utilities */
+
+  /* Durations */
   --duration-instant: var(--anim-duration-instant);
   --duration-fast: var(--anim-duration-fast);
   --duration: var(--anim-duration-normal);
@@ -157,7 +185,7 @@
   --duration-slow: var(--anim-duration-slow);
   --duration-slowest: var(--anim-duration-slowest);
 
-  /* Easing - maps to ease-* utilities */
+  /* Easing Functions */
   --ease-linear: var(--anim-ease-linear);
   --ease-in: var(--anim-ease-in);
   --ease-out: var(--anim-ease-out);
@@ -166,19 +194,14 @@
   --ease-spring: var(--anim-ease-spring);
 
   /* ========================================
-     ICON SIZES
+     ICON SIZES - Reference effects.css tokens
+     Maps to custom width/height utilities
      ======================================== */
-  --width-icon-xs: var(--icon-size-xs);
-  --width-icon-sm: var(--icon-size-sm);
-  --width-icon-md: var(--icon-size-md);
-  --width-icon-lg: var(--icon-size-lg);
-  --width-icon-xl: var(--icon-size-xl);
-
-  --height-icon-xs: var(--icon-size-xs);
-  --height-icon-sm: var(--icon-size-sm);
-  --height-icon-md: var(--icon-size-md);
-  --height-icon-lg: var(--icon-size-lg);
-  --height-icon-xl: var(--icon-size-xl);
+  --size-icon-xs: var(--token-icon-xs);
+  --size-icon-sm: var(--token-icon-sm);
+  --size-icon-md: var(--token-icon-md);
+  --size-icon-lg: var(--token-icon-lg);
+  --size-icon-xl: var(--token-icon-xl);
 }
 
 body {

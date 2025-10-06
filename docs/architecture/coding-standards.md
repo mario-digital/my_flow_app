@@ -340,7 +340,7 @@ from src.middleware.auth import get_current_user
 | `shadow-sm` / `shadow-md` / `shadow-lg` | `var(--shadow-*)` | Box shadows |
 | `bg-card` | `var(--card-bg)` | Card background |
 
-**All mappings are defined in `my_flow_client/tailwind.config.ts` - verify there before using.**
+**All mappings are defined in `my_flow_client/src/app/globals.css` in the `@theme` block - verify there before using.**
 
 **See [`docs/token-system-update-2.0.md`](../token-system-update-2.0.md) for complete migration guide.**
 
