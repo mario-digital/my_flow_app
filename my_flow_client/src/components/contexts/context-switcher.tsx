@@ -1,5 +1,6 @@
 'use client';
 
+import type { JSX } from 'react';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 import {
   Select,

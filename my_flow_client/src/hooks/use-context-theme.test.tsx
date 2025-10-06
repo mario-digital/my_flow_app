@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setContextTheme, getCurrentContext } from '@/lib/context-theme';
-import type { ContextType } from '@/types/context';
+import { ContextType } from '@/types/enums';
 
 /**
  * Note: These tests verify the context theming behavior that the useContextTheme hook enables.
@@ -48,34 +48,34 @@ describe('useContextTheme behavior', () => {
   });
 
   it('should set context theme', () => {
-    setContextTheme('work');
+    setContextTheme(ContextType.Work);
 
-    expect(getCurrentContext()).toBe('work');
+    expect(getCurrentContext()).toBe(ContextType.Work);
     expect(
       document.documentElement.style.getPropertyValue('--color-context-current')
     ).toBe('#3B82F6');
   });
 
   it('should update context theme when context changes', () => {
-    setContextTheme('work');
-    expect(getCurrentContext()).toBe('work');
+    setContextTheme(ContextType.Work);
+    expect(getCurrentContext()).toBe(ContextType.Work);
 
-    setContextTheme('personal');
+    setContextTheme(ContextType.Personal);
 
-    expect(getCurrentContext()).toBe('personal');
+    expect(getCurrentContext()).toBe(ContextType.Personal);
     expect(
       document.documentElement.style.getPropertyValue('--color-context-current')
     ).toBe('#F97316');
   });
 
   it('should handle setting same context multiple times', () => {
-    setContextTheme('rest');
+    setContextTheme(ContextType.Rest);
 
     const initialColor = document.documentElement.style.getPropertyValue(
       '--color-context-current'
     );
 
-    setContextTheme('rest');
+    setContextTheme(ContextType.Rest);
 
     expect(
       document.documentElement.style.getPropertyValue('--color-context-current')
@@ -83,7 +83,12 @@ describe('useContextTheme behavior', () => {
   });
 
   it('should handle all context types', () => {
-    const contexts: ContextType[] = ['work', 'personal', 'rest', 'social'];
+    const contexts: ContextType[] = [
+      ContextType.Work,
+      ContextType.Personal,
+      ContextType.Rest,
+      ContextType.Social,
+    ];
 
     contexts.forEach((context) => {
       setContextTheme(context);
