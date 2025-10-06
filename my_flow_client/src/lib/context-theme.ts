@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import type { ContextType } from '@/types/context';
+import { ContextType } from '@/types/context';
 import type { ToastOptions } from '@/types/toast';
 
 /**
@@ -85,10 +85,10 @@ export function getCurrentContext(): ContextType | null {
  */
 export function showContextSwitchNotification(context: ContextType): void {
   const contextLabels: Record<ContextType, string> = {
-    work: 'Work',
-    personal: 'Personal',
-    rest: 'Rest',
-    social: 'Social',
+    [ContextType.Work]: 'Work',
+    [ContextType.Personal]: 'Personal',
+    [ContextType.Rest]: 'Rest',
+    [ContextType.Social]: 'Social',
   };
 
   const options: ToastOptions = {

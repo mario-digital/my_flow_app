@@ -3,9 +3,10 @@ import {
   showContextSwitchNotification,
 } from './context-theme';
 import type { ContextType } from '@/types/context';
-import type {
-  AIContextSuggestion,
-  ContextSwitchConfig,
+import {
+  type AIContextSuggestion,
+  type ContextSwitchConfig,
+  ContextSwitchMode,
 } from '@/types/ai-context';
 
 /**
@@ -57,11 +58,11 @@ export function handleAIContextSuggestion(
   }
 
   switch (mode) {
-    case 'manual':
+    case ContextSwitchMode.Manual:
       // Never auto-switch, only show suggestion to user
       return false;
 
-    case 'suggest':
+    case ContextSwitchMode.Suggest:
       // Auto-switch only if high confidence (>threshold)
       if (suggestion.confidence > suggestThreshold) {
         setContextTheme(suggestion.suggestedContext);
@@ -70,7 +71,7 @@ export function handleAIContextSuggestion(
       }
       return false;
 
-    case 'auto':
+    case ContextSwitchMode.Auto:
       // Auto-switch for medium-high confidence (>threshold)
       if (suggestion.confidence > autoThreshold) {
         setContextTheme(suggestion.suggestedContext);

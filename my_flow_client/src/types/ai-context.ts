@@ -1,4 +1,5 @@
 import type { ContextType } from './context';
+import { ContextSwitchMode } from './enums';
 
 /**
  * AI Context Suggestion
@@ -10,11 +11,8 @@ export interface AIContextSuggestion {
   reason?: string; // Optional explanation for the suggestion
 }
 
-/**
- * Context Switch Trigger
- * Determines how aggressively to auto-switch contexts based on AI suggestions
- */
-export type ContextSwitchMode = 'manual' | 'suggest' | 'auto';
+// Re-export ContextSwitchMode enum from centralized enums file
+export { ContextSwitchMode };
 
 /**
  * Configuration for context switching behavior
