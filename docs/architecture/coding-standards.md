@@ -205,10 +205,14 @@ const flow = {
 **Enum organization:**
 ```typescript
 // src/types/enums.ts
+// CRITICAL: Enum string values MUST match Python backend exactly
+// Python: FlowPriority.HIGH = "high"
+// TypeScript: FlowPriority.High = "high" ✅ (values match, member names differ)
+
 export enum FlowPriority {
-  Low = 'low',
-  Medium = 'medium',
-  High = 'high'
+  Low = 'low',        // Must match Python: FlowPriority.LOW = "low"
+  Medium = 'medium',  // Must match Python: FlowPriority.MEDIUM = "medium"
+  High = 'high'       // Must match Python: FlowPriority.HIGH = "high"
 }
 
 export enum FlowStatus {
