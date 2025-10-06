@@ -3,8 +3,5 @@
  * Centralized type definitions for MyFlow context system
  */
 
-/**
- * Available context types in MyFlow
- * Each context has associated theme colors and flow categorization
- */
-export type ContextType = 'work' | 'personal' | 'rest' | 'social';
+// Re-export ContextType enum from centralized enums file
+export { ContextType } from './enums';

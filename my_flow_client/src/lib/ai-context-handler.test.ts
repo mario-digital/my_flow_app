@@ -5,7 +5,11 @@ import {
   showContextSwitchNotification,
 } from './context-theme';
 import { toast } from 'sonner';
-import type { AIContextSuggestion } from '@/types/ai-context';
+import {
+  type AIContextSuggestion,
+  ContextSwitchMode,
+} from '@/types/ai-context';
+import { ContextType } from '@/types/context';
 
 // Mock sonner toast
 vi.mock('sonner', () => ({
@@ -53,14 +57,14 @@ describe('handleAIContextSuggestion', () => {
   describe('manual mode', () => {
     it('should never auto-switch in manual mode', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.95, // High confidence
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'manual' },
-        'work'
+        { mode: ContextSwitchMode.Manual },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -71,14 +75,14 @@ describe('handleAIContextSuggestion', () => {
   describe('suggest mode', () => {
     it('should auto-switch when confidence > 80%', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0.85,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest' },
-        'work'
+        { mode: ContextSwitchMode.Suggest },
+        ContextType.Work
       );
 
       expect(result).toBe(true);
@@ -87,14 +91,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should not auto-switch when confidence <= 80%', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.8,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest' },
-        'work'
+        { mode: ContextSwitchMode.Suggest },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -103,14 +107,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should not switch when confidence is low', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'social',
+        suggestedContext: ContextType.Social,
         confidence: 0.5,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest' },
-        'work'
+        { mode: ContextSwitchMode.Suggest },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -120,14 +124,14 @@ describe('handleAIContextSuggestion', () => {
   describe('auto mode', () => {
     it('should auto-switch when confidence > 60%', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'social',
+        suggestedContext: ContextType.Social,
         confidence: 0.65,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto' },
-        'work'
+        { mode: ContextSwitchMode.Auto },
+        ContextType.Work
       );
 
       expect(result).toBe(true);
@@ -136,14 +140,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should auto-switch with high confidence', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0.95,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto' },
-        'work'
+        { mode: ContextSwitchMode.Auto },
+        ContextType.Work
       );
 
       expect(result).toBe(true);
@@ -152,14 +156,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should not auto-switch when confidence <= 60%', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.6,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto' },
-        'work'
+        { mode: ContextSwitchMode.Auto },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -168,14 +172,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should not switch when confidence is very low', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'social',
+        suggestedContext: ContextType.Social,
         confidence: 0.3,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto' },
-        'work'
+        { mode: ContextSwitchMode.Auto },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -185,14 +189,14 @@ describe('handleAIContextSuggestion', () => {
   describe('context matching', () => {
     it('should not switch if already in suggested context', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'work',
+        suggestedContext: ContextType.Work,
         confidence: 0.95,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto' },
-        'work'
+        { mode: ContextSwitchMode.Auto },
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -200,14 +204,14 @@ describe('handleAIContextSuggestion', () => {
 
     it('should not switch in suggest mode if contexts match', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.9,
       };
 
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest' },
-        'personal'
+        { mode: ContextSwitchMode.Suggest },
+        ContextType.Personal
       );
 
       expect(result).toBe(false);
@@ -218,20 +222,20 @@ describe('handleAIContextSuggestion', () => {
     it('should handle exact confidence thresholds', () => {
       // Suggest mode: exactly 0.8 should NOT switch (> not >=)
       const suggestionSuggest: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0.8,
       };
       expect(
         handleAIContextSuggestion(
           suggestionSuggest,
-          { mode: 'suggest' },
-          'work'
+          { mode: ContextSwitchMode.Suggest },
+          ContextType.Work
         )
       ).toBe(false);
 
       // Auto mode: exactly 0.6 should NOT switch (> not >=)
       const suggestionAuto: AIContextSuggestion = {
-        suggestedContext: 'social',
+        suggestedContext: ContextType.Social,
         confidence: 0.6,
       };
       expect(
@@ -241,7 +245,7 @@ describe('handleAIContextSuggestion', () => {
 
     it('should handle minimum and maximum confidence values', () => {
       const minConfidence: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0,
       };
       expect(
@@ -249,7 +253,7 @@ describe('handleAIContextSuggestion', () => {
       ).toBe(false);
 
       const maxConfidence: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 1,
       };
       expect(
@@ -261,7 +265,7 @@ describe('handleAIContextSuggestion', () => {
   describe('custom thresholds', () => {
     it('should respect custom suggestThreshold', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.7,
       };
 
@@ -269,7 +273,7 @@ describe('handleAIContextSuggestion', () => {
       const result = handleAIContextSuggestion(
         suggestion,
         { mode: 'suggest', suggestThreshold: 0.65 },
-        'work'
+        ContextType.Work
       );
 
       expect(result).toBe(true);
@@ -278,7 +282,7 @@ describe('handleAIContextSuggestion', () => {
 
     it('should respect custom autoThreshold', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'social',
+        suggestedContext: ContextType.Social,
         confidence: 0.5,
       };
 
@@ -286,7 +290,7 @@ describe('handleAIContextSuggestion', () => {
       const result = handleAIContextSuggestion(
         suggestion,
         { mode: 'auto', autoThreshold: 0.4 },
-        'work'
+        ContextType.Work
       );
 
       expect(result).toBe(true);
@@ -295,7 +299,7 @@ describe('handleAIContextSuggestion', () => {
 
     it('should use default thresholds when not specified', () => {
       const suggestionSuggest: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0.75,
       };
 
@@ -303,13 +307,13 @@ describe('handleAIContextSuggestion', () => {
       expect(
         handleAIContextSuggestion(
           suggestionSuggest,
-          { mode: 'suggest' },
-          'work'
+          { mode: ContextSwitchMode.Suggest },
+          ContextType.Work
         )
       ).toBe(false);
 
       const suggestionAuto: AIContextSuggestion = {
-        suggestedContext: 'personal',
+        suggestedContext: ContextType.Personal,
         confidence: 0.55,
       };
 
@@ -321,7 +325,7 @@ describe('handleAIContextSuggestion', () => {
 
     it('should handle higher custom thresholds', () => {
       const suggestion: AIContextSuggestion = {
-        suggestedContext: 'rest',
+        suggestedContext: ContextType.Rest,
         confidence: 0.85,
       };
 
@@ -329,7 +333,7 @@ describe('handleAIContextSuggestion', () => {
       const result = handleAIContextSuggestion(
         suggestion,
         { mode: 'suggest', suggestThreshold: 0.9 },
-        'work'
+        ContextType.Work
       );
 
       expect(result).toBe(false);
@@ -342,7 +346,7 @@ describe('showContextSwitchNotification', () => {
   it('should call toast.success with correct message', () => {
     const toastSpy = vi.spyOn(toast, 'success');
 
-    showContextSwitchNotification('personal');
+    showContextSwitchNotification(ContextType.Personal);
 
     expect(toastSpy).toHaveBeenCalledWith('Switched to Personal context', {
       duration: 2000,
@@ -354,17 +358,17 @@ describe('showContextSwitchNotification', () => {
   it('should display correct label for each context type', () => {
     const toastSpy = vi.spyOn(toast, 'success');
 
-    showContextSwitchNotification('work');
+    showContextSwitchNotification(ContextType.Work);
     expect(toastSpy).toHaveBeenCalledWith('Switched to Work context', {
       duration: 2000,
     });
 
-    showContextSwitchNotification('rest');
+    showContextSwitchNotification(ContextType.Rest);
     expect(toastSpy).toHaveBeenCalledWith('Switched to Rest context', {
       duration: 2000,
     });
 
-    showContextSwitchNotification('social');
+    showContextSwitchNotification(ContextType.Social);
     expect(toastSpy).toHaveBeenCalledWith('Switched to Social context', {
       duration: 2000,
     });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setContextTheme, getCurrentContext } from './context-theme';
-import type { ContextType } from '@/types/context';
+import { ContextType } from '@/types/context';
 
 describe('setContextTheme', () => {
   // Mock CSS custom properties that would be defined in colors.css
@@ -39,7 +39,7 @@ describe('setContextTheme', () => {
   });
 
   it('should update CSS custom properties when context changes', () => {
-    setContextTheme('work');
+    setContextTheme(ContextType.Work);
 
     const root = document.documentElement;
     expect(root.style.getPropertyValue('--color-context-current')).toBe(
@@ -54,7 +54,7 @@ describe('setContextTheme', () => {
   });
 
   it('should set data-context attribute', () => {
-    setContextTheme('personal');
+    setContextTheme(ContextType.Personal);
 
     expect(document.documentElement.getAttribute('data-context')).toBe(
       'personal'
@@ -68,19 +68,40 @@ describe('setContextTheme', () => {
     global.document = undefined;
 
     // Should not throw
-    expect(() => setContextTheme('work')).not.toThrow();
+    expect(() => setContextTheme(ContextType.Work)).not.toThrow();
 
     // Restore document
     global.document = originalDocument;
   });
 
   it('should apply correct hover/active states for all contexts', () => {
-    const contexts: ContextType[] = ['work', 'personal', 'rest', 'social'];
+    const contexts: ContextType[] = [
+      ContextType.Work,
+      ContextType.Personal,
+      ContextType.Rest,
+      ContextType.Social,
+    ];
     const expectedColors = {
-      work: { base: '#3B82F6', hover: '#60A5FA', active: '#93C5FD' },
-      personal: { base: '#F97316', hover: '#FB923C', active: '#FDBA74' },
-      rest: { base: '#A855F7', hover: '#C084FC', active: '#D8B4FE' },
-      social: { base: '#10B981', hover: '#34D399', active: '#6EE7B7' },
+      [ContextType.Work]: {
+        base: '#3B82F6',
+        hover: '#60A5FA',
+        active: '#93C5FD',
+      },
+      [ContextType.Personal]: {
+        base: '#F97316',
+        hover: '#FB923C',
+        active: '#FDBA74',
+      },
+      [ContextType.Rest]: {
+        base: '#A855F7',
+        hover: '#C084FC',
+        active: '#D8B4FE',
+      },
+      [ContextType.Social]: {
+        base: '#10B981',
+        hover: '#34D399',
+        active: '#6EE7B7',
+      },
     };
 
     contexts.forEach((context) => {
@@ -100,10 +121,10 @@ describe('setContextTheme', () => {
   });
 
   it('should update when switching between contexts', () => {
-    setContextTheme('work');
+    setContextTheme(ContextType.Work);
     expect(document.documentElement.getAttribute('data-context')).toBe('work');
 
-    setContextTheme('rest');
+    setContextTheme(ContextType.Rest);
     expect(document.documentElement.getAttribute('data-context')).toBe('rest');
     expect(
       document.documentElement.style.getPropertyValue('--color-context-current')
@@ -121,7 +142,7 @@ describe('getCurrentContext', () => {
   });
 
   it('should return the current context from data attribute', () => {
-    setContextTheme('personal');
+    setContextTheme(ContextType.Personal);
     expect(getCurrentContext()).toBe('personal');
   });
 
@@ -136,10 +157,10 @@ describe('getCurrentContext', () => {
   });
 
   it('should reflect context changes', () => {
-    setContextTheme('work');
+    setContextTheme(ContextType.Work);
     expect(getCurrentContext()).toBe('work');
 
-    setContextTheme('social');
+    setContextTheme(ContextType.Social);
     expect(getCurrentContext()).toBe('social');
   });
 });
