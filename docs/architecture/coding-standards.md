@@ -469,4 +469,44 @@ class FlowCreate(BaseModel):
 - **Type safety**: mypy catches invalid enum usage
 - **Documentation**: OpenAPI spec shows allowed values
 
+**Cross-language enum naming conventions:**
+
+Python and TypeScript use different casing for enum members, but serialize to the same JSON values:
+
+```python
+# Python: UPPER_SNAKE for enum members (PEP 8)
+class FlowPriority(str, Enum):
+    LOW = "low"       # Member name: UPPER_SNAKE
+    MEDIUM = "medium"
+    HIGH = "high"
+
+# Usage in Python
+priority = FlowPriority.HIGH  # FlowPriority.HIGH
+```
+
+```typescript
+// TypeScript: PascalCase for enum members (TypeScript convention)
+enum FlowPriority {
+  Low = 'low',      // Member name: PascalCase
+  Medium = 'medium',
+  High = 'high'
+}
+
+// Usage in TypeScript
+const priority = FlowPriority.High;  // FlowPriority.High
+```
+
+**JSON serialization (identical):**
+```json
+{
+  "priority": "high"
+}
+```
+
+**Key points:**
+- Member names differ (Python: `HIGH`, TypeScript: `High`)
+- String values match exactly (both: `"high"`)
+- API contract uses string values, so it's consistent
+- Each language follows its own naming convention
+
 ---
