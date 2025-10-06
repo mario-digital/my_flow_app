@@ -157,10 +157,10 @@ export function FlowListInteractive({ initialFlows }) {
 
 ### 7. **Enum Usage for Type Safety**
 
-**Rule:** ALWAYS use TypeScript enums or const enums for fixed value sets. NEVER use hardcoded string literals for states, statuses, types, or categories.
+**Rule:** ALWAYS use TypeScript enums or const enums for fixed value sets. Prefer enums over union type literals for better developer experience.
 
 ```typescript
-// ❌ WRONG: Hardcoded string literals
+// ❌ DISCOURAGED: Union type literals (no autocomplete, harder refactoring)
 interface Flow {
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'in_progress' | 'completed';
@@ -171,7 +171,7 @@ const flow = {
   status: 'completed'
 };
 
-// ✅ CORRECT: Use enums for type safety
+// ✅ PREFERRED: Use enums for autocomplete and type safety
 enum FlowPriority {
   Low = 'low',
   Medium = 'medium',
