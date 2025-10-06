@@ -115,7 +115,9 @@ describe('ContextSwitcher', () => {
 
     // Click on Personal context
     const personalOption = screen.getAllByText('Personal')[0];
-    await user.click(personalOption);
+    if (personalOption) {
+      await user.click(personalOption);
+    }
 
     // Should call handler with correct ID
     expect(handleChange).toHaveBeenCalledWith('ctx-personal-456');
