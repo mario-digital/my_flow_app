@@ -7,25 +7,25 @@ MongoDB Indexes Required:
 """
 
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class ContextBase(BaseModel):
     """Base schema for context entities."""
     name: str = Field(..., min_length=1, max_length=50)
-    color: str = Field(..., pattern=r'^#[0-9A-Fa-f]{6}$')
+    color: str = Field(..., pattern=r"^#[0-9A-Fa-f]{6}$")
     icon: str = Field(..., min_length=1, max_length=10)
 
 
 class ContextCreate(ContextBase):
     """Schema for creating a context."""
-    pass
 
 
 class ContextUpdate(BaseModel):
     """Schema for updating a context (partial)."""
     name: str | None = Field(None, min_length=1, max_length=50)
-    color: str | None = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     icon: str | None = Field(None, min_length=1, max_length=10)
 
 
@@ -52,12 +52,11 @@ class ContextInDB(ContextBase):
         },
     )
 
-    @field_serializer('id')
-    def serialize_id(self, v):
+    @field_serializer("id")
+    def serialize_id(self, v: str) -> str:
         """Serialize ObjectId to string for JSON responses."""
         return str(v)
 
 
 class ContextResponse(ContextInDB):
     """Schema for context API responses."""
-    pass

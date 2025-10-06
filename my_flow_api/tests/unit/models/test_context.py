@@ -1,15 +1,15 @@
 """Unit tests for Context Pydantic models."""
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from src.models.context import (
-    ContextBase,
     ContextCreate,
-    ContextUpdate,
     ContextInDB,
     ContextResponse,
+    ContextUpdate,
 )
 
 

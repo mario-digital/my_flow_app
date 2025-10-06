@@ -1,17 +1,17 @@
 """Unit tests for Flow Pydantic models."""
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from src.models.flow import (
-    FlowPriority,
-    FlowStatus,
-    FlowBase,
     FlowCreate,
-    FlowUpdate,
     FlowInDB,
+    FlowPriority,
     FlowResponse,
+    FlowStatus,
+    FlowUpdate,
     FlowWithStatus,
 )
 
@@ -62,7 +62,7 @@ class TestFlowCreate:
 
     def test_valid_flow_create_all_fields(self):
         """Test creating a valid flow with all fields."""
-        due_date = datetime(2025, 10, 15, 17, 0, 0, tzinfo=timezone.utc)
+        due_date = datetime(2025, 10, 15, 17, 0, 0, tzinfo=UTC)
         data = {
             "context_id": "507f1f77bcf86cd799439022",
             "title": "Complete documentation",
@@ -159,7 +159,7 @@ class TestFlowCreate:
 
     def test_due_date_timezone_aware_required(self):
         """Test validation fails for naive datetime (no timezone)."""
-        naive_datetime = datetime(2025, 10, 15, 17, 0, 0)
+        naive_datetime = datetime(2025, 10, 15, 17, 0, 0)  # noqa: DTZ001
         data = {
             "context_id": "507f1f77bcf86cd799439022",
             "title": "Complete documentation",
@@ -171,7 +171,7 @@ class TestFlowCreate:
 
     def test_due_date_timezone_aware_valid(self):
         """Test timezone-aware datetime is valid."""
-        aware_datetime = datetime(2025, 10, 15, 17, 0, 0, tzinfo=timezone.utc)
+        aware_datetime = datetime(2025, 10, 15, 17, 0, 0, tzinfo=UTC)
         data = {
             "context_id": "507f1f77bcf86cd799439022",
             "title": "Complete documentation",
@@ -210,7 +210,7 @@ class TestFlowUpdate:
 
     def test_partial_update_all_fields(self):
         """Test updating all fields."""
-        due_date = datetime(2025, 10, 15, 17, 0, 0, tzinfo=timezone.utc)
+        due_date = datetime(2025, 10, 15, 17, 0, 0, tzinfo=UTC)
         data = {
             "title": "Updated title",
             "description": "Updated description",
@@ -243,7 +243,7 @@ class TestFlowUpdate:
 
     def test_update_validates_due_date_timezone(self):
         """Test update validates due_date timezone when provided."""
-        naive_datetime = datetime(2025, 10, 15, 17, 0, 0)
+        naive_datetime = datetime(2025, 10, 15, 17, 0, 0)  # noqa: DTZ001
         data = {"due_date": naive_datetime}
         with pytest.raises(ValidationError) as exc_info:
             FlowUpdate(**data)
@@ -263,10 +263,10 @@ class TestFlowInDB:
             "description": "Write comprehensive API docs",
             "priority": FlowPriority.HIGH,
             "is_completed": False,
-            "due_date": datetime(2025, 10, 15, 17, 0, 0, tzinfo=timezone.utc),
+            "due_date": datetime(2025, 10, 15, 17, 0, 0, tzinfo=UTC),
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
             "completed_at": None,
         }
         flow = FlowInDB(**data)
@@ -286,8 +286,8 @@ class TestFlowInDB:
             "priority": FlowPriority.MEDIUM,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         flow = FlowInDB(**data)
         assert flow.id == "507f1f77bcf86cd799439011"
@@ -302,8 +302,8 @@ class TestFlowInDB:
             "priority": FlowPriority.HIGH,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         flow = FlowInDB(**data)
         flow_dict = flow.model_dump()
@@ -322,8 +322,8 @@ class TestFlowInDB:
             "priority": FlowPriority.HIGH,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         flow = FlowInDB(**data)
         json_str = flow.model_dump_json()
@@ -340,8 +340,8 @@ class TestFlowInDB:
             "title": "Complete documentation",
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         flow = FlowInDB(**data)
         assert flow.priority == FlowPriority.MEDIUM
@@ -360,8 +360,8 @@ class TestFlowResponse:
             "priority": FlowPriority.HIGH,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         response = FlowResponse(**data)
         assert response.id == "507f1f77bcf86cd799439011"
@@ -381,8 +381,8 @@ class TestFlowWithStatus:
             "priority": FlowPriority.HIGH,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
             "status": FlowStatus.DUE_SOON,
             "days_until_due": 5,
         }
@@ -400,8 +400,8 @@ class TestFlowWithStatus:
             "priority": FlowPriority.MEDIUM,
             "is_completed": False,
             "reminder_enabled": True,
-            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
-            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 10, 5, 10, 0, 0, tzinfo=UTC),
         }
         flow = FlowWithStatus(**data)
         assert flow.status is None

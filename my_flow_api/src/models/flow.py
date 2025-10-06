@@ -8,6 +8,7 @@ MongoDB Indexes Required:
 
 from datetime import datetime
 from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 
@@ -34,12 +35,13 @@ class FlowBase(BaseModel):
     due_date: datetime | None = None
     reminder_enabled: bool = True
 
-    @field_validator('due_date')
+    @field_validator("due_date")
     @classmethod
     def ensure_timezone_aware(cls, v: datetime | None) -> datetime | None:
         """Validate that due_date includes timezone info (UTC required)."""
         if v is not None and v.tzinfo is None:
-            raise ValueError('due_date must be timezone-aware (UTC recommended)')
+            msg = "due_date must be timezone-aware (UTC recommended)"
+            raise ValueError(msg)
         return v
 
 
@@ -56,12 +58,13 @@ class FlowUpdate(BaseModel):
     due_date: datetime | None = None
     reminder_enabled: bool | None = None
 
-    @field_validator('due_date')
+    @field_validator("due_date")
     @classmethod
     def ensure_timezone_aware(cls, v: datetime | None) -> datetime | None:
         """Validate that due_date includes timezone info (UTC required)."""
         if v is not None and v.tzinfo is None:
-            raise ValueError('due_date must be timezone-aware (UTC recommended)')
+            msg = "due_date must be timezone-aware (UTC recommended)"
+            raise ValueError(msg)
         return v
 
 
@@ -96,15 +99,14 @@ class FlowInDB(FlowBase):
         },
     )
 
-    @field_serializer('id')
-    def serialize_id(self, v):
+    @field_serializer("id")
+    def serialize_id(self, v: str) -> str:
         """Serialize ObjectId to string for JSON responses."""
         return str(v)
 
 
 class FlowResponse(FlowInDB):
     """Schema for flow API responses."""
-    pass
 
 
 class FlowWithStatus(FlowInDB):
