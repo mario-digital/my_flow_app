@@ -239,7 +239,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0.6,
       };
       expect(
-        handleAIContextSuggestion(suggestionAuto, { mode: 'auto' }, 'work')
+        handleAIContextSuggestion(
+          suggestionAuto,
+          { mode: ContextSwitchMode.Auto },
+          ContextType.Work
+        )
       ).toBe(false);
     });
 
@@ -249,7 +253,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 0,
       };
       expect(
-        handleAIContextSuggestion(minConfidence, { mode: 'auto' }, 'work')
+        handleAIContextSuggestion(
+          minConfidence,
+          { mode: ContextSwitchMode.Auto },
+          ContextType.Work
+        )
       ).toBe(false);
 
       const maxConfidence: AIContextSuggestion = {
@@ -257,7 +265,11 @@ describe('handleAIContextSuggestion', () => {
         confidence: 1,
       };
       expect(
-        handleAIContextSuggestion(maxConfidence, { mode: 'auto' }, 'work')
+        handleAIContextSuggestion(
+          maxConfidence,
+          { mode: ContextSwitchMode.Auto },
+          ContextType.Work
+        )
       ).toBe(true);
     });
   });
@@ -272,7 +284,7 @@ describe('handleAIContextSuggestion', () => {
       // With custom threshold of 0.65, confidence 0.7 should trigger switch
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest', suggestThreshold: 0.65 },
+        { mode: ContextSwitchMode.Suggest, suggestThreshold: 0.65 },
         ContextType.Work
       );
 
@@ -289,7 +301,7 @@ describe('handleAIContextSuggestion', () => {
       // With custom threshold of 0.4, confidence 0.5 should trigger switch
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'auto', autoThreshold: 0.4 },
+        { mode: ContextSwitchMode.Auto, autoThreshold: 0.4 },
         ContextType.Work
       );
 
@@ -319,7 +331,11 @@ describe('handleAIContextSuggestion', () => {
 
       // Should not switch (default auto threshold is 0.6)
       expect(
-        handleAIContextSuggestion(suggestionAuto, { mode: 'auto' }, 'work')
+        handleAIContextSuggestion(
+          suggestionAuto,
+          { mode: ContextSwitchMode.Auto },
+          ContextType.Work
+        )
       ).toBe(false);
     });
 
@@ -332,7 +348,7 @@ describe('handleAIContextSuggestion', () => {
       // With high threshold of 0.9, confidence 0.85 should NOT trigger switch
       const result = handleAIContextSuggestion(
         suggestion,
-        { mode: 'suggest', suggestThreshold: 0.9 },
+        { mode: ContextSwitchMode.Suggest, suggestThreshold: 0.9 },
         ContextType.Work
       );
 

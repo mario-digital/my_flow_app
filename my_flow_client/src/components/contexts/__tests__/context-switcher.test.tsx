@@ -184,7 +184,8 @@ describe('ContextSwitcher', () => {
     const options = screen.getAllByRole('option');
     const workOption = options.find((opt) => opt.textContent?.includes('Work'));
 
-    expect(workOption).toHaveAttribute('aria-current', 'true');
+    expect(workOption).toBeDefined();
+    expect(workOption!).toHaveAttribute('aria-current', 'true');
   });
 
   it('sorts contexts by most recently used (updated_at descending)', async () => {
@@ -206,10 +207,10 @@ describe('ContextSwitcher', () => {
     const options = screen.getAllByRole('option');
 
     // Expected order: Work (10-05), Personal (10-04), Rest (10-03), Social (10-02)
-    expect(options[0].textContent).toContain('Work');
-    expect(options[1].textContent).toContain('Personal');
-    expect(options[2].textContent).toContain('Rest');
-    expect(options[3].textContent).toContain('Social');
+    expect(options[0]?.textContent).toContain('Work');
+    expect(options[1]?.textContent).toContain('Personal');
+    expect(options[2]?.textContent).toContain('Rest');
+    expect(options[3]?.textContent).toContain('Social');
   });
 
   it('has no accessibility violations', async () => {
