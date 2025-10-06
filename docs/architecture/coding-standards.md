@@ -155,7 +155,84 @@ export function FlowListInteractive({ initialFlows }) {
 }
 ```
 
-### 7. **Database Query Patterns**
+### 7. **Enum Usage for Type Safety**
+
+**Rule:** ALWAYS use TypeScript enums or const enums for fixed value sets. NEVER use hardcoded string literals for states, statuses, types, or categories.
+
+```typescript
+// ❌ WRONG: Hardcoded string literals
+interface Flow {
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in_progress' | 'completed';
+}
+
+const flow = {
+  priority: 'high',  // Typo risk: 'hihg', 'High', etc.
+  status: 'completed'
+};
+
+// ✅ CORRECT: Use enums for type safety
+enum FlowPriority {
+  Low = 'low',
+  Medium = 'medium',
+  High = 'high'
+}
+
+enum FlowStatus {
+  Pending = 'pending',
+  InProgress = 'in_progress',
+  Completed = 'completed'
+}
+
+interface Flow {
+  priority: FlowPriority;
+  status: FlowStatus;
+}
+
+const flow = {
+  priority: FlowPriority.High,  // Autocomplete, no typos
+  status: FlowStatus.Completed
+};
+```
+
+**When to use enums:**
+- Fixed sets of values (statuses, priorities, types, categories)
+- API response types that won't change frequently
+- UI states (loading, success, error, idle)
+- Button variants, sizes, or themes
+- Any value set that appears in multiple files
+
+**Enum organization:**
+```typescript
+// src/types/enums.ts
+export enum FlowPriority {
+  Low = 'low',
+  Medium = 'medium',
+  High = 'high'
+}
+
+export enum FlowStatus {
+  Pending = 'pending',
+  InProgress = 'in_progress',
+  Completed = 'completed'
+}
+
+export enum ContextType {
+  Work = 'work',
+  Personal = 'personal',
+  Rest = 'rest',
+  Social = 'social'
+}
+```
+
+**Benefits:**
+- **Autocomplete**: IDE suggests all valid values
+- **Type safety**: Prevents typos and invalid values
+- **Refactoring**: Rename enum value updates all usages
+- **Discoverability**: Easy to find all possible values
+- **Consistency**: Enforces same casing/spelling across codebase
+
+### 8. **Database Query Patterns**
 
 **Rule:** All MongoDB queries MUST use repository pattern with proper error handling.
 
@@ -343,5 +420,53 @@ from src.middleware.auth import get_current_user
 **All mappings are defined in `my_flow_client/src/app/globals.css` in the `@theme` block - verify there before using.**
 
 **See [`docs/token-system-update-2.0.md`](../token-system-update-2.0.md) for complete migration guide.**
+
+### 9. **Backend Enum Usage (Python)**
+
+**Rule:** Python backend MUST also use Enum classes for fixed value sets, matching frontend TypeScript enums.
+
+```python
+# ❌ WRONG: String literals
+from typing import Literal
+
+Priority = Literal["low", "medium", "high"]
+
+def create_flow(priority: Priority):
+    if priority == "high":  # Typo risk
+        ...
+
+# ✅ CORRECT: Use Python Enum
+from enum import Enum
+
+class FlowPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+def create_flow(priority: FlowPriority):
+    if priority == FlowPriority.HIGH:  # Type-safe
+        ...
+```
+
+**Pydantic integration:**
+```python
+from pydantic import BaseModel
+from enum import Enum
+
+class FlowPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+class FlowCreate(BaseModel):
+    title: str
+    priority: FlowPriority = FlowPriority.MEDIUM  # Default with enum
+```
+
+**Benefits:**
+- **API consistency**: Frontend and backend use same string values
+- **Validation**: Pydantic validates enum values automatically
+- **Type safety**: mypy catches invalid enum usage
+- **Documentation**: OpenAPI spec shows allowed values
 
 ---
