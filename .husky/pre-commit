@@ -32,6 +32,9 @@ fi
 
 # Backend checks (only if backend files staged AND directory exists)
 if [ "$BACKEND_STAGED" = "true" ] && [ -d "my_flow_api" ]; then
+  echo "🧹 Linting backend..."
+  uv run --project my_flow_api ruff check my_flow_api/src/ my_flow_api/tests/ || { echo "❌ Backend lint failed"; exit 1; }
+
   echo "🐍 Type checking backend..."
   PYTHONPATH=./my_flow_api uv run --project my_flow_api mypy my_flow_api/src/ || { echo "❌ Backend type check failed"; exit 1; }
 elif [ "$BACKEND_STAGED" = "true" ]; then
