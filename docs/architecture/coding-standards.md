@@ -375,7 +375,7 @@ from src.middleware.auth import get_current_user
 
 7. **Consistent Naming Conventions:** Reduces cognitive load for AI agents. `snake_case` for Python/DB, `camelCase` for JS functions, `PascalCase` for classes/components.
 
-8. **CSS Design Tokens System:** All colors, spacing, typography, and effects use CSS custom properties in a 3-layer hierarchy (Primitive → Semantic → Component). This ensures consistent theming, enables dynamic context switching, and prevents hardcoded values. **CRITICAL:** Never add new tokens without UX approval. See [`docs/ux-design-tokens/css-tokens-usage.md`](../ux-design-tokens/css-tokens-usage.md) for complete usage guide.
+8. **CSS Design Tokens System:** All colors, spacing, typography, and effects use CSS custom properties in a 3-layer hierarchy (Primitive → Semantic → Component). Token files are organized in `my_flow_client/src/app/styles/tokens/` (colors.css, animation.css, effects.css, spacing.css, typography.css). This ensures consistent theming, enables dynamic context switching, and prevents hardcoded values. **CRITICAL:** Never add new tokens without UX approval. See [`docs/ux-design-tokens/component-styling-guide.md`](../ux-design-tokens/component-styling-guide.md) for complete implementation guide and [`docs/ux-design-tokens/css-tokens-usage.md`](../ux-design-tokens/css-tokens-usage.md) for usage reference.
 
 ### 8. **Tailwind CSS Variable Usage**
 
@@ -423,7 +423,7 @@ from src.middleware.auth import get_current_user
 
 **All mappings are defined in `my_flow_client/src/app/globals.css` in the `@theme` block - verify there before using.**
 
-**See [`docs/token-system-update-2.0.md`](../token-system-update-2.0.md) for complete migration guide.**
+**See [`docs/ux-design-tokens/component-styling-guide.md`](../ux-design-tokens/component-styling-guide.md) for complete styling guide.**
 
 ### 9. **Backend Enum Usage (Python)**
 
