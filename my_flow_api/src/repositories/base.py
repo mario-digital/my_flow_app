@@ -5,17 +5,14 @@ Provides generic CRUD methods for all repository implementations.
 """
 
 from datetime import UTC, datetime
-from typing import Generic, TypeVar
 
 from bson import ObjectId
 from bson.errors import InvalidId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pydantic import BaseModel
 
-ModelType = TypeVar("ModelType", bound=BaseModel)
 
-
-class BaseRepository(Generic[ModelType]):
+class BaseRepository[ModelType: BaseModel]:
     """
     Generic base repository with common CRUD operations.
 
