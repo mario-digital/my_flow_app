@@ -22,7 +22,7 @@ class BaseRepository[ModelType: BaseModel]:
 
     def __init__(
         self,
-        db: AsyncIOMotorDatabase,
+        db: AsyncIOMotorDatabase,  # type: ignore[type-arg]
         collection_name: str,
         model: type[ModelType],
     ) -> None:
@@ -73,7 +73,7 @@ class BaseRepository[ModelType: BaseModel]:
         doc = await self.collection.find_one({"_id": obj_id})
         return self.model(**doc) if doc else None
 
-    async def create(self, data: dict) -> ModelType:
+    async def create(self, data: dict[str, object]) -> ModelType:
         """
         Insert new document with timestamps.
 
@@ -89,9 +89,12 @@ class BaseRepository[ModelType: BaseModel]:
 
         result = await self.collection.insert_one(data)
         doc = await self.collection.find_one({"_id": result.inserted_id})
+        if doc is None:
+            msg = f"Failed to retrieve created document with ID {result.inserted_id}"
+            raise RuntimeError(msg)
         return self.model(**doc)
 
-    async def update(self, doc_id: str, data: dict) -> ModelType | None:
+    async def update(self, doc_id: str, data: dict[str, object]) -> ModelType | None:
         """
         Update document by ID.
 
