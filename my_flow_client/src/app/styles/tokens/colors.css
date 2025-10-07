@@ -63,7 +63,11 @@
   --color-bg-elevated: var(
     --primitive-slate-800
   ); /* #1e293b - highest elevation */
-  --color-bg-overlay: color-mix(in srgb, var(--color-bg-primary) 60%, transparent); /* 60% opacity for modals */
+  --color-bg-overlay: color-mix(
+    in srgb,
+    var(--color-bg-primary) 60%,
+    transparent
+  ); /* 60% opacity for modals */
 
   /* Text - Refined hierarchy */
   --color-text-primary: var(--primitive-white); /* #fafafa - main text */
@@ -220,7 +224,11 @@
   --badge-border: var(--color-border-subtle);
 
   /* Context Badge - Shows context color */
-  --badge-context-bg: color-mix(in srgb, var(--color-context-current) 10%, transparent);
+  --badge-context-bg: color-mix(
+    in srgb,
+    var(--color-context-current) 10%,
+    transparent
+  );
   --badge-context-text: var(--color-context-current);
   --badge-context-border: var(--color-context-current);
 
