@@ -18,7 +18,7 @@ class ContextRepository(BaseRepository[ContextInDB]):
     All operations include user ownership checks for security.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase) -> None:
+    def __init__(self, db: AsyncIOMotorDatabase) -> None:  # type: ignore[type-arg]
         """
         Initialize ContextRepository.
 
@@ -27,7 +27,9 @@ class ContextRepository(BaseRepository[ContextInDB]):
         """
         super().__init__(db, "contexts", ContextInDB)
 
-    async def create(self, user_id: str, context_data: ContextCreate) -> ContextInDB:
+    async def create(  # type: ignore[override]
+        self, user_id: str, context_data: ContextCreate
+    ) -> ContextInDB:
         """
         Create new context with user ownership.
 
@@ -42,9 +44,7 @@ class ContextRepository(BaseRepository[ContextInDB]):
         data["user_id"] = user_id
         return await super().create(data)
 
-    async def get_by_id(
-        self, context_id: str, user_id: str
-    ) -> ContextInDB | None:
+    async def get_by_id(self, context_id: str, user_id: str) -> ContextInDB | None:
         """
         Get context by ID with ownership check.
 
@@ -59,9 +59,7 @@ class ContextRepository(BaseRepository[ContextInDB]):
         if not obj_id:
             return None
 
-        doc = await self.collection.find_one(
-            {"_id": obj_id, "user_id": user_id}
-        )
+        doc = await self.collection.find_one({"_id": obj_id, "user_id": user_id})
         return ContextInDB(**doc) if doc else None
 
     async def get_all_by_user(self, user_id: str) -> list[ContextInDB]:
@@ -78,13 +76,11 @@ class ContextRepository(BaseRepository[ContextInDB]):
             List of contexts sorted by most recent first, limited to
             MAX_CONTEXTS_PER_USER entries
         """
-        cursor = self.collection.find({"user_id": user_id}).sort(
-            "created_at", -1
-        )
+        cursor = self.collection.find({"user_id": user_id}).sort("created_at", -1)
         docs = await cursor.to_list(length=settings.MAX_CONTEXTS_PER_USER)
         return [ContextInDB(**doc) for doc in docs]
 
-    async def update(
+    async def update(  # type: ignore[override]
         self,
         context_id: str,
         user_id: str,
@@ -108,9 +104,7 @@ class ContextRepository(BaseRepository[ContextInDB]):
             return None
 
         # Only include non-None fields in update
-        data = {
-            k: v for k, v in updates.model_dump().items() if v is not None
-        }
+        data = {k: v for k, v in updates.model_dump().items() if v is not None}
         if not data:
             # No fields to update, return current document
             return await self.get_by_id(context_id, user_id)
@@ -124,7 +118,9 @@ class ContextRepository(BaseRepository[ContextInDB]):
         )
         return ContextInDB(**result) if result else None
 
-    async def delete(self, context_id: str, user_id: str) -> bool:
+    async def delete(  # type: ignore[override]
+        self, context_id: str, user_id: str
+    ) -> bool:
         """
         Delete context with ownership check.
 
@@ -139,7 +135,5 @@ class ContextRepository(BaseRepository[ContextInDB]):
         if not obj_id:
             return False
 
-        result = await self.collection.delete_one(
-            {"_id": obj_id, "user_id": user_id}
-        )
+        result = await self.collection.delete_one({"_id": obj_id, "user_id": user_id})
         return result.deleted_count > 0
