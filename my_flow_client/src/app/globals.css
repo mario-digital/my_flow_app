@@ -43,61 +43,60 @@
   --leading-loose: var(--token-line-height-loose);
 
   /* ========================================
-     COLORS - Reference colors.css tokens
+     COLORS - Reference colors.css tokens for Tailwind utilities
      Maps to Tailwind's bg-*, text-*, border-* utilities
      ======================================== */
 
   /* Backgrounds - Maps to bg-* utilities */
-  --color-bg-primary: var(--primitive-black-900);
-  --color-bg-secondary: var(--primitive-black-800);
-  --color-bg-tertiary: var(--primitive-black-700);
-  --color-bg-elevated: var(--primitive-slate-800);
-  --color-bg-overlay: rgba(10, 10, 10, 0.6);
+  --color-bg-primary: var(--color-bg-primary);
+  --color-bg-secondary: var(--color-bg-secondary);
+  --color-bg-tertiary: var(--color-bg-tertiary);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-bg-overlay: var(--color-bg-overlay);
 
   /* Text Colors - Maps to text-* utilities */
-  --color-text-primary: var(--primitive-white);
-  --color-text-secondary: var(--primitive-slate-400);
-  --color-text-muted: var(--primitive-slate-500);
-  --color-text-disabled: var(--primitive-neutral-600);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-disabled: var(--color-text-disabled);
 
   /* Border Colors - Maps to border-* utilities */
-  --color-border: var(--primitive-neutral-600);
-  --color-border-default: var(--primitive-slate-700);
-  --color-border-subtle: var(--primitive-slate-800);
-  --color-border-hover: var(--primitive-slate-600);
-  --color-border-focus: var(--primitive-work);
+  --color-border-default: var(--color-border-default);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-border-hover: var(--color-border-hover);
+  --color-border-focus: var(--color-border-focus);
 
   /* Context Colors - Maps to context-* utilities */
-  --color-context: var(--primitive-work);
-  --color-context-current: var(--primitive-work);
-  --color-context-hover: var(--primitive-work-hover);
-  --color-context-work: var(--primitive-work);
-  --color-context-personal: var(--primitive-personal);
-  --color-context-rest: var(--primitive-rest);
-  --color-context-social: var(--primitive-social);
+  --color-context: var(--color-context-current);
+  --color-context-current: var(--color-context-current);
+  --color-context-hover: var(--color-context-current-hover);
+  --color-context-work: var(--color-context-work);
+  --color-context-personal: var(--color-context-personal);
+  --color-context-rest: var(--color-context-rest);
+  --color-context-social: var(--color-context-social);
 
   /* Semantic Colors - Maps to success-*, warning-*, error-* utilities */
-  --color-success: var(--primitive-success);
-  --color-success-bg: rgba(34, 197, 94, 0.1);
-  --color-warning: var(--primitive-warning);
-  --color-warning-bg: rgba(234, 179, 8, 0.1);
-  --color-error: var(--primitive-error);
-  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
+  --color-warning: var(--color-warning);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
 
   /* Component Colors - Cards */
-  --color-card: var(--primitive-black-800);
-  --color-card-bg: var(--primitive-black-800);
-  --color-card-bg-hover: var(--primitive-black-700);
-  --color-card-border: var(--primitive-slate-800);
-  --color-card-text: var(--primitive-white);
+  --color-card: var(--card-bg);
+  --color-card-bg: var(--card-bg);
+  --color-card-bg-hover: var(--card-bg-hover);
+  --color-card-border: var(--card-border);
+  --color-card-text: var(--card-text);
 
   /* Component Colors - Inputs */
-  --color-input-bg: var(--primitive-black-800);
-  --color-input-border: var(--primitive-slate-700);
-  --color-input-border-hover: var(--primitive-slate-600);
-  --color-input-border-focus: var(--primitive-work);
-  --color-input-text: var(--primitive-white);
-  --color-input-placeholder: var(--primitive-slate-500);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-input-border-hover: var(--input-border-hover);
+  --color-input-border-focus: var(--input-border-focus);
+  --color-input-text: var(--input-text);
+  --color-input-placeholder: var(--input-placeholder);
 
   /* ========================================
      SPACING - Reference spacing.css tokens

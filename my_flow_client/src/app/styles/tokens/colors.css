@@ -63,7 +63,7 @@
   --color-bg-elevated: var(
     --primitive-slate-800
   ); /* #1e293b - highest elevation */
-  --color-bg-overlay: rgba(10, 10, 10, 0.6); /* 60% opacity for modals */
+  --color-bg-overlay: color-mix(in srgb, var(--color-bg-primary) 60%, transparent); /* 60% opacity for modals */
 
   /* Text - Refined hierarchy */
   --color-text-primary: var(--primitive-white); /* #fafafa - main text */
@@ -77,9 +77,6 @@
   --color-text-inverse: var(--primitive-black-900); /* For light backgrounds */
 
   /* Borders - Subtle and refined */
-  --color-border: var(
-    --primitive-neutral-600
-  ); /* Legacy - kept for backward compatibility */
   --color-border-default: var(
     --primitive-slate-700
   ); /* #334155 - default borders */
@@ -99,11 +96,11 @@
 
   /* Semantic Feedback */
   --color-success: var(--primitive-success);
-  --color-success-bg: rgba(34, 197, 94, 0.1);
+  --color-success-bg: color-mix(in srgb, var(--color-success) 10%, transparent);
   --color-warning: var(--primitive-warning);
-  --color-warning-bg: rgba(234, 179, 8, 0.1);
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 10%, transparent);
   --color-error: var(--primitive-error);
-  --color-error-bg: rgba(239, 68, 68, 0.1);
+  --color-error-bg: color-mix(in srgb, var(--color-error) 10%, transparent);
 
   /* ========================================
      COMPONENT COLORS (Layer 3)
@@ -135,14 +132,14 @@
 
   /* Danger Button - Destructive actions */
   --button-bg-danger: transparent;
-  --button-text-danger: var(--primitive-error);
-  --button-border-danger: var(--primitive-error);
-  --button-bg-danger-hover: rgba(239, 68, 68, 0.1);
+  --button-text-danger: var(--color-error);
+  --button-border-danger: var(--color-error);
+  --button-bg-danger-hover: var(--color-error-bg);
 
   /* Context Button - Only for context-switching actions */
   --button-bg-context: var(--color-context-current);
   --button-bg-context-hover: var(--color-context-current-hover);
-  --button-text-context: var(--primitive-white);
+  --button-text-context: var(--color-text-primary);
 
   /* ========================================
      FORM COMPONENTS
@@ -223,7 +220,7 @@
   --badge-border: var(--color-border-subtle);
 
   /* Context Badge - Shows context color */
-  --badge-context-bg: rgba(99, 102, 241, 0.1); /* Transparent context color */
+  --badge-context-bg: color-mix(in srgb, var(--color-context-current) 10%, transparent);
   --badge-context-text: var(--color-context-current);
   --badge-context-border: var(--color-context-current);
 
@@ -248,6 +245,6 @@
   --message-bg-user: var(--color-context-current);
   --message-bg-ai: var(--color-bg-secondary);
   --message-bg-system: var(--color-bg-tertiary);
-  --message-text-user: var(--primitive-white);
+  --message-text-user: var(--color-text-primary);
   --message-text-ai: var(--color-text-primary);
 }
