@@ -8,7 +8,7 @@ export async function Navigation(): Promise<JSX.Element> {
   const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
   return (
-    <nav className="border-b border-border bg-bg-primary">
+    <nav className="border-b border-border-default bg-bg-primary">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="text-xl font-bold text-text-primary">
           MyFlow
@@ -25,7 +25,7 @@ export async function Navigation(): Promise<JSX.Element> {
                   await signOut(logtoConfig);
                 }}
               >
-                <Button variant="outline" type="submit">
+                <Button variant="secondary" type="submit">
                   Sign Out
                 </Button>
               </form>

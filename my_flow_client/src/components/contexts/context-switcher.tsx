@@ -41,11 +41,11 @@ export function ContextSwitcher({
         className={cn(
           'relative w-full sm:w-[240px] flex items-center justify-between gap-2',
           'rounded-lg px-4 py-2.5',
-          'bg-bg-secondary border border-border',
+          'bg-bg-secondary border border-border-default',
           'text-text-primary',
           'hover:bg-bg-tertiary',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-context focus-visible:ring-offset-2',
-          'transition-colors duration-150',
+          'transition-colors duration-fast',
           className
         )}
         aria-label="Select context"
@@ -72,7 +72,7 @@ export function ContextSwitcher({
       <SelectContent
         className={cn(
           'absolute z-10 mt-1 w-full sm:w-[240px] max-h-60 overflow-auto',
-          'rounded-lg border border-border',
+          'rounded-lg border border-border-default',
           'bg-bg-secondary shadow-lg',
           'focus:outline-none'
         )}

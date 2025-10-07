@@ -47,31 +47,36 @@
      Maps to Tailwind's bg-*, text-*, border-* utilities
      ======================================== */
 
-  /* Backgrounds - Use --color-* namespace */
+  /* Backgrounds - Maps to bg-* utilities */
   --color-bg-primary: var(--primitive-black-900);
   --color-bg-secondary: var(--primitive-black-800);
   --color-bg-tertiary: var(--primitive-black-700);
+  --color-bg-elevated: var(--primitive-slate-800);
   --color-bg-overlay: rgba(10, 10, 10, 0.6);
 
-  /* Text Colors */
+  /* Text Colors - Maps to text-* utilities */
   --color-text-primary: var(--primitive-white);
-  --color-text-secondary: var(--primitive-neutral-400);
-  --color-text-muted: var(--primitive-neutral-500);
+  --color-text-secondary: var(--primitive-slate-400);
+  --color-text-muted: var(--primitive-slate-500);
   --color-text-disabled: var(--primitive-neutral-600);
 
-  /* Border Colors */
-  --color-border-default: var(--primitive-neutral-600);
-  --color-border-hover: var(--primitive-neutral-500);
+  /* Border Colors - Maps to border-* utilities */
+  --color-border: var(--primitive-neutral-600);
+  --color-border-default: var(--primitive-slate-700);
+  --color-border-subtle: var(--primitive-slate-800);
+  --color-border-hover: var(--primitive-slate-600);
   --color-border-focus: var(--primitive-work);
 
-  /* Context Colors */
+  /* Context Colors - Maps to context-* utilities */
+  --color-context: var(--primitive-work);
   --color-context-current: var(--primitive-work);
+  --color-context-hover: var(--primitive-work-hover);
   --color-context-work: var(--primitive-work);
   --color-context-personal: var(--primitive-personal);
   --color-context-rest: var(--primitive-rest);
   --color-context-social: var(--primitive-social);
 
-  /* Semantic Colors */
+  /* Semantic Colors - Maps to success-*, warning-*, error-* utilities */
   --color-success: var(--primitive-success);
   --color-success-bg: rgba(34, 197, 94, 0.1);
   --color-warning: var(--primitive-warning);
@@ -79,39 +84,20 @@
   --color-error: var(--primitive-error);
   --color-error-bg: rgba(239, 68, 68, 0.1);
 
-  /* Component Colors - Buttons */
-  /* Primary Button */
-  --color-button-primary: var(--primitive-work);
-  --color-button-primary-hover: var(--primitive-work-hover);
-  --color-button-primary-active: var(--primitive-work-active);
-  --color-button-text-primary: var(--primitive-white);
-
-  /* Danger/Destructive Button */
-  --color-button-danger: var(--primitive-error);
-  --color-button-danger-hover: var(--primitive-error-hover);
-  --color-button-danger-active: var(--primitive-error-active);
-  --color-button-text-danger: var(--primitive-white);
-
-  /* Secondary Button */
-  --color-button-secondary: var(--primitive-black-700);
-  --color-button-text-secondary: var(--primitive-white);
-  --color-button-border-secondary: var(--primitive-neutral-500);
-  --color-button-border-secondary-hover: var(--primitive-work);
-
-  /* Ghost Button */
-  --color-button-ghost: transparent;
-  --color-button-text-ghost: var(--primitive-neutral-400);
-  --color-button-text-ghost-hover: var(--primitive-white);
-
   /* Component Colors - Cards */
+  --color-card: var(--primitive-black-800);
   --color-card-bg: var(--primitive-black-800);
   --color-card-bg-hover: var(--primitive-black-700);
-  --color-card-border: var(--primitive-neutral-600);
+  --color-card-border: var(--primitive-slate-800);
+  --color-card-text: var(--primitive-white);
 
   /* Component Colors - Inputs */
   --color-input-bg: var(--primitive-black-800);
-  --color-input-border: var(--primitive-neutral-600);
+  --color-input-border: var(--primitive-slate-700);
+  --color-input-border-hover: var(--primitive-slate-600);
   --color-input-border-focus: var(--primitive-work);
+  --color-input-text: var(--primitive-white);
+  --color-input-placeholder: var(--primitive-slate-500);
 
   /* ========================================
      SPACING - Reference spacing.css tokens

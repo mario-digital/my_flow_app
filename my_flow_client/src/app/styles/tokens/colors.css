@@ -54,21 +54,35 @@
 
   /* Backgrounds - Deeper, more refined */
   --color-bg-primary: var(--primitive-black-900); /* #0a0a0a - deepest black */
-  --color-bg-secondary: var(--primitive-black-800); /* #1a1a1a - cards, panels */
-  --color-bg-tertiary: var(--primitive-black-700); /* #2a2a2a - elevated elements */
-  --color-bg-elevated: var(--primitive-slate-800); /* #1e293b - highest elevation */
+  --color-bg-secondary: var(
+    --primitive-black-800
+  ); /* #1a1a1a - cards, panels */
+  --color-bg-tertiary: var(
+    --primitive-black-700
+  ); /* #2a2a2a - elevated elements */
+  --color-bg-elevated: var(
+    --primitive-slate-800
+  ); /* #1e293b - highest elevation */
   --color-bg-overlay: rgba(10, 10, 10, 0.6); /* 60% opacity for modals */
 
   /* Text - Refined hierarchy */
   --color-text-primary: var(--primitive-white); /* #fafafa - main text */
-  --color-text-secondary: var(--primitive-slate-400); /* #94a3b8 - secondary text */
+  --color-text-secondary: var(
+    --primitive-slate-400
+  ); /* #94a3b8 - secondary text */
   --color-text-muted: var(--primitive-slate-500); /* #64748b - muted text */
-  --color-text-disabled: var(--primitive-neutral-600); /* #404040 - disabled state */
+  --color-text-disabled: var(
+    --primitive-neutral-600
+  ); /* #404040 - disabled state */
   --color-text-inverse: var(--primitive-black-900); /* For light backgrounds */
 
   /* Borders - Subtle and refined */
-  --color-border: var(--primitive-neutral-600); /* Legacy - kept for backward compatibility */
-  --color-border-default: var(--primitive-slate-700); /* #334155 - default borders */
+  --color-border: var(
+    --primitive-neutral-600
+  ); /* Legacy - kept for backward compatibility */
+  --color-border-default: var(
+    --primitive-slate-700
+  ); /* #334155 - default borders */
   --color-border-subtle: var(--primitive-slate-800); /* #1e293b - very subtle */
   --color-border-hover: var(--primitive-slate-600); /* #475569 - hover state */
   --color-border-focus: var(--color-context-current);
