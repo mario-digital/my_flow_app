@@ -3,7 +3,7 @@
      PRIMITIVE COLORS (Layer 1)
      ======================================== */
 
-  /* Neutrals */
+  /* Neutrals - Black scale */
   --primitive-black-900: #0a0a0a;
   --primitive-black-800: #1a1a1a;
   --primitive-black-700: #2a2a2a;
@@ -12,22 +12,34 @@
   --primitive-neutral-400: #a3a3a3;
   --primitive-white: #fafafa;
 
-  /* Context Colors (with hover/active states for full browser compatibility) */
-  --primitive-work: #3b82f6;
-  --primitive-work-hover: #60a5fa; /* 10% lighter for hover */
-  --primitive-work-active: #93c5fd; /* 20% lighter for active */
+  /* Enhanced neutral palette - Slate scale for sophisticated UI */
+  --primitive-slate-50: #f8fafc;
+  --primitive-slate-100: #f1f5f9;
+  --primitive-slate-200: #e2e8f0;
+  --primitive-slate-300: #cbd5e1;
+  --primitive-slate-400: #94a3b8;
+  --primitive-slate-500: #64748b;
+  --primitive-slate-600: #475569;
+  --primitive-slate-700: #334155;
+  --primitive-slate-800: #1e293b;
+  --primitive-slate-900: #0f172a;
 
-  --primitive-personal: #f97316;
-  --primitive-personal-hover: #fb923c; /* 10% lighter for hover */
-  --primitive-personal-active: #fdba74; /* 20% lighter for active */
+  /* Context Colors - Refined sophisticated palette */
+  --primitive-work: #6366f1; /* Indigo - professional, focused */
+  --primitive-work-hover: #818cf8;
+  --primitive-work-active: #a5b4fc;
 
-  --primitive-rest: #a855f7;
-  --primitive-rest-hover: #c084fc; /* 10% lighter for hover */
-  --primitive-rest-active: #d8b4fe; /* 20% lighter for active */
+  --primitive-personal: #f59e0b; /* Amber - warm, personal */
+  --primitive-personal-hover: #fbbf24;
+  --primitive-personal-active: #fcd34d;
 
-  --primitive-social: #10b981;
-  --primitive-social-hover: #34d399; /* 10% lighter for hover */
-  --primitive-social-active: #6ee7b7; /* 20% lighter for active */
+  --primitive-rest: #8b5cf6; /* Violet - calm, restorative */
+  --primitive-rest-hover: #a78bfa;
+  --primitive-rest-active: #c4b5fd;
+
+  --primitive-social: #10b981; /* Emerald - vibrant, connective */
+  --primitive-social-hover: #34d399;
+  --primitive-social-active: #6ee7b7;
 
   /* Semantic Colors (with hover states) */
   --primitive-success: #22c55e;
@@ -40,22 +52,25 @@
      SEMANTIC COLORS (Layer 2)
      ======================================== */
 
-  /* Backgrounds */
-  --color-bg-primary: var(--primitive-black-900);
-  --color-bg-secondary: var(--primitive-black-800);
-  --color-bg-tertiary: var(--primitive-black-700);
+  /* Backgrounds - Deeper, more refined */
+  --color-bg-primary: var(--primitive-black-900); /* #0a0a0a - deepest black */
+  --color-bg-secondary: var(--primitive-black-800); /* #1a1a1a - cards, panels */
+  --color-bg-tertiary: var(--primitive-black-700); /* #2a2a2a - elevated elements */
+  --color-bg-elevated: var(--primitive-slate-800); /* #1e293b - highest elevation */
   --color-bg-overlay: rgba(10, 10, 10, 0.6); /* 60% opacity for modals */
 
-  /* Text */
-  --color-text-primary: var(--primitive-white);
-  --color-text-secondary: var(--primitive-neutral-400);
-  --color-text-muted: var(--primitive-neutral-500);
-  --color-text-disabled: var(--primitive-neutral-600);
+  /* Text - Refined hierarchy */
+  --color-text-primary: var(--primitive-white); /* #fafafa - main text */
+  --color-text-secondary: var(--primitive-slate-400); /* #94a3b8 - secondary text */
+  --color-text-muted: var(--primitive-slate-500); /* #64748b - muted text */
+  --color-text-disabled: var(--primitive-neutral-600); /* #404040 - disabled state */
   --color-text-inverse: var(--primitive-black-900); /* For light backgrounds */
 
-  /* Borders */
-  --color-border: var(--primitive-neutral-600);
-  --color-border-hover: var(--primitive-neutral-500);
+  /* Borders - Subtle and refined */
+  --color-border: var(--primitive-neutral-600); /* Legacy - kept for backward compatibility */
+  --color-border-default: var(--primitive-slate-700); /* #334155 - default borders */
+  --color-border-subtle: var(--primitive-slate-800); /* #1e293b - very subtle */
+  --color-border-hover: var(--primitive-slate-600); /* #475569 - hover state */
   --color-border-focus: var(--color-context-current);
 
   /* Context - Dynamic (controlled via JavaScript) */
@@ -80,45 +95,140 @@
      COMPONENT COLORS (Layer 3)
      ======================================== */
 
-  /* Buttons - Using pre-calculated hover/active colors for full browser compatibility */
-  --button-bg-primary: var(--color-context-current);
-  --button-bg-primary-hover: var(--color-context-current-hover);
-  --button-bg-primary-active: var(--color-context-current-active);
-  --button-text-primary: var(--primitive-white);
+  /* ========================================
+     BUTTON COMPONENTS - Neutral First Approach
+     ======================================== */
 
+  /* Primary Button - Neutral with glow */
+  --button-bg-primary: var(--color-bg-tertiary);
+  --button-bg-primary-hover: var(--color-bg-elevated);
+  --button-text-primary: var(--color-text-primary);
+  --button-border-primary: var(--color-border-default);
+  --button-border-primary-hover: var(--color-context-current);
+  --button-glow-primary-hover: 0 0 0 1px var(--color-context-current);
+
+  /* Secondary Button - Outlined */
   --button-bg-secondary: transparent;
-  --button-border-secondary: var(--color-border);
-  --button-border-secondary-hover: var(--color-context-current);
   --button-text-secondary: var(--color-text-primary);
+  --button-border-secondary: var(--color-border-default);
+  --button-border-secondary-hover: var(--color-context-current);
 
+  /* Ghost Button - Minimal */
   --button-bg-ghost: transparent;
+  --button-bg-ghost-hover: var(--color-bg-tertiary);
   --button-text-ghost: var(--color-text-secondary);
   --button-text-ghost-hover: var(--color-text-primary);
 
-  --button-bg-danger: var(--color-error);
-  --button-bg-danger-hover: var(--primitive-error-hover);
-  --button-bg-danger-active: var(--primitive-error-active);
-  --button-text-danger: var(--primitive-white);
+  /* Danger Button - Destructive actions */
+  --button-bg-danger: transparent;
+  --button-text-danger: var(--primitive-error);
+  --button-border-danger: var(--primitive-error);
+  --button-bg-danger-hover: rgba(239, 68, 68, 0.1);
 
-  /* Inputs */
+  /* Context Button - Only for context-switching actions */
+  --button-bg-context: var(--color-context-current);
+  --button-bg-context-hover: var(--color-context-current-hover);
+  --button-text-context: var(--primitive-white);
+
+  /* ========================================
+     FORM COMPONENTS
+     ======================================== */
+
+  /* Input Fields */
   --input-bg: var(--color-bg-secondary);
-  --input-border: var(--color-border);
+  --input-border: var(--color-border-default);
   --input-border-hover: var(--color-border-hover);
   --input-border-focus: var(--color-context-current);
   --input-text: var(--color-text-primary);
   --input-placeholder: var(--color-text-muted);
+  --input-shadow-focus: 0 0 0 2px var(--color-context-current);
 
-  /* Cards */
+  /* ========================================
+     CARD COMPONENTS
+     ======================================== */
+
+  /* Standard Card */
   --card-bg: var(--color-bg-secondary);
   --card-bg-hover: var(--color-bg-tertiary);
-  --card-border: var(--color-border);
-  --card-border-active: var(--color-context-current);
+  --card-border: var(--color-border-subtle);
+  --card-text: var(--color-text-primary);
 
-  /* Flow Cards */
-  --flow-bg: var(--card-bg);
-  --flow-bg-hover: var(--card-bg-hover);
-  --flow-border-left: var(--color-context-current); /* 3px accent border */
-  --flow-text-completed: var(--color-text-muted);
+  /* Flow Card - With context accent */
+  --flow-card-bg: var(--color-bg-secondary);
+  --flow-card-bg-hover: var(--color-bg-tertiary);
+  --flow-card-border: var(--color-border-subtle);
+  --flow-card-border-left: var(--color-context-current);
+  --flow-card-border-left-width: 3px;
+  --flow-card-text: var(--color-text-primary);
+  --flow-card-text-completed: var(--color-text-muted);
+
+  /* Context Card - For context switcher */
+  --context-card-bg: var(--color-bg-secondary);
+  --context-card-bg-hover: var(--color-bg-tertiary);
+  --context-card-bg-active: var(--color-bg-elevated);
+  --context-card-border: var(--color-border-subtle);
+  --context-card-indicator: var(--color-context-current);
+
+  /* ========================================
+     NAVIGATION COMPONENTS
+     ======================================== */
+
+  /* Navigation Items */
+  --nav-item-text: var(--color-text-secondary);
+  --nav-item-text-hover: var(--color-text-primary);
+  --nav-item-text-active: var(--color-text-primary);
+  --nav-item-bg-hover: var(--color-bg-tertiary);
+  --nav-item-bg-active: var(--color-bg-elevated);
+  --nav-item-indicator: var(--color-context-current);
+
+  /* ========================================
+     OVERLAY COMPONENTS
+     ======================================== */
+
+  /* Modal/Dialog */
+  --modal-bg: var(--color-bg-secondary);
+  --modal-border: var(--color-border-default);
+  --modal-backdrop: var(--color-bg-overlay);
+
+  /* Dropdown/Popover */
+  --dropdown-bg: var(--color-bg-secondary);
+  --dropdown-border: var(--color-border-default);
+  --dropdown-item-hover: var(--color-bg-tertiary);
+
+  /* Tooltip */
+  --tooltip-bg: var(--color-bg-elevated);
+  --tooltip-text: var(--color-text-primary);
+
+  /* ========================================
+     FEEDBACK COMPONENTS
+     ======================================== */
+
+  /* Badge/Pill */
+  --badge-bg: var(--color-bg-tertiary);
+  --badge-text: var(--color-text-secondary);
+  --badge-border: var(--color-border-subtle);
+
+  /* Context Badge - Shows context color */
+  --badge-context-bg: rgba(99, 102, 241, 0.1); /* Transparent context color */
+  --badge-context-text: var(--color-context-current);
+  --badge-context-border: var(--color-context-current);
+
+  /* Alert - Success/Warning/Error */
+  --alert-success-bg: var(--color-success-bg);
+  --alert-success-text: var(--color-success);
+  --alert-success-border: var(--color-success);
+
+  --alert-warning-bg: var(--color-warning-bg);
+  --alert-warning-text: var(--color-warning);
+  --alert-warning-border: var(--color-warning);
+
+  --alert-error-bg: var(--color-error-bg);
+  --alert-error-text: var(--color-error);
+  --alert-error-border: var(--color-error);
+
+  /* ========================================
+     SPECIAL COMPONENTS
+     ======================================== */
 
   /* Message Bubbles */
   --message-bg-user: var(--color-context-current);

@@ -32,6 +32,7 @@
   --token-shadow-card-hover: var(--token-shadow-md);
   --token-shadow-modal: var(--token-shadow-xl);
   --token-shadow-dropdown: var(--token-shadow-lg);
+  --token-shadow-tooltip: var(--token-shadow-lg);
 
   /* Z-index scale - Token prefix to avoid Tailwind @theme conflicts */
   --token-z-base: 0;
