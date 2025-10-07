@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX } from 'react';
+import type { JSX, CSSProperties } from 'react';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 import {
   Select,
@@ -57,8 +57,12 @@ export function ContextSwitcher({
             </span>
             <span className="font-medium truncate">{currentContext.name}</span>
             <div
-              className="w-3 h-3 rounded-full flex-shrink-0 ml-auto"
-              style={{ backgroundColor: currentContext.color }}
+              className="w-3 h-3 rounded-full flex-shrink-0 ml-auto bg-[var(--context-indicator)]"
+              style={
+                {
+                  '--context-indicator': currentContext.color,
+                } as React.CSSProperties
+              }
               aria-hidden="true"
             />
           </div>
@@ -109,8 +113,10 @@ export function ContextSwitcher({
                   {context.name}
                 </span>
                 <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: context.color }}
+                  className="w-3 h-3 rounded-full flex-shrink-0 bg-[var(--context-indicator)]"
+                  style={
+                    { '--context-indicator': context.color } as CSSProperties
+                  }
                   aria-hidden="true"
                 />
                 {selected && (
