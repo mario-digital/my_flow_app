@@ -12,39 +12,33 @@ describe('Button', () => {
     render(<Button data-testid="button">Default Button</Button>);
     const button = screen.getByTestId('button');
 
-    // Should have default variant classes
-    expect(button.className).toContain('bg-button-primary');
+    // Should have neutral-first default variant classes
+    expect(button.className).toContain('bg-bg-tertiary');
   });
 
   it('should apply destructive variant styles', () => {
     const className = buttonVariants({ variant: 'destructive' });
-    expect(className).toContain('bg-button-danger');
-    expect(className).toContain('text-button-text-danger');
-    expect(className).toContain('hover:bg-button-danger-hover');
-  });
-
-  it('should apply outline variant styles', () => {
-    const className = buttonVariants({ variant: 'outline' });
-    expect(className).toContain('border-button-border-secondary');
-    expect(className).toContain('bg-button-secondary');
-    expect(className).toContain('text-button-text-secondary');
+    expect(className).toContain('bg-transparent');
+    expect(className).toContain('text-error');
+    expect(className).toContain('border-error');
   });
 
   it('should apply secondary variant styles', () => {
     const className = buttonVariants({ variant: 'secondary' });
-    expect(className).toContain('bg-bg-secondary');
+    expect(className).toContain('bg-transparent');
     expect(className).toContain('text-text-primary');
+    expect(className).toContain('border-border-default');
   });
 
   it('should apply ghost variant styles', () => {
     const className = buttonVariants({ variant: 'ghost' });
-    expect(className).toContain('bg-button-ghost');
-    expect(className).toContain('text-button-text-ghost');
+    expect(className).toContain('bg-transparent');
+    expect(className).toContain('text-text-secondary');
   });
 
   it('should apply link variant styles', () => {
     const className = buttonVariants({ variant: 'link' });
-    expect(className).toContain('text-context');
+    expect(className).toContain('text-context-current');
   });
 
   it('should use CSS design tokens instead of hardcoded colors', () => {
@@ -52,10 +46,10 @@ describe('Button', () => {
     const variants = [
       'default',
       'destructive',
-      'outline',
       'secondary',
       'ghost',
       'link',
+      'context',
     ] as const;
 
     variants.forEach((variant) => {
@@ -64,10 +58,8 @@ describe('Button', () => {
       // Should NOT contain hardcoded colors
       expect(className).not.toMatch(/\sbg-blue-\d+/);
       expect(className).not.toMatch(/\sbg-red-\d+/);
-      expect(className).not.toMatch(/\stext-white\s/);
 
       // Should use Tailwind utility classes that map to design tokens
-      // (bg-button-primary, text-text-primary, etc.)
       expect(className).toBeTruthy();
     });
   });
@@ -92,19 +84,20 @@ describe('Button', () => {
     expect(link).toHaveAttribute('href', '/test');
   });
 
-  it('should use context-current color for focus ring', () => {
+  it('should include focus styles', () => {
     const className = buttonVariants();
-    expect(className).toContain('focus-visible:ring-context');
+    expect(className).toContain('focus-visible:outline-none');
   });
 
   it('should include hover and active states for primary variant', () => {
     const className = buttonVariants({ variant: 'default' });
-    expect(className).toContain('hover:bg-button-primary-hover');
-    expect(className).toContain('active:bg-button-primary-active');
+    expect(className).toContain('hover:bg-bg-elevated');
+    expect(className).toContain('active:scale-[0.98]');
   });
 
-  it('should include shadow styles using design tokens', () => {
-    const className = buttonVariants({ variant: 'default' });
-    expect(className).toContain('shadow-sm');
+  it('should include context button variant', () => {
+    const className = buttonVariants({ variant: 'context' });
+    expect(className).toContain('bg-context-current');
+    expect(className).toContain('font-semibold');
   });
 });
