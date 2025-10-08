@@ -26,17 +26,17 @@ type ContextCreate = components['schemas']['ContextCreate'];
 type ContextUpdate = components['schemas']['ContextUpdate'];
 
 type CreateContextMutationContext = {
-  previousContexts?: Context[];
-  tempId?: string;
+  previousContexts: Context[];
+  tempId: string;
 };
 
 type UpdateContextMutationContext = {
   previousContext?: Context;
-  previousContexts?: Context[];
+  previousContexts: Context[];
 };
 
 type DeleteContextMutationContext = {
-  previousContexts?: Context[];
+  previousContexts: Context[];
 };
 
 /**
@@ -119,7 +119,7 @@ export function useContexts(): UseQueryResult<Context[], Error> {
     throw new Error('useContexts requires an authenticated user');
   }
 
-  return useQuery({
+  return useQuery<Context[], Error>({
     queryKey: contextKeys.list(userId),
     queryFn: fetchContexts,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -157,7 +157,7 @@ export function useContexts(): UseQueryResult<Context[], Error> {
  * ```
  */
 export function useContext(id: string): UseQueryResult<Context | null, Error> {
-  return useQuery({
+  return useQuery<Context | null, Error>({
     queryKey: contextKeys.detail(id),
     queryFn: () => fetchContextById(id),
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -214,11 +214,11 @@ export function useCreateContext(): UseMutationResult<
 
     // Optimistic update: Add context to cache immediately
     onMutate: async (newContext): Promise<CreateContextMutationContext> => {
-      await queryClient.cancelQueries({ queryKey: contextKeys.list(userId) });
+      const listKey = contextKeys.list(userId);
+      await queryClient.cancelQueries({ queryKey: listKey });
 
-      const previousContexts = queryClient.getQueryData<Context[]>(
-        contextKeys.list(userId)
-      );
+      const previousContexts =
+        queryClient.getQueryData<Context[]>(listKey) ?? [];
 
       // Optimistically add new context with unique temporary ID
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -232,17 +232,15 @@ export function useCreateContext(): UseMutationResult<
         updated_at: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<Context[]>(contextKeys.list(userId), (old) => {
-        const current = old ?? [];
-        return [...current, optimisticContext];
-      });
+      const optimisticList = [...previousContexts, optimisticContext];
+      queryClient.setQueryData<Context[]>(listKey, optimisticList);
 
       return { previousContexts, tempId };
     },
 
     // On error: Rollback to previous state
     onError: (err, _newContext, context) => {
-      if (context?.previousContexts) {
+      if (context) {
         queryClient.setQueryData(
           contextKeys.list(userId),
           context.previousContexts
@@ -256,14 +254,15 @@ export function useCreateContext(): UseMutationResult<
     // On success: Replace optimistic data with server response
     onSuccess: (createdContext, _variables, context) => {
       // Replace optimistic entry (temp ID) with real server response before refetch
-      queryClient.setQueryData<Context[]>(contextKeys.list(userId), (old) => {
-        const current = old ?? [];
-        return context?.tempId
-          ? current.map((ctx) =>
-              ctx.id === context.tempId ? createdContext : ctx
-            )
-          : [...current, createdContext];
-      });
+      const listKey = contextKeys.list(userId);
+      const cachedList = queryClient.getQueryData<Context[]>(listKey) ?? [];
+      const nextList = cachedList.map((ctx) =>
+        context && ctx.id === context.tempId ? createdContext : ctx
+      );
+      if (!context) {
+        nextList.push(createdContext);
+      }
+      queryClient.setQueryData<Context[]>(listKey, nextList);
 
       void queryClient.invalidateQueries({ queryKey: contextKeys.lists() });
       toast.success(CONTEXT_MESSAGES.createSuccess);
@@ -320,45 +319,41 @@ export function useUpdateContext(
 
     // Optimistic update: Update context in cache immediately
     onMutate: async (data): Promise<UpdateContextMutationContext> => {
-      await queryClient.cancelQueries({ queryKey: contextKeys.list(userId) });
-      await queryClient.cancelQueries({ queryKey: contextKeys.detail(id) });
+      const listKey = contextKeys.list(userId);
+      const detailKey = contextKeys.detail(id);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      await queryClient.cancelQueries({ queryKey: detailKey });
 
-      const previousContext = queryClient.getQueryData<Context>(
-        contextKeys.detail(id)
-      );
-      const previousContexts = queryClient.getQueryData<Context[]>(
-        contextKeys.list(userId)
-      );
+      const previousContext = queryClient.getQueryData<Context>(detailKey);
+      const previousContexts =
+        queryClient.getQueryData<Context[]>(listKey) ?? [];
 
-      // Optimistically update context in list (filter out null values from ContextUpdate)
-      queryClient.setQueryData<Context[]>(
-        contextKeys.list(userId),
-        (old) =>
-          old?.map((ctx) => {
-            if (ctx.id === id) {
-              const updates: Partial<Context> = {
-                ...(data.name != null && { name: data.name }),
-                ...(data.color != null && { color: data.color }),
-                ...(data.icon != null && { icon: data.icon }),
-                updated_at: new Date().toISOString(),
-              };
-              return { ...ctx, ...updates };
-            }
-            return ctx;
-          }) ?? []
-      );
+      const updatedList = previousContexts.map((ctx) => {
+        if (ctx.id !== id) {
+          return ctx;
+        }
 
-      // Optimistically update single context query
-      queryClient.setQueryData<Context>(contextKeys.detail(id), (old) => {
-        if (!old) return old;
         const updates: Partial<Context> = {
           ...(data.name != null && { name: data.name }),
           ...(data.color != null && { color: data.color }),
           ...(data.icon != null && { icon: data.icon }),
           updated_at: new Date().toISOString(),
         };
-        return { ...old, ...updates };
+
+        return { ...ctx, ...updates };
       });
+      queryClient.setQueryData<Context[]>(listKey, updatedList);
+
+      if (previousContext) {
+        const updates: Partial<Context> = {
+          ...(data.name != null && { name: data.name }),
+          ...(data.color != null && { color: data.color }),
+          ...(data.icon != null && { icon: data.icon }),
+          updated_at: new Date().toISOString(),
+        };
+        const optimisticDetail = { ...previousContext, ...updates };
+        queryClient.setQueryData<Context>(detailKey, optimisticDetail);
+      }
 
       return { previousContext, previousContexts };
     },
@@ -370,7 +365,7 @@ export function useUpdateContext(
           context.previousContext
         );
       }
-      if (context?.previousContexts) {
+      if (context) {
         queryClient.setQueryData(
           contextKeys.list(userId),
           context.previousContexts
@@ -382,15 +377,14 @@ export function useUpdateContext(
     },
 
     onSuccess: (updatedContext) => {
+      const listKey = contextKeys.list(userId);
       // Ensure both detail and list caches reflect server response before refetch
-      queryClient.setQueryData<Context>(
-        contextKeys.detail(id),
-        () => updatedContext
+      queryClient.setQueryData<Context>(contextKeys.detail(id), updatedContext);
+      const cachedList = queryClient.getQueryData<Context[]>(listKey) ?? [];
+      const nextList = cachedList.map((ctx) =>
+        ctx.id === id ? updatedContext : ctx
       );
-      queryClient.setQueryData<Context[]>(
-        contextKeys.list(userId),
-        (old) => old?.map((ctx) => (ctx.id === id ? updatedContext : ctx)) ?? []
-      );
+      queryClient.setQueryData<Context[]>(listKey, nextList);
 
       void queryClient.invalidateQueries({ queryKey: contextKeys.detail(id) });
       void queryClient.invalidateQueries({ queryKey: contextKeys.lists() });
@@ -440,23 +434,21 @@ export function useDeleteContext(
 
     // Optimistic update: Remove context from cache immediately
     onMutate: async (): Promise<DeleteContextMutationContext> => {
-      await queryClient.cancelQueries({ queryKey: contextKeys.list(userId) });
+      const listKey = contextKeys.list(userId);
+      await queryClient.cancelQueries({ queryKey: listKey });
 
-      const previousContexts = queryClient.getQueryData<Context[]>(
-        contextKeys.list(userId)
-      );
+      const previousContexts =
+        queryClient.getQueryData<Context[]>(listKey) ?? [];
 
       // Optimistically remove context from list
-      queryClient.setQueryData<Context[]>(
-        contextKeys.list(userId),
-        (old) => old?.filter((ctx) => ctx.id !== id) ?? []
-      );
+      const updatedList = previousContexts.filter((ctx) => ctx.id !== id);
+      queryClient.setQueryData<Context[]>(listKey, updatedList);
 
       return { previousContexts };
     },
 
     onError: (err, _variables, context) => {
-      if (context?.previousContexts) {
+      if (context) {
         queryClient.setQueryData(
           contextKeys.list(userId),
           context.previousContexts
@@ -469,10 +461,10 @@ export function useDeleteContext(
 
     onSuccess: () => {
       // Ensure caches are cleaned before invalidation
-      queryClient.setQueryData<Context[]>(
-        contextKeys.list(userId),
-        (old) => old?.filter((ctx) => ctx.id !== id) ?? []
-      );
+      const listKey = contextKeys.list(userId);
+      const cachedList = queryClient.getQueryData<Context[]>(listKey) ?? [];
+      const nextList = cachedList.filter((ctx) => ctx.id !== id);
+      queryClient.setQueryData<Context[]>(listKey, nextList);
       queryClient.removeQueries({ queryKey: contextKeys.detail(id) });
       void queryClient.invalidateQueries({ queryKey: contextKeys.lists() });
       toast.success(CONTEXT_MESSAGES.deleteSuccess);
