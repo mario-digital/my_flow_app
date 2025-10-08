@@ -614,18 +614,64 @@ async def toggle_flow_completion(
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
-from functools import lru_cache
+from datetime import datetime, timedelta
 import httpx
 from src.config import settings
 
 security = HTTPBearer()
 
-@lru_cache(maxsize=1)
-def get_logto_jwks() -> dict:
-    """Fetch and cache Logto JWKS (public keys)."""
-    response = httpx.get(f"{settings.LOGTO_ENDPOINT}/oidc/jwks")
-    response.raise_for_status()
-    return response.json()
+# JWKS cache with TTL and error handling
+_jwks_cache = {"keys": None, "expires_at": None}
+
+async def get_logto_jwks() -> dict:
+    """
+    Fetch and cache Logto JWKS (public keys) with 1-hour TTL.
+
+    Security considerations:
+    - TTL of 1 hour allows for JWKS rotation without app restart
+    - Falls back to stale cache if fetch fails (avoids auth outage)
+    - Network errors are handled gracefully
+
+    Returns:
+        dict: JWKS containing public keys
+
+    Raises:
+        HTTPException: 503 if fetch fails and no cached keys available
+    """
+    now = datetime.utcnow()
+
+    # Return cached JWKS if still valid
+    if _jwks_cache["keys"] and _jwks_cache["expires_at"] and now < _jwks_cache["expires_at"]:
+        return _jwks_cache["keys"]
+
+    # Fetch fresh JWKS asynchronously
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"{settings.LOGTO_ENDPOINT}/oidc/jwks",
+                timeout=5.0  # 5 second timeout
+            )
+            response.raise_for_status()
+            jwks = response.json()
+
+            # Update cache with 1-hour TTL
+            _jwks_cache["keys"] = jwks
+            _jwks_cache["expires_at"] = now + timedelta(hours=1)
+
+            return jwks
+
+        except (httpx.HTTPError, httpx.TimeoutException) as e:
+            # If fetch fails but we have stale cache, use it
+            if _jwks_cache["keys"]:
+                # Log warning about stale cache usage (would use logger in production)
+                print(f"WARNING: Using stale JWKS cache due to fetch error: {e}")
+                return _jwks_cache["keys"]
+
+            # No cache available - this is a critical error
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Unable to fetch authentication keys"
+            )
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -638,14 +684,18 @@ async def get_current_user(
 
     Raises:
         HTTPException: 401 if token is invalid or expired
+        HTTPException: 503 if JWKS fetch fails and no cache available
     """
     token = credentials.credentials
 
     try:
-        # Decode and verify JWT
+        # Fetch JWKS asynchronously (will use cache if valid)
+        jwks = await get_logto_jwks()
+
+        # Decode and verify JWT (synchronous operation)
         payload = jwt.decode(
             token,
-            key=get_logto_jwks(),
+            key=jwks,
             algorithms=["RS256"],
             audience=settings.LOGTO_APP_ID,
             issuer=f"{settings.LOGTO_ENDPOINT}/oidc"
