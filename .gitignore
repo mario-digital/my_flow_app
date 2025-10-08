@@ -74,6 +74,8 @@ my_flow_api/*.pid
 mongodb_data/
 data/db/
 *.lock
+!bun.lockb
+!package-lock.json
 *.wt
 WiredTiger*
 mongod.lock
