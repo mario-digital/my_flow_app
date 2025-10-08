@@ -9,7 +9,14 @@ MongoDB Indexes Required:
 from datetime import datetime
 
 from bson import ObjectId as BsonObjectId
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+)
 
 
 class ContextBase(BaseModel):
@@ -32,7 +39,11 @@ class ContextUpdate(BaseModel):
 
 class ContextInDB(ContextBase):
     """Complete context schema with DB fields."""
-    id: str = Field(..., alias="_id")
+    id: str = Field(
+        ...,
+        validation_alias=AliasChoices("_id", "id"),
+        serialization_alias="id",
+    )
     user_id: str
     created_at: datetime
     updated_at: datetime

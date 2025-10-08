@@ -12,7 +12,7 @@ import logging
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from threading import RLock
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
 import httpx
@@ -21,6 +21,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from src.config import settings
+
+if TYPE_CHECKING:
+    from src.models.context import ContextInDB
+    from src.models.flow import FlowInDB
+    from src.repositories.context_repository import ContextRepository
+    from src.repositories.flow_repository import FlowRepository
 
 # HTTPBearer security scheme for extracting Bearer tokens
 security = HTTPBearer()
@@ -136,7 +142,7 @@ def clear_jwks_cache() -> None:
 
 async def get_current_user(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security),  # noqa: B008
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> str:
     """
     Validate Logto JWT token and extract user_id.
@@ -262,3 +268,63 @@ def _token_has_required_resource(payload: Mapping[str, object]) -> bool:
         claim_values.extend(str(item) for item in resources_claim if isinstance(item, str))
 
     return expected_resource in claim_values
+
+
+# Authorization Helper Functions (DRY pattern for ownership verification)
+
+
+async def verify_context_ownership(
+    context_id: str,
+    user_id: str,
+    context_repo: ContextRepository,
+) -> ContextInDB:
+    """
+    Verify user owns the context and return it.
+
+    Args:
+        context_id: Context ID to verify
+        user_id: Current user ID from JWT
+        context_repo: ContextRepository instance
+
+    Returns:
+        ContextInDB: The context if owned by user
+
+    Raises:
+        HTTPException: 404 if context not found or not owned by user
+    """
+    context = await context_repo.get_by_id(context_id, user_id)
+    if not context:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Context not found",
+        )
+    return context
+
+
+async def verify_flow_ownership(
+    flow_id: str,
+    user_id: str,
+    flow_repo: FlowRepository,
+) -> FlowInDB:
+    """
+    Verify user owns the flow and return it.
+
+    Args:
+        flow_id: Flow ID to verify
+        user_id: Current user ID from JWT
+        flow_repo: FlowRepository instance
+
+    Returns:
+        FlowInDB: The flow if owned by user
+
+    Raises:
+        HTTPException: 404 if flow not found, 403 if not owned by user
+    """
+    flow = await flow_repo.get_by_id(flow_id, user_id)
+    if not flow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Flow not found",
+        )
+
+    return flow

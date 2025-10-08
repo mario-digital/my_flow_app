@@ -62,6 +62,8 @@ select = [
 ignore = [
     "PLW0603", # Allow global statement for database connection pattern
     "PLR2004", # Allow magic values in tests
+    "B008",    # Allow Depends() in function arguments (FastAPI dependency injection pattern)
+    "PLR0913", # Allow more than 5 function arguments (FastAPI route handlers often have many dependencies)
 ]
 
 # Allow unused variables when they start with underscore
