@@ -62,9 +62,7 @@ class FlowRepository(BaseRepository[FlowInDB]):
         data["is_completed"] = False
         return await super().create(data)
 
-    async def get_by_id(
-        self, flow_id: str, user_id: str
-    ) -> FlowInDB | None:
+    async def get_by_id(self, flow_id: str, user_id: str) -> FlowInDB | None:
         """
         Get flow by ID with ownership check.
 
@@ -82,9 +80,7 @@ class FlowRepository(BaseRepository[FlowInDB]):
         doc = await self.collection.find_one({"_id": obj_id, "user_id": user_id})
         return FlowInDB(**doc) if doc else None
 
-    async def count_by_context(
-        self, context_id: str, include_completed: bool = False
-    ) -> int:
+    async def count_by_context(self, context_id: str, include_completed: bool = False) -> int:
         """
         Count total flows for a context.
 
@@ -213,14 +209,10 @@ class FlowRepository(BaseRepository[FlowInDB]):
         if not obj_id:
             return False
 
-        result = await self.collection.delete_one(
-            {"_id": obj_id, "user_id": user_id}
-        )
+        result = await self.collection.delete_one({"_id": obj_id, "user_id": user_id})
         return result.deleted_count > 0
 
-    async def mark_complete(
-        self, flow_id: str, user_id: str
-    ) -> FlowInDB | None:
+    async def mark_complete(self, flow_id: str, user_id: str) -> FlowInDB | None:
         """
         Mark flow as completed with timestamp.
 

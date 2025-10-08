@@ -22,6 +22,7 @@ from pydantic import (
 
 class FlowPriority(str, Enum):
     """Priority levels for flows."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -29,6 +30,7 @@ class FlowPriority(str, Enum):
 
 class FlowStatus(str, Enum):
     """Status indicators for flow due dates (for future service layer use)."""
+
     OVERDUE = "overdue"
     DUE_TODAY = "due_today"
     DUE_SOON = "due_soon"
@@ -37,6 +39,7 @@ class FlowStatus(str, Enum):
 
 class FlowBase(BaseModel):
     """Base schema for flow entities."""
+
     title: str = Field(..., min_length=1, max_length=200)
     description: str | None = None
     priority: FlowPriority = FlowPriority.MEDIUM
@@ -55,11 +58,13 @@ class FlowBase(BaseModel):
 
 class FlowCreate(FlowBase):
     """Schema for creating a flow."""
+
     context_id: str
 
 
 class FlowUpdate(BaseModel):
     """Schema for updating a flow (partial)."""
+
     title: str | None = Field(None, min_length=1, max_length=200)
     description: str | None = None
     priority: FlowPriority | None = None
@@ -78,6 +83,7 @@ class FlowUpdate(BaseModel):
 
 class FlowInDB(FlowBase):
     """Complete flow schema with DB fields."""
+
     id: str = Field(
         ...,
         validation_alias=AliasChoices("_id", "id"),
@@ -106,7 +112,7 @@ class FlowInDB(FlowBase):
                 "reminder_enabled": True,
                 "created_at": "2025-10-05T10:00:00Z",
                 "updated_at": "2025-10-05T10:00:00Z",
-                "completed_at": None
+                "completed_at": None,
             }
         },
     )
@@ -131,5 +137,6 @@ class FlowResponse(FlowInDB):
 
 class FlowWithStatus(FlowInDB):
     """Flow with computed status fields for future service layer use."""
+
     status: FlowStatus | None = None
     days_until_due: int | None = None
