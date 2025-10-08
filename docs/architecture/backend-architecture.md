@@ -614,64 +614,100 @@ async def toggle_flow_completion(
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
+import asyncio
+import logging
 import httpx
 from src.config import settings
 
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
-# JWKS cache with TTL and error handling
-_jwks_cache = {"keys": None, "expires_at": None}
+# JWKS cache with TTL, error handling, thread safety, and max stale age
+_jwks_cache = {"keys": None, "expires_at": None, "cached_at": None}
+_cache_lock: asyncio.Lock | None = None
 
 async def get_logto_jwks() -> dict:
     """
     Fetch and cache Logto JWKS (public keys) with 1-hour TTL.
 
     Security considerations:
+    - Thread-safe with asyncio.Lock to prevent race conditions
+    - Lazy lock initialization to avoid RuntimeError at module load
     - TTL of 1 hour allows for JWKS rotation without app restart
     - Falls back to stale cache if fetch fails (avoids auth outage)
+    - Max stale age of 2 hours prevents using rotated-out keys indefinitely
+    - Validates JWKS structure before caching
     - Network errors are handled gracefully
 
     Returns:
         dict: JWKS containing public keys
 
     Raises:
-        HTTPException: 503 if fetch fails and no cached keys available
+        HTTPException: 503 if fetch fails and no cached keys available or stale cache too old
     """
-    now = datetime.utcnow()
+    global _cache_lock
 
-    # Return cached JWKS if still valid
+    # Lazy initialization of lock (avoids RuntimeError: no running event loop)
+    if _cache_lock is None:
+        _cache_lock = asyncio.Lock()
+
+    now = datetime.now(timezone.utc)
+
+    # Fast path: Return cached JWKS if still valid (no lock needed)
     if _jwks_cache["keys"] and _jwks_cache["expires_at"] and now < _jwks_cache["expires_at"]:
         return _jwks_cache["keys"]
 
-    # Fetch fresh JWKS asynchronously
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{settings.LOGTO_ENDPOINT}/oidc/jwks",
-                timeout=5.0  # 5 second timeout
-            )
-            response.raise_for_status()
-            jwks = response.json()
+    # Slow path: Acquire lock for cache update
+    async with _cache_lock:
+        # Double-check after acquiring lock (another request may have updated)
+        if _jwks_cache["keys"] and _jwks_cache["expires_at"] and now < _jwks_cache["expires_at"]:
+            return _jwks_cache["keys"]
 
-            # Update cache with 1-hour TTL
-            _jwks_cache["keys"] = jwks
-            _jwks_cache["expires_at"] = now + timedelta(hours=1)
+        # Fetch fresh JWKS asynchronously
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{settings.LOGTO_ENDPOINT}/oidc/jwks",
+                    timeout=5.0  # 5 second timeout
+                )
+                response.raise_for_status()
+                jwks = response.json()
 
-            return jwks
+                # Validate JWKS structure before caching
+                if not isinstance(jwks, dict) or "keys" not in jwks or not jwks["keys"]:
+                    raise ValueError("Invalid JWKS response: missing 'keys' array")
 
-        except (httpx.HTTPError, httpx.TimeoutException) as e:
-            # If fetch fails but we have stale cache, use it
-            if _jwks_cache["keys"]:
-                # Log warning about stale cache usage (would use logger in production)
-                print(f"WARNING: Using stale JWKS cache due to fetch error: {e}")
-                return _jwks_cache["keys"]
+                # Update cache with 1-hour TTL
+                _jwks_cache["keys"] = jwks
+                _jwks_cache["expires_at"] = now + timedelta(hours=1)
+                _jwks_cache["cached_at"] = now
 
-            # No cache available - this is a critical error
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Unable to fetch authentication keys"
-            )
+                return jwks
+
+            except (httpx.HTTPError, httpx.TimeoutException) as e:
+                # If fetch fails but we have stale cache, check if it's not too old
+                if _jwks_cache["keys"] and _jwks_cache["cached_at"]:
+                    stale_age = (now - _jwks_cache["cached_at"]).total_seconds()
+                    max_stale = settings.LOGTO_JWKS_MAX_STALE_SECONDS  # Default: 7200 (2 hours)
+
+                    if stale_age < max_stale:
+                        logger.warning(
+                            "Using stale JWKS cache (age: %.0f seconds) due to fetch error: %s",
+                            stale_age, str(e)
+                        )
+                        return _jwks_cache["keys"]
+                    else:
+                        logger.error(
+                            "Stale JWKS cache too old (age: %.0f seconds, max: %d seconds). Rejecting.",
+                            stale_age, max_stale
+                        )
+
+                # No cache available or stale cache too old - this is a critical error
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Unable to fetch authentication keys"
+                )
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -698,7 +734,19 @@ async def get_current_user(
             key=jwks,
             algorithms=["RS256"],
             audience=settings.LOGTO_APP_ID,
-            issuer=f"{settings.LOGTO_ENDPOINT}/oidc"
+            issuer=f"{settings.LOGTO_ENDPOINT}/oidc",
+            options={
+                "verify_signature": True,
+                "verify_aud": True,
+                "verify_iat": True,
+                "verify_exp": True,
+                "verify_nbf": True,
+                "verify_iss": True,
+                "require_aud": True,
+                "require_iat": True,
+                "require_exp": True,
+                "require_nbf": False,  # nbf is optional in Logto tokens
+            }
         )
 
         user_id: str = payload.get("sub")
