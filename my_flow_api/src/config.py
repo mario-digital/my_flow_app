@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     MONGODB_URI: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "myflow_dev"
     MAX_CONTEXTS_PER_USER: int = 100
+    MAX_FLOWS_PER_CONTEXT: int = 100
 
     # Logto Authentication Configuration
     # Defaults let local tests run without secrets; production validator enforces real values

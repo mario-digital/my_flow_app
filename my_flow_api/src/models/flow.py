@@ -9,6 +9,7 @@ MongoDB Indexes Required:
 from datetime import datetime
 from enum import Enum
 
+from bson import ObjectId as BsonObjectId
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 
@@ -98,6 +99,14 @@ class FlowInDB(FlowBase):
             }
         },
     )
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_object_id(cls, v: object) -> str:
+        """Convert MongoDB ObjectId to string."""
+        if isinstance(v, BsonObjectId):
+            return str(v)
+        return str(v) if v else ""
 
     @field_serializer("id")
     def serialize_id(self, v: str) -> str:
