@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.database import db_instance
+from src.main import app
 
 
 # Mock database lifecycle at session level to prevent TestClient from requiring real MongoDB
@@ -70,8 +71,6 @@ def cleanup_dependency_overrides():
     Ensures app.dependency_overrides dict is cleared between tests
     to prevent test contamination.
     """
-    from src.main import app
-
     yield
     # Cleanup after test
     app.dependency_overrides.clear()

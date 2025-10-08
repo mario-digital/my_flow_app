@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 import src.repositories.context_repository as context_repository_module
@@ -13,14 +13,29 @@ from src.middleware.auth import (
     verify_context_ownership,
     verify_flow_ownership,
 )
+from src.models.errors import RateLimitError
 from src.models.flow import FlowCreate, FlowInDB, FlowUpdate
 from src.models.pagination import PaginatedResponse
+from src.rate_limit import limiter
 
 if TYPE_CHECKING:
     from src.repositories.context_repository import ContextRepository
     from src.repositories.flow_repository import FlowRepository
 
 router = APIRouter(tags=["Flows"])
+
+RATE_LIMIT_RESPONSE = {
+    429: {
+        "model": RateLimitError,
+        "description": "Rate limit exceeded",
+        "headers": {
+            "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": {"type": "integer"},
+            }
+        },
+    }
+}
 
 
 async def get_context_repository(
@@ -43,9 +58,12 @@ async def get_flow_repository(
     response_model=PaginatedResponse[FlowInDB],
     summary="List flows for a context",
     description="List all flows for a context with pagination and optional completion filter",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("60/minute")
 async def list_flows(
     context_id: str,
+    request: Request,
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
@@ -59,6 +77,9 @@ async def list_flows(
     Enables UI features like progress indicators ("Showing 1-50 of 150 flows")
     and "Load More" buttons.
     """
+    # slowapi uses the request object to track rate limits
+    _ = request
+
     # Verify ownership
     await verify_context_ownership(context_id, user_id, context_repo)
 
@@ -91,14 +112,18 @@ async def list_flows(
     status_code=status.HTTP_201_CREATED,
     summary="Create a new flow",
     description="Create a new flow in a context (requires context ownership)",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("30/minute")
 async def create_flow(
+    request: Request,
     flow_data: FlowCreate,
     user_id: str = Depends(get_current_user),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
     context_repo: "ContextRepository" = Depends(get_context_repository),
 ) -> FlowInDB:
     """Create a new flow with context ownership verification."""
+    _ = request
     # Verify context ownership
     await verify_context_ownership(flow_data.context_id, user_id, context_repo)
 
@@ -117,13 +142,17 @@ async def create_flow(
     response_model=FlowInDB,
     summary="Get a single flow",
     description="Get a flow by ID (requires ownership)",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("60/minute")
 async def get_flow(
     flow_id: str,
+    request: Request,
     user_id: str = Depends(get_current_user),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> FlowInDB:
     """Get single flow by ID with ownership check."""
+    _ = request
     # Use helper to verify ownership and return flow
     return await verify_flow_ownership(flow_id, user_id, flow_repo)
 
@@ -133,14 +162,18 @@ async def get_flow(
     response_model=FlowInDB,
     summary="Update a flow",
     description="Update a flow by ID (requires ownership)",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("30/minute")
 async def update_flow(
     flow_id: str,
+    request: Request,
     updates: FlowUpdate,
     user_id: str = Depends(get_current_user),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> FlowInDB:
     """Update flow with ownership check."""
+    _ = request
     # Use helper to verify ownership
     await verify_flow_ownership(flow_id, user_id, flow_repo)
 
@@ -159,13 +192,17 @@ async def update_flow(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a flow",
     description="Delete a flow by ID (requires ownership)",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("30/minute")
 async def delete_flow(
     flow_id: str,
+    request: Request,
     user_id: str = Depends(get_current_user),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> None:
     """Delete flow with ownership check."""
+    _ = request
     # Use helper to verify ownership
     await verify_flow_ownership(flow_id, user_id, flow_repo)
 
@@ -183,13 +220,17 @@ async def delete_flow(
     response_model=FlowInDB,
     summary="Mark flow as complete",
     description="Mark a flow as completed (requires ownership)",
+    responses=RATE_LIMIT_RESPONSE,
 )
+@limiter.limit("30/minute")
 async def mark_flow_complete(
     flow_id: str,
+    request: Request,
     user_id: str = Depends(get_current_user),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> FlowInDB:
     """Mark flow as completed with timestamp."""
+    _ = request
     # Use helper to verify ownership
     await verify_flow_ownership(flow_id, user_id, flow_repo)
 
