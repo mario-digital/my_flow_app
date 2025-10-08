@@ -6,6 +6,7 @@ import {
   useQueryClient,
   type UseQueryResult,
   type UseMutationResult,
+  type QueryClient,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -194,7 +195,7 @@ export function useCreateContext(): UseMutationResult<
   ContextCreate,
   CreateContextMutationContext
 > {
-  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
+  const queryClient: QueryClient = useQueryClient();
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
@@ -301,7 +302,7 @@ export function useUpdateContext(
   ContextUpdate,
   UpdateContextMutationContext
 > {
-  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
+  const queryClient: QueryClient = useQueryClient();
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
@@ -421,7 +422,7 @@ export function useUpdateContext(
 export function useDeleteContext(
   id: string
 ): UseMutationResult<void, Error, void, DeleteContextMutationContext> {
-  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
+  const queryClient: QueryClient = useQueryClient();
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
