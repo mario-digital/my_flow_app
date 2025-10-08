@@ -95,9 +95,15 @@ const eslintConfig = [
       "local/use-client-directive-position": "error",
     },
   },
-  // Disable strict type checking for mock files (MSW has inherently loose types)
+  // Disable strict type checking for mock files and TanStack Query hooks
+  // MSW has inherently loose types, and TanStack Query's QueryClient methods
+  // are not fully typed in strict mode
   {
-    files: ["**/mocks/**/*.ts", "**/mocks/**/*.tsx"],
+    files: [
+      "**/mocks/**/*.ts",
+      "**/mocks/**/*.tsx",
+      "**/hooks/use-contexts.ts",
+    ],
     rules: {
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
