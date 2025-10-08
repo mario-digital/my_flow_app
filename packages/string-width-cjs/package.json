@@ -1,0 +1,10 @@
+{
+  "name": "string-width-cjs",
+  "version": "4.2.3",
+  "main": "index.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "dependencies": {
+    "string-width": "^4.2.3"
+  }
+}
