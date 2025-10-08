@@ -82,37 +82,34 @@ export const handlers: HttpHandler[] = [
     }
 
     // Validation: color format
-    if (!body.color || !/^#[0-9A-Fa-f]{6}$/.test(body.color)) {
+    if (!/^#[0-9A-F]{6}$/i.test(body.color)) {
       return HttpResponse.json(
-        { detail: 'Invalid color format. Use #RRGGBB hex format.' },
+        { detail: CONTEXT_MESSAGES.createError },
         { status: 400 }
       );
     }
 
-    // Validation: icon exists
-    if (!body.icon) {
-      return HttpResponse.json({ detail: 'Icon is required' }, { status: 400 });
-    }
-
-    const created: Context = {
-      ...body,
-      id: crypto.randomUUID(),
+    // Create new context
+    const newContext: Context = {
+      id: `507f${Date.now()}${Math.random().toString(36).slice(2, 9)}`,
       user_id: 'test-user-123',
+      name: body.name,
+      color: body.color,
+      icon: body.icon,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    mockContexts.push(created);
-    return HttpResponse.json(created, { status: 201 });
+    mockContexts.push(newContext);
+    return HttpResponse.json(newContext);
   }),
 
   // PUT /api/v1/contexts/:id - Update context
-  http.put('*/api/v1/contexts/:id', async ({ request, params }) => {
-    await delay(150);
-    const existingIndex = mockContexts.findIndex(
-      (ctx) => ctx.id === params['id']
-    );
-    if (existingIndex === -1) {
+  http.put('*/api/v1/contexts/:id', async ({ params, request }) => {
+    await delay(100);
+
+    const index = mockContexts.findIndex((c) => c.id === params['id']);
+    if (index === -1) {
       return HttpResponse.json(
         { detail: CONTEXT_MESSAGES.updateError },
         { status: 404 }
@@ -120,21 +117,29 @@ export const handlers: HttpHandler[] = [
     }
 
     const body = (await request.json()) as {
-      name?: string | null;
-      color?: string | null;
-      icon?: string | null;
+      name?: string;
+      color?: string;
+      icon?: string;
     };
 
-    // Validation: color format if provided
-    if (body.color && !/^#[0-9A-Fa-f]{6}$/.test(body.color)) {
+    // Validation: name length (if provided)
+    if (body.name && body.name.length > 50) {
       return HttpResponse.json(
-        { detail: 'Invalid color format. Use #RRGGBB hex format.' },
+        { detail: CONTEXT_MESSAGES.updateError },
         { status: 400 }
       );
     }
 
-    // Apply updates only if provided (partial update)
-    const existing = mockContexts[existingIndex];
+    // Validation: color format (if provided)
+    if (body.color && !/^#[0-9A-F]{6}$/i.test(body.color)) {
+      return HttpResponse.json(
+        { detail: CONTEXT_MESSAGES.updateError },
+        { status: 400 }
+      );
+    }
+
+    // Update context
+    const existing = mockContexts[index];
     if (!existing) {
       return HttpResponse.json(
         { detail: CONTEXT_MESSAGES.updateError },
@@ -142,37 +147,37 @@ export const handlers: HttpHandler[] = [
       );
     }
 
-    if (body.name != null) {
-      existing.name = body.name;
-    }
-    if (body.color != null) {
-      existing.color = body.color;
-    }
-    if (body.icon != null) {
-      existing.icon = body.icon;
-    }
-    existing.updated_at = new Date().toISOString();
-    return HttpResponse.json(mockContexts[existingIndex]);
+    mockContexts[index] = {
+      id: existing.id,
+      user_id: existing.user_id,
+      created_at: existing.created_at,
+      name: body.name ?? existing.name,
+      color: body.color ?? existing.color,
+      icon: body.icon ?? existing.icon,
+      updated_at: new Date().toISOString(),
+    };
+
+    return HttpResponse.json(mockContexts[index]);
   }),
 
   // DELETE /api/v1/contexts/:id - Delete context
   http.delete('*/api/v1/contexts/:id', async ({ params }) => {
-    await delay(120);
-    const index = mockContexts.findIndex((ctx) => ctx.id === params['id']);
+    await delay(100);
+    const index = mockContexts.findIndex((c) => c.id === params['id']);
     if (index === -1) {
       return HttpResponse.json(
         { detail: CONTEXT_MESSAGES.deleteError },
         { status: 404 }
       );
     }
+
     mockContexts.splice(index, 1);
-    return HttpResponse.json({ success: true }, { status: 200 });
+    return HttpResponse.json({ detail: CONTEXT_MESSAGES.deleteSuccess });
   }),
 ];
 
 /**
- * Reset mock contexts to initial state.
- * Useful for test isolation between test cases.
+ * Resets mock contexts to initial state between tests.
  */
 export function resetMockContexts(): void {
   mockContexts = [
@@ -204,11 +209,4 @@ export function resetMockContexts(): void {
       updated_at: '2025-10-07T12:00:00Z',
     },
   ];
-}
-
-/**
- * Get current mock contexts (for test assertions).
- */
-export function getMockContexts(): Context[] {
-  return [...mockContexts];
 }

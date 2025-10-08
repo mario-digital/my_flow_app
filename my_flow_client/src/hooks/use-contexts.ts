@@ -194,7 +194,7 @@ export function useCreateContext(): UseMutationResult<
   ContextCreate,
   CreateContextMutationContext
 > {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
@@ -301,7 +301,7 @@ export function useUpdateContext(
   ContextUpdate,
   UpdateContextMutationContext
 > {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
@@ -421,7 +421,7 @@ export function useUpdateContext(
 export function useDeleteContext(
   id: string
 ): UseMutationResult<void, Error, void, DeleteContextMutationContext> {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient() as ReturnType<typeof useQueryClient>;
   const { userId, isAuthenticated } = useCurrentUser();
 
   if (!isAuthenticated || !userId) {
