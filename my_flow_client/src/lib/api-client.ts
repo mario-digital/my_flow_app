@@ -1,5 +1,6 @@
 import { getAccessToken } from '@logto/next/server-actions';
 import { logtoConfig } from './logto';
+import { AppError } from './errors';
 
 const API_BASE_URL =
   process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8000';
@@ -92,8 +93,31 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
+    let errorMessage: string | undefined;
+    try {
+      const data = (await response.json()) as { detail?: unknown } | undefined;
+      if (data && typeof data === 'object' && 'detail' in data) {
+        const detail = (data as { detail?: unknown }).detail;
+        if (typeof detail === 'string' && detail.trim().length > 0) {
+          errorMessage = detail;
+        }
+      }
+    } catch {
+      // ignore JSON parsing errors – fall back to status text
+    }
+
+    const statusCode = response.status;
+    const statusText = response.statusText || 'Unknown Error';
+    const developerMessage = `API request failed: ${statusCode} ${statusText}`;
+
+    throw new AppError(developerMessage, statusCode, errorMessage);
   }
 
-  return response.json() as Promise<T>;
+  // Some endpoints (e.g., DELETE returning 204) may not include a JSON body.
+  // Attempt to parse JSON but fall back to undefined for empty responses.
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return undefined as T;
+  }
 }

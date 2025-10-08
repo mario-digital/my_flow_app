@@ -16,6 +16,13 @@ export default defineConfig({
         inline: ['@logto/next'],
       },
     },
+    env: {
+      NEXT_PUBLIC_LOGTO_RESOURCE: 'http://localhost:8000/api',
+      LOGTO_COOKIE_SECRET: 'test-cookie-secret-0123456789abcdef',
+      NEXT_PUBLIC_LOGTO_ENDPOINT: 'https://test.logto.dev',
+      NEXT_PUBLIC_LOGTO_APP_ID: 'test-logto-app-id',
+      LOGTO_APP_SECRET: 'test-logto-app-secret',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html', 'lcov'],

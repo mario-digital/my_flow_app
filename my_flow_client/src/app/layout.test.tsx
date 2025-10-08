@@ -1,43 +1,59 @@
 /**
  * Unit tests for root layout component.
  */
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type { ReactNode } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+vi.mock('@/components/providers/current-user-provider', () => ({
+  CurrentUserServerProvider: ({ children }: { children: ReactNode }) => (
+    <>{children}</>
+  ),
+}));
+
+vi.mock('@/components/navigation', () => ({
+  Navigation: () => <nav data-testid="navigation" />,
+}));
+
+vi.mock('sonner', () => ({
+  Toaster: () => <div data-testid="toaster" />,
+}));
+
 import RootLayout from './layout';
 
+async function renderRoot(children: ReactNode) {
+  const element = await RootLayout({ children });
+  const markup = renderToStaticMarkup(element);
+  const parser = new DOMParser();
+  return parser.parseFromString(markup, 'text/html');
+}
+
 describe('RootLayout', () => {
-  it('renders children correctly', () => {
-    render(
-      <RootLayout>
-        <div data-testid="test-child">Test Content</div>
-      </RootLayout>
+  it('renders children correctly', async () => {
+    const doc = await renderRoot(
+      <div data-testid="test-child">Test Content</div>
     );
 
-    expect(screen.getByTestId('test-child')).toBeInstanceOf(HTMLElement);
-    expect(screen.getByText('Test Content')).toBeInstanceOf(HTMLElement);
+    const child = doc.querySelector('[data-testid="test-child"]');
+    expect(child).not.toBeNull();
+    expect(child?.textContent).toBe('Test Content');
   });
 
-  it('renders as a function component', () => {
-    const result = render(
-      <RootLayout>
-        <div>Test</div>
-      </RootLayout>
-    );
+  it('renders as a function component', async () => {
+    const doc = await renderRoot(<div>Test</div>);
 
-    expect(result.container).toBeDefined();
+    expect(doc.documentElement).toBeDefined();
   });
 
-  it('accepts React node children', () => {
-    const { getByText } = render(
-      <RootLayout>
-        <main>
-          <h1>Main Content</h1>
-          <p>Paragraph</p>
-        </main>
-      </RootLayout>
+  it('accepts React node children', async () => {
+    const doc = await renderRoot(
+      <main>
+        <h1>Main Content</h1>
+        <p>Paragraph</p>
+      </main>
     );
 
-    expect(getByText('Main Content')).toBeInstanceOf(HTMLElement);
-    expect(getByText('Paragraph')).toBeInstanceOf(HTMLElement);
+    expect(doc.body.querySelector('h1')?.textContent).toBe('Main Content');
+    expect(doc.body.querySelector('p')?.textContent).toBe('Paragraph');
   });
 });

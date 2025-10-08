@@ -111,12 +111,14 @@ describe('apiRequest', () => {
     );
     const mockResponse: Response = {
       ok: false,
+      status: 404,
       statusText: 'Not Found',
+      json: async () => ({ detail: 'Not Found' }),
     } as Response;
     vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await expect(apiRequest('/test')).rejects.toThrow(
-      'API request failed: Not Found'
+      'API request failed: 404 Not Found'
     );
   });
 

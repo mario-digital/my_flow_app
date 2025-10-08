@@ -19,6 +19,19 @@ vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
+// Mock Logto server actions to avoid requiring real session context
+vi.mock('@logto/next/server-actions', () => ({
+  getAccessToken: vi.fn(async () => 'test-access-token'),
+  getLogtoContext: vi.fn(async () => ({
+    isAuthenticated: true,
+    claims: {
+      sub: 'test-user-123',
+      email: 'test@example.com',
+      name: 'Test User',
+    },
+  })),
+}));
+
 // Mock Navigation component (async server component)
 vi.mock('@/components/navigation', () => ({
   Navigation: () =>
@@ -43,10 +56,26 @@ vi.mock('next/font/google', () => ({
 // Next.js Image component uses advanced features (lazy loading, optimization) that are
 // difficult to test in jsdom. We replace it with a standard img tag for testing purposes.
 vi.mock('next/image', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+  default: ({
+    priority: _priority,
+    loader: _loader,
+    fill: _fill,
+    placeholder: _placeholder,
+    blurDataURL: _blur,
+    ...props
+  }: Record<string, unknown>) => {
     // Replace Next.js Image with standard img element for testing
-    // (lazy loading and optimization features don't work in jsdom)
-    return React.createElement('img', props);
+    // Strip Next-specific props (priority, loader, fill, etc.) so React
+    // doesn't warn about unknown/dom-incompatible attributes.
+    void _priority;
+    void _loader;
+    void _fill;
+    void _placeholder;
+    void _blur;
+    return React.createElement(
+      'img',
+      props as React.ImgHTMLAttributes<HTMLImageElement>
+    );
   },
 }));
 
