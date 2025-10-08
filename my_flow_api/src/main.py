@@ -7,10 +7,13 @@ from datetime import UTC, datetime
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from src.config import settings
 from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.middleware.auth import get_current_user
+from src.rate_limit import limiter, rate_limit_exceeded_handler
 from src.routers import contexts, flows
 
 
@@ -73,6 +76,10 @@ app = FastAPI(
 
 # Security Middleware Configuration
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # HTTPS enforcement for production (prevents man-in-the-middle attacks)
 if settings.ENV == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
@@ -127,5 +134,4 @@ async def protected_route(user_id: str = Depends(get_current_user)) -> dict[str,
         "user_id": user_id,
         "timestamp": datetime.now(UTC).isoformat(),
     }
-
 

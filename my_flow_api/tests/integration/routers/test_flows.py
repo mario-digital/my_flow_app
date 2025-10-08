@@ -264,7 +264,7 @@ class TestGetFlow:
 
     def test_get_flow_requires_auth(self, client):
         """Test that getting flow requires authentication."""
-        response = client.get(f"/api/v1/flows/{str(ObjectId())}")
+        response = client.get(f"/api/v1/flows/{ObjectId()!s}")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_flow_success(
@@ -296,7 +296,7 @@ class TestGetFlow:
             app.dependency_overrides[get_flow_repository] = lambda: mock_repo
 
             response = client.get(
-            f"/api/v1/flows/{str(ObjectId())}",
+            f"/api/v1/flows/{ObjectId()!s}",
             headers={"Authorization": "Bearer valid-token"},
             )
 
@@ -310,7 +310,7 @@ class TestUpdateFlow:
     def test_update_flow_requires_auth(self, client):
         """Test that updating flow requires authentication."""
         response = client.put(
-            f"/api/v1/flows/{str(ObjectId())}",
+            f"/api/v1/flows/{ObjectId()!s}",
             json={"title": "Updated"},
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -349,7 +349,7 @@ class TestUpdateFlow:
             app.dependency_overrides[get_flow_repository] = lambda: mock_repo
 
             response = client.put(
-            f"/api/v1/flows/{str(ObjectId())}",
+            f"/api/v1/flows/{ObjectId()!s}",
             json={"title": "Updated"},
             headers={"Authorization": "Bearer valid-token"},
             )
@@ -363,7 +363,7 @@ class TestDeleteFlow:
 
     def test_delete_flow_requires_auth(self, client):
         """Test that deleting flow requires authentication."""
-        response = client.delete(f"/api/v1/flows/{str(ObjectId())}")
+        response = client.delete(f"/api/v1/flows/{ObjectId()!s}")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_delete_flow_success(
@@ -394,7 +394,7 @@ class TestDeleteFlow:
             app.dependency_overrides[get_flow_repository] = lambda: mock_repo
 
             response = client.delete(
-            f"/api/v1/flows/{str(ObjectId())}",
+            f"/api/v1/flows/{ObjectId()!s}",
             headers={"Authorization": "Bearer valid-token"},
             )
 
@@ -407,7 +407,7 @@ class TestMarkFlowComplete:
 
     def test_mark_complete_requires_auth(self, client):
         """Test that marking flow complete requires authentication."""
-        response = client.patch(f"/api/v1/flows/{str(ObjectId())}/complete")
+        response = client.patch(f"/api/v1/flows/{ObjectId()!s}/complete")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_mark_complete_success(
@@ -463,7 +463,7 @@ class TestMarkFlowComplete:
             app.dependency_overrides[get_flow_repository] = lambda: mock_repo
 
             response = client.patch(
-            f"/api/v1/flows/{str(ObjectId())}/complete",
+            f"/api/v1/flows/{ObjectId()!s}/complete",
             headers={"Authorization": "Bearer valid-token"},
             )
 
