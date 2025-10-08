@@ -10,7 +10,14 @@ from datetime import datetime
 from enum import Enum
 
 from bson import ObjectId as BsonObjectId
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+)
 
 
 class FlowPriority(str, Enum):
@@ -71,7 +78,11 @@ class FlowUpdate(BaseModel):
 
 class FlowInDB(FlowBase):
     """Complete flow schema with DB fields."""
-    id: str = Field(..., alias="_id")
+    id: str = Field(
+        ...,
+        validation_alias=AliasChoices("_id", "id"),
+        serialization_alias="id",
+    )
     context_id: str
     user_id: str
     is_completed: bool = False

@@ -6,10 +6,44 @@ from datetime import UTC, datetime
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from src.config import settings
 from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.middleware.auth import get_current_user
+from src.routers import contexts, flows
+
+
+async def ensure_indexes() -> None:
+    """
+    Ensure database indexes exist for optimal query performance.
+
+    This function is idempotent - safe to run multiple times.
+    MongoDB will skip index creation if it already exists.
+    """
+    if db_instance.db is None:
+        print("⚠️  Database not connected, skipping index creation")
+        return
+
+    db = db_instance.db
+
+    # Context collection indexes
+    await db.contexts.create_index([("user_id", 1)])
+    await db.contexts.create_index([("user_id", 1), ("created_at", -1)])
+
+    # Flow collection indexes
+    await db.flows.create_index([("context_id", 1)])
+    await db.flows.create_index([("user_id", 1)])
+    await db.flows.create_index([("context_id", 1), ("is_completed", 1)])
+    await db.flows.create_index([("context_id", 1), ("created_at", -1)])
+    await db.flows.create_index(
+        [("context_id", 1), ("is_completed", 1), ("priority", 1)]
+    )
+    await db.flows.create_index(
+        [("context_id", 1), ("user_id", 1), ("is_completed", 1), ("created_at", -1)]
+    )
+
+    print("✅ Database indexes verified (8 indexes created)")
 
 
 @asynccontextmanager
@@ -17,7 +51,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifespan events (startup and shutdown)."""
     # Startup
     await connect_to_mongo()
-    print("✅ Connected to MongoDB")
+    await ensure_indexes()
+    print("✅ Connected to MongoDB with indexes")
 
     yield
 
@@ -36,14 +71,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration
+# Security Middleware Configuration
+
+# HTTPS enforcement for production (prevents man-in-the-middle attacks)
+if settings.ENV == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+# CORS configuration with strict validation
+# CRITICAL: Never use allow_origins=["*"] in production (security vulnerability)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.CORS_ORIGINS,  # Explicit origins list from config
+    allow_credentials=True,  # Required for JWT cookies/headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+# Register API routers
+app.include_router(contexts.router)
+app.include_router(flows.router)
 
 
 @app.get(f"{settings.API_V1_STR}/health")

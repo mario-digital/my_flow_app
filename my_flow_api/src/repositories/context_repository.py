@@ -6,7 +6,6 @@ Implements repository pattern for Context entities with user ownership checks.
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from src.config import settings
 from src.models.context import ContextCreate, ContextInDB, ContextUpdate
 from src.repositories.base import BaseRepository
 
@@ -62,22 +61,36 @@ class ContextRepository(BaseRepository[ContextInDB]):
         doc = await self.collection.find_one({"_id": obj_id, "user_id": user_id})
         return ContextInDB(**doc) if doc else None
 
-    async def get_all_by_user(self, user_id: str) -> list[ContextInDB]:
+    async def count_by_user(self, user_id: str) -> int:
         """
-        Get all contexts for a user, sorted by created_at descending.
+        Count total contexts for a user.
 
-        The maximum number of contexts returned is configurable via
-        settings.MAX_CONTEXTS_PER_USER (default: 100).
+        Args:
+            user_id: ID of user whose contexts to count
+
+        Returns:
+            Total count of contexts for user
+        """
+        return await self.collection.count_documents({"user_id": user_id})
+
+    async def get_all_by_user(
+        self, user_id: str, limit: int = 50, offset: int = 0
+    ) -> list[ContextInDB]:
+        """
+        Get all contexts for a user with pagination, sorted by created_at descending.
 
         Args:
             user_id: ID of user whose contexts to retrieve
+            limit: Maximum number of contexts to return (default: 50)
+            offset: Number of contexts to skip for pagination (default: 0)
 
         Returns:
-            List of contexts sorted by most recent first, limited to
-            MAX_CONTEXTS_PER_USER entries
+            List of contexts sorted by most recent first
         """
         cursor = self.collection.find({"user_id": user_id}).sort("created_at", -1)
-        docs = await cursor.to_list(length=settings.MAX_CONTEXTS_PER_USER)
+        cursor.skip(offset)
+        cursor.limit(limit)
+        docs = await cursor.to_list(length=limit)
         return [ContextInDB(**doc) for doc in docs]
 
     async def update(  # type: ignore[override]
