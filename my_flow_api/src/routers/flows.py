@@ -1,6 +1,6 @@
 """Flow API routes for CRUD operations."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 router = APIRouter(tags=["Flows"])
 
-RATE_LIMIT_RESPONSE = {
+RATE_LIMIT_RESPONSE: dict[int | str, dict[str, Any]] = {
     429: {
         "model": RateLimitError,
         "description": "Rate limit exceeded",
@@ -84,9 +84,7 @@ async def list_flows(
     await verify_context_ownership(context_id, user_id, context_repo)
 
     # Get total count for metadata
-    total = await flow_repo.count_by_context(
-        context_id, include_completed=include_completed
-    )
+    total = await flow_repo.count_by_context(context_id, include_completed=include_completed)
 
     # Fetch flows with pagination
     flows = await flow_repo.get_all_by_context(
