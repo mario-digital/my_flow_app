@@ -95,6 +95,17 @@ const eslintConfig = [
       "local/use-client-directive-position": "error",
     },
   },
+  // Disable strict type checking for mock files (MSW has inherently loose types)
+  {
+    files: ["**/mocks/**/*.ts", "**/mocks/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
