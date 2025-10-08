@@ -3,11 +3,8 @@
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
-import src.repositories.context_repository as context_repository_module
-import src.repositories.flow_repository as flow_repository_module
-from src.database import get_database
+from src.dependencies import get_context_repository, get_flow_repository
 from src.middleware.auth import get_current_user, verify_context_ownership
 from src.models.context import ContextCreate, ContextInDB, ContextUpdate
 from src.models.errors import RateLimitError
@@ -34,25 +31,10 @@ RATE_LIMIT_RESPONSE: dict[int | str, dict[str, Any]] = {
 }
 
 
-async def get_context_repository(
-    db: AsyncIOMotorDatabase = Depends(get_database),  # type: ignore[type-arg]
-) -> "ContextRepository":
-    """Dependency injection for ContextRepository."""
-    return context_repository_module.ContextRepository(db)
-
-
-async def get_flow_repository(
-    db: AsyncIOMotorDatabase = Depends(get_database),  # type: ignore[type-arg]
-) -> "FlowRepository":
-    """Dependency injection for FlowRepository."""
-    context_repo = context_repository_module.ContextRepository(db)
-    return flow_repository_module.FlowRepository(db, context_repo)
-
-
 @router.get("", response_model=PaginatedResponse[ContextInDB], responses=RATE_LIMIT_RESPONSE)
 @limiter.limit("60/minute")
 async def list_contexts(
-    request: Request,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
     limit: int = Query(default=50, ge=1, le=100, description="Max items per page"),
@@ -64,9 +46,6 @@ async def list_contexts(
     Returns paginated contexts with metadata for UI components like
     "Page X of Y" indicators and "Load More" buttons.
     """
-    # slowapi uses the request object to track rate limits
-    _ = request
-
     # Get total count for metadata
     total = await context_repo.count_by_user(user_id)
 
@@ -92,13 +71,12 @@ async def list_contexts(
 )
 @limiter.limit("10/minute")
 async def create_context(
-    request: Request,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
     context_data: ContextCreate,
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
 ) -> ContextInDB:
     """Create a new context."""
-    _ = request
     return await context_repo.create(user_id, context_data)
 
 
@@ -112,12 +90,11 @@ async def create_context(
 @limiter.limit("60/minute")
 async def get_context(
     context_id: str,
-    request: Request,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
 ) -> ContextInDB:
     """Get single context by ID with ownership check."""
-    _ = request
     context = await context_repo.get_by_id(context_id, user_id)
     if not context:
         raise HTTPException(
@@ -137,13 +114,12 @@ async def get_context(
 @limiter.limit("30/minute")
 async def update_context(
     context_id: str,
-    request: Request,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
     updates: ContextUpdate,
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
 ) -> ContextInDB:
     """Update context with ownership check."""
-    _ = request
     # Verify ownership using helper
     await verify_context_ownership(context_id, user_id, context_repo)
 
@@ -167,13 +143,12 @@ async def update_context(
 @limiter.limit("30/minute")
 async def delete_context(
     context_id: str,
-    request: Request,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
     user_id: str = Depends(get_current_user),
     context_repo: "ContextRepository" = Depends(get_context_repository),
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> None:
     """Delete context and cascade delete all associated flows."""
-    _ = request
     # Verify context ownership
     await verify_context_ownership(context_id, user_id, context_repo)
 

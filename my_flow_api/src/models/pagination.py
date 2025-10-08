@@ -1,8 +1,8 @@
 """Pagination response model for API list endpoints."""
 
-from typing import ClassVar, TypeVar
+from typing import TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -24,10 +24,8 @@ class PaginatedResponse[T](BaseModel):
     offset: int = Field(..., description="Number of items skipped")
     has_more: bool = Field(..., description="True if more items available")
 
-    class Config:
-        """Pydantic model configuration."""
-
-        json_schema_extra: ClassVar[dict[str, dict[str, object]]] = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "items": [],
                 "total": 150,
@@ -36,3 +34,4 @@ class PaginatedResponse[T](BaseModel):
                 "has_more": True,
             }
         }
+    )
