@@ -1,0 +1,1069 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MyFlow API",
+    "description": "Backend API for MyFlow - Context-based flow management system",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/contexts": {
+      "get": {
+        "tags": ["Contexts"],
+        "summary": "List Contexts",
+        "description": "List all contexts for the authenticated user with pagination metadata.\n\nReturns paginated contexts with metadata for UI components like\n\"Page X of Y\" indicators and \"Load More\" buttons.",
+        "operationId": "list_contexts_api_v1_contexts_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Max items per page",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max items per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "description": "Number of items to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ContextInDB_"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Contexts"],
+        "summary": "Create a new context",
+        "description": "Create a new context for the authenticated user",
+        "operationId": "create_context_api_v1_contexts_post",
+        "security": [{ "HTTPBearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ContextCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ContextInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}": {
+      "get": {
+        "tags": ["Contexts"],
+        "summary": "Get a single context",
+        "description": "Get a context by ID (requires ownership)",
+        "operationId": "get_context_api_v1_contexts__context_id__get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "context_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Context Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ContextInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Contexts"],
+        "summary": "Update a context",
+        "description": "Update a context by ID (requires ownership)",
+        "operationId": "update_context_api_v1_contexts__context_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "context_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Context Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ContextUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ContextInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Contexts"],
+        "summary": "Delete a context",
+        "description": "Delete a context and all associated flows (requires ownership)",
+        "operationId": "delete_context_api_v1_contexts__context_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "context_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Context Id" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/flows": {
+      "get": {
+        "tags": ["Flows"],
+        "summary": "List flows for a context",
+        "description": "List all flows for a context with pagination and optional completion filter",
+        "operationId": "list_flows_api_v1_contexts__context_id__flows_get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "context_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Context Id" }
+          },
+          {
+            "name": "include_completed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include completed flows",
+              "default": false,
+              "title": "Include Completed"
+            },
+            "description": "Include completed flows"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Max items per page",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max items per page"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 0,
+              "description": "Number of items to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of items to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_FlowInDB_"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/flows": {
+      "post": {
+        "tags": ["Flows"],
+        "summary": "Create a new flow",
+        "description": "Create a new flow in a context (requires context ownership)",
+        "operationId": "create_flow_api_v1_flows_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FlowCreate" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlowInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    },
+    "/api/v1/flows/{flow_id}": {
+      "get": {
+        "tags": ["Flows"],
+        "summary": "Get a single flow",
+        "description": "Get a flow by ID (requires ownership)",
+        "operationId": "get_flow_api_v1_flows__flow_id__get",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Flow Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlowInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Flows"],
+        "summary": "Update a flow",
+        "description": "Update a flow by ID (requires ownership)",
+        "operationId": "update_flow_api_v1_flows__flow_id__put",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Flow Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FlowUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlowInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Flows"],
+        "summary": "Delete a flow",
+        "description": "Delete a flow by ID (requires ownership)",
+        "operationId": "delete_flow_api_v1_flows__flow_id__delete",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Flow Id" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Successful Response" },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/flows/{flow_id}/complete": {
+      "patch": {
+        "tags": ["Flows"],
+        "summary": "Mark flow as complete",
+        "description": "Mark a flow as completed (requires ownership)",
+        "operationId": "mark_flow_complete_api_v1_flows__flow_id__complete_patch",
+        "security": [{ "HTTPBearer": [] }],
+        "parameters": [
+          {
+            "name": "flow_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Flow Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FlowInDB" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds until rate limit resets",
+                "schema": { "type": "integer" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Health check endpoint with MongoDB connection status.",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "anyOf": [{ "type": "string" }, { "type": "boolean" }]
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Root endpoint.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "string" },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/protected": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Protected Route",
+        "description": "Protected endpoint that requires valid JWT authentication.",
+        "operationId": "protected_route_api_v1_protected_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "string" },
+                  "type": "object",
+                  "title": "Response Protected Route Api V1 Protected Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "HTTPBearer": [] }]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContextCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color"
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "required": ["name", "color", "icon"],
+        "title": "ContextCreate",
+        "description": "Schema for creating a context."
+      },
+      "ContextInDB": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "title": "Color"
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 1,
+            "title": "Icon"
+          },
+          "id": { "type": "string", "title": "Id" },
+          "user_id": { "type": "string", "title": "User Id" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "color",
+          "icon",
+          "id",
+          "user_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ContextInDB",
+        "description": "Complete context schema with DB fields.",
+        "example": {
+          "color": "#3B82F6",
+          "created_at": "2025-09-30T10:00:00Z",
+          "icon": "💼",
+          "id": "507f1f77bcf86cd799439011",
+          "name": "Work",
+          "updated_at": "2025-09-30T10:00:00Z",
+          "user_id": "logto_user_abc123"
+        }
+      },
+      "ContextUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              { "type": "string", "maxLength": 50, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Name"
+          },
+          "color": {
+            "anyOf": [
+              { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+              { "type": "null" }
+            ],
+            "title": "Color"
+          },
+          "icon": {
+            "anyOf": [
+              { "type": "string", "maxLength": 10, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Icon"
+          }
+        },
+        "type": "object",
+        "title": "ContextUpdate",
+        "description": "Schema for updating a context (partial)."
+      },
+      "FlowCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/FlowPriority",
+            "default": "medium"
+          },
+          "due_date": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Due Date"
+          },
+          "reminder_enabled": {
+            "type": "boolean",
+            "title": "Reminder Enabled",
+            "default": true
+          },
+          "context_id": { "type": "string", "title": "Context Id" }
+        },
+        "type": "object",
+        "required": ["title", "context_id"],
+        "title": "FlowCreate",
+        "description": "Schema for creating a flow."
+      },
+      "FlowInDB": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/FlowPriority",
+            "default": "medium"
+          },
+          "due_date": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Due Date"
+          },
+          "reminder_enabled": {
+            "type": "boolean",
+            "title": "Reminder Enabled",
+            "default": true
+          },
+          "id": { "type": "string", "title": "Id" },
+          "context_id": { "type": "string", "title": "Context Id" },
+          "user_id": { "type": "string", "title": "User Id" },
+          "is_completed": {
+            "type": "boolean",
+            "title": "Is Completed",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "completed_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "id",
+          "context_id",
+          "user_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "FlowInDB",
+        "description": "Complete flow schema with DB fields.",
+        "example": {
+          "context_id": "507f1f77bcf86cd799439022",
+          "created_at": "2025-10-05T10:00:00Z",
+          "description": "Write comprehensive API docs",
+          "due_date": "2025-10-15T17:00:00Z",
+          "id": "507f1f77bcf86cd799439011",
+          "is_completed": false,
+          "priority": "high",
+          "reminder_enabled": true,
+          "title": "Complete project documentation",
+          "updated_at": "2025-10-05T10:00:00Z",
+          "user_id": "logto_user_abc123"
+        }
+      },
+      "FlowPriority": {
+        "type": "string",
+        "enum": ["low", "medium", "high"],
+        "title": "FlowPriority",
+        "description": "Priority levels for flows."
+      },
+      "FlowUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              { "type": "string", "maxLength": 200, "minLength": 1 },
+              { "type": "null" }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "priority": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/FlowPriority" },
+              { "type": "null" }
+            ]
+          },
+          "due_date": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Due Date"
+          },
+          "reminder_enabled": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Reminder Enabled"
+          }
+        },
+        "type": "object",
+        "title": "FlowUpdate",
+        "description": "Schema for updating a flow (partial)."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PaginatedResponse_ContextInDB_": {
+        "properties": {
+          "items": {
+            "items": { "$ref": "#/components/schemas/ContextInDB" },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for current page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of all items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Max items per page"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Number of items skipped"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "description": "True if more items available"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset", "has_more"],
+        "title": "PaginatedResponse[ContextInDB]",
+        "example": {
+          "has_more": true,
+          "items": [],
+          "limit": 50,
+          "offset": 0,
+          "total": 150
+        }
+      },
+      "PaginatedResponse_FlowInDB_": {
+        "properties": {
+          "items": {
+            "items": { "$ref": "#/components/schemas/FlowInDB" },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items for current page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total count of all items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Max items per page"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Number of items skipped"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "description": "True if more items available"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset", "has_more"],
+        "title": "PaginatedResponse[FlowInDB]",
+        "example": {
+          "has_more": true,
+          "items": [],
+          "limit": 50,
+          "offset": 0,
+          "total": 150
+        }
+      },
+      "RateLimitError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "Human-readable explanation of the rate limit violation."
+          },
+          "retry_after": {
+            "type": "integer",
+            "title": "Retry After",
+            "description": "Seconds until rate limit resets",
+            "example": 60
+          }
+        },
+        "type": "object",
+        "required": ["detail", "retry_after"],
+        "title": "RateLimitError",
+        "description": "Rate limit exceeded error response.",
+        "example": {
+          "detail": "Rate limit exceeded. Please try again later.",
+          "retry_after": 60
+        }
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": { "HTTPBearer": { "type": "http", "scheme": "bearer" } }
+  }
+}

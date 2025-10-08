@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { ContextSwitcher } from '../context-switcher';
@@ -136,7 +136,9 @@ describe('ContextSwitcher', () => {
 
     // Focus trigger with Tab
     const trigger = screen.getByRole('button', { name: /select context/i });
-    trigger.focus();
+    await act(async () => {
+      trigger.focus();
+    });
 
     // Open with Enter
     await user.keyboard('{Enter}');

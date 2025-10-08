@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from 'sonner';
+import { CurrentUserServerProvider } from '@/components/providers/current-user-provider';
+import { ReactNode, ReactElement } from 'react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -23,19 +25,21 @@ export const metadata: Metadata = {
 // This is required because Navigation component accesses Logto session data
 export const dynamic = 'force-dynamic';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>): React.ReactElement {
+  children: ReactNode;
+}>): Promise<ReactElement> {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navigation />
-        {children}
-        <Toaster />
+        <CurrentUserServerProvider>
+          <Navigation />
+          {children}
+          <Toaster />
+        </CurrentUserServerProvider>
       </body>
     </html>
   );
