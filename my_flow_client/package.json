@@ -54,8 +54,11 @@
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^27.0.0",
     "prettier": "^3.6.2",
+    "string-width-cjs": "file:../packages/string-width-cjs",
+    "strip-ansi-cjs": "file:../packages/strip-ansi-cjs",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrap-ansi-cjs": "file:../packages/wrap-ansi-cjs"
   }
 }

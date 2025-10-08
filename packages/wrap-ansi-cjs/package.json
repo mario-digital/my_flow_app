@@ -1,0 +1,10 @@
+{
+  "name": "wrap-ansi-cjs",
+  "version": "7.0.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "dependencies": {
+    "wrap-ansi": "^7.0.0"
+  }
+}
