@@ -21,6 +21,7 @@ from pydantic import (
 
 class ContextBase(BaseModel):
     """Base schema for context entities."""
+
     name: str = Field(..., min_length=1, max_length=50)
     color: str = Field(..., pattern=r"^#[0-9A-Fa-f]{6}$")
     icon: str = Field(..., min_length=1, max_length=10)
@@ -32,6 +33,7 @@ class ContextCreate(ContextBase):
 
 class ContextUpdate(BaseModel):
     """Schema for updating a context (partial)."""
+
     name: str | None = Field(None, min_length=1, max_length=50)
     color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     icon: str | None = Field(None, min_length=1, max_length=10)
@@ -39,6 +41,7 @@ class ContextUpdate(BaseModel):
 
 class ContextInDB(ContextBase):
     """Complete context schema with DB fields."""
+
     id: str = Field(
         ...,
         validation_alias=AliasChoices("_id", "id"),

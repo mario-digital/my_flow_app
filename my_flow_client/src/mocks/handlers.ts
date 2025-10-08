@@ -1,4 +1,4 @@
-import { http, HttpResponse, delay } from 'msw';
+import { http, HttpResponse, delay, type HttpHandler } from 'msw';
 import { CONTEXT_MESSAGES } from '@/lib/messages/contexts';
 import type { components } from '@/types/api';
 
@@ -44,7 +44,7 @@ let mockContexts: Context[] = [
  * - Validation error responses
  * - In-memory state management
  */
-export const handlers = [
+export const handlers: HttpHandler[] = [
   // GET /api/v1/contexts - List all contexts
   http.get('*/api/v1/contexts', async () => {
     await delay(100); // Simulate network latency

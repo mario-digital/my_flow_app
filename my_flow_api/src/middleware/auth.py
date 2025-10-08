@@ -88,8 +88,10 @@ def _fetch_jwks(request_id: str) -> JWKSResponse:
         ) from exc
 
     keys = jwks.get("keys")
-    malformed_keys = not isinstance(keys, list) or not keys or not all(
-        isinstance(item, Mapping) for item in keys
+    malformed_keys = (
+        not isinstance(keys, list)
+        or not keys
+        or not all(isinstance(item, Mapping) for item in keys)
     )
     if malformed_keys:
         msg = "Logto signing keys response malformed"

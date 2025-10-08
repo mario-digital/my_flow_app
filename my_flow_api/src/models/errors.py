@@ -6,9 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class RateLimitError(BaseModel):
     """Rate limit exceeded error response."""
 
-    detail: str = Field(
-        ..., description="Human-readable explanation of the rate limit violation."
-    )
+    detail: str = Field(..., description="Human-readable explanation of the rate limit violation.")
     retry_after: int = Field(
         ..., description="Seconds until rate limit resets", json_schema_extra={"example": 60}
     )

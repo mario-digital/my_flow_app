@@ -39,9 +39,7 @@ async def ensure_indexes() -> None:
     await db.flows.create_index([("user_id", 1)])
     await db.flows.create_index([("context_id", 1), ("is_completed", 1)])
     await db.flows.create_index([("context_id", 1), ("created_at", -1)])
-    await db.flows.create_index(
-        [("context_id", 1), ("is_completed", 1), ("priority", 1)]
-    )
+    await db.flows.create_index([("context_id", 1), ("is_completed", 1), ("priority", 1)])
     await db.flows.create_index(
         [("context_id", 1), ("user_id", 1), ("is_completed", 1), ("created_at", -1)]
     )
@@ -134,4 +132,3 @@ async def protected_route(user_id: str = Depends(get_current_user)) -> dict[str,
         "user_id": user_id,
         "timestamp": datetime.now(UTC).isoformat(),
     }
-
