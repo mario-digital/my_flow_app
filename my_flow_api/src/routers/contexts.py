@@ -1,6 +1,6 @@
 """Context API routes for CRUD operations."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 router = APIRouter(prefix="/api/v1/contexts", tags=["Contexts"])
 
-RATE_LIMIT_RESPONSE = {
+RATE_LIMIT_RESPONSE: dict[int | str, dict[str, Any]] = {
     429: {
         "model": RateLimitError,
         "description": "Rate limit exceeded",

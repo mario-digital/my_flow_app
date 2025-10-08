@@ -9,8 +9,11 @@ from slowapi.util import get_remote_address
 limiter = Limiter(key_func=get_remote_address)
 
 
-def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+def rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONResponse:
     """Return standardized response when rate limits are exceeded."""
+    if not isinstance(exc, RateLimitExceeded):  # pragma: no cover - defensive guard
+        raise exc
+
     if hasattr(request, "state"):
         request.state.rate_limit_path = str(request.url.path)
 
