@@ -1,19 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { setContextTheme, getCurrentContext } from '@/lib/context-theme';
+import { renderHook } from '@testing-library/react';
+import { useContextTheme } from './use-context-theme';
+import { getCurrentContext } from '@/lib/context-theme';
 import { ContextType } from '@/types/enums';
 
-/**
- * Note: These tests verify the context theming behavior that the useContextTheme hook enables.
- * The hook itself is a thin wrapper around setContextTheme (just calls it in useEffect).
- * The setContextTheme function is already thoroughly tested in context-theme.test.ts.
- *
- * Testing React hooks in isolation with the current test setup is challenging due to
- * React instance/context issues. Since the hook's only responsibility is to call
- * setContextTheme when context changes, and that function is already well-tested,
- * these tests focus on the behavior rather than the hook implementation.
- */
-
-describe('useContextTheme behavior', () => {
+describe('useContextTheme', () => {
   // Mock CSS custom properties that would be defined in colors.css
   const mockCssProperties: Record<string, string> = {
     '--primitive-work': '#3B82F6',
@@ -47,8 +38,8 @@ describe('useContextTheme behavior', () => {
     vi.restoreAllMocks();
   });
 
-  it('should set context theme', () => {
-    setContextTheme(ContextType.Work);
+  it('should set context theme when hook is rendered', () => {
+    renderHook(() => useContextTheme(ContextType.Work));
 
     expect(getCurrentContext()).toBe(ContextType.Work);
     expect(
@@ -56,11 +47,14 @@ describe('useContextTheme behavior', () => {
     ).toBe('#3B82F6');
   });
 
-  it('should update context theme when context changes', () => {
-    setContextTheme(ContextType.Work);
+  it('should update context theme when context prop changes', () => {
+    const { rerender } = renderHook(({ context }) => useContextTheme(context), {
+      initialProps: { context: ContextType.Work },
+    });
+
     expect(getCurrentContext()).toBe(ContextType.Work);
 
-    setContextTheme(ContextType.Personal);
+    rerender({ context: ContextType.Personal });
 
     expect(getCurrentContext()).toBe(ContextType.Personal);
     expect(
@@ -69,13 +63,15 @@ describe('useContextTheme behavior', () => {
   });
 
   it('should handle setting same context multiple times', () => {
-    setContextTheme(ContextType.Rest);
+    const { rerender } = renderHook(({ context }) => useContextTheme(context), {
+      initialProps: { context: ContextType.Rest },
+    });
 
     const initialColor = document.documentElement.style.getPropertyValue(
       '--color-context-current'
     );
 
-    setContextTheme(ContextType.Rest);
+    rerender({ context: ContextType.Rest });
 
     expect(
       document.documentElement.style.getPropertyValue('--color-context-current')
@@ -91,7 +87,7 @@ describe('useContextTheme behavior', () => {
     ];
 
     contexts.forEach((context) => {
-      setContextTheme(context);
+      renderHook(() => useContextTheme(context));
       expect(getCurrentContext()).toBe(context);
       // Clean up for next iteration
       document.documentElement.removeAttribute('data-context');

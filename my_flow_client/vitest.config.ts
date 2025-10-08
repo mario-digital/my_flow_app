@@ -27,6 +27,7 @@ export default defineConfig({
         '**/*.config.{ts,js,mjs}',
         '**/types/**',
         '**/components/ui/**', // Exclude shadcn UI components
+        '**/index.ts', // Exclude barrel exports from coverage
       ],
       thresholds: {
         lines: 80,
