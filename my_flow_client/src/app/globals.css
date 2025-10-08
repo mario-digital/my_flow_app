@@ -90,6 +90,15 @@
   --color-card-border: var(--card-border);
   --color-card-text: var(--card-text);
 
+  /* Component Colors - Flow Cards (Context-Aware Task Cards) */
+  --color-flow-card: var(--flow-card-bg);
+  --color-flow-card-bg: var(--flow-card-bg);
+  --color-flow-card-bg-hover: var(--flow-card-bg-hover);
+  --color-flow-card-border: var(--flow-card-border);
+  --color-flow-card-border-left: var(--flow-card-border-left);
+  --color-flow-card-text: var(--flow-card-text);
+  --color-flow-card-text-completed: var(--flow-card-text-completed);
+
   /* Component Colors - Inputs */
   --color-input-bg: var(--input-bg);
   --color-input-border: var(--input-border);
