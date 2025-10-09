@@ -495,7 +495,7 @@ async def test_stream_chat_response_validates_inputs(mock_openai_class, mock_set
 
     # Test missing context_id
     messages = [Message(role="user", content="Test")]
-    with pytest.raises(ValueError, match=r".*context.*") as exc_info:
+    with pytest.raises(ValueError, match=r".*[Cc]ontext.*") as exc_info:
         async for _ in service.stream_chat_response(messages, ""):
             pass
     assert "context" in str(exc_info.value).lower()
