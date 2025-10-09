@@ -40,9 +40,11 @@ class Settings(BaseSettings):
     LOGTO_JWKS_TIMEOUT_SECONDS: float = 5.0
     LOGTO_JWKS_CACHE_TTL_SECONDS: float = 3600.0
 
-    # AI Configuration (placeholder - will be configured in later stories)
-    OPENAI_API_KEY: str = ""
-    ANTHROPIC_API_KEY: str = ""
+    # AI Provider Configuration
+    AI_PROVIDER: str = "openai"  # "openai" or "anthropic"
+    AI_MODEL: str | None = None  # e.g., "gpt-4" or "claude-3-5-sonnet-20241022"
+    OPENAI_API_KEY: str | None = None
+    ANTHROPIC_API_KEY: str | None = None
 
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":
