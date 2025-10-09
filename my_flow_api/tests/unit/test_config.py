@@ -129,8 +129,8 @@ def test_development_environment_allows_empty_secrets(clean_env: None) -> None:
         LOGTO_APP_ID="test-app-id",
         LOGTO_APP_SECRET="test-secret",
     )
-    assert settings.OPENAI_API_KEY == ""
-    assert settings.ANTHROPIC_API_KEY == ""
+    assert settings.OPENAI_API_KEY is None
+    assert settings.ANTHROPIC_API_KEY is None
     assert settings.LOGTO_ENDPOINT == "https://test.logto.app"
 
 
