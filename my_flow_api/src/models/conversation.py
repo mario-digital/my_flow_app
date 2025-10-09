@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -18,7 +17,7 @@ class MessageRole(str, Enum):
 class Message(BaseModel):
     """Individual message in a conversation."""
 
-    role: Literal["user", "assistant", "system"]
+    role: MessageRole
     content: str = Field(..., min_length=1, max_length=10000)
     timestamp: datetime | None = None
 
