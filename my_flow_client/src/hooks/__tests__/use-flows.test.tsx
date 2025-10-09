@@ -32,6 +32,9 @@ vi.mock('sonner', () => ({
   },
 }));
 
+// Mock console.error to suppress expected error logs in tests
+const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
 // Test wrapper with QueryClient and CurrentUserProvider
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -68,8 +71,12 @@ describe('use-flows hooks', () => {
   afterEach(() => {
     server.resetHandlers();
     resetMockFlows();
+    consoleErrorSpy.mockClear();
   });
-  afterAll(() => server.close());
+  afterAll(() => {
+    server.close();
+    consoleErrorSpy.mockRestore();
+  });
 
   describe('useFlows', () => {
     it('successfully fetches flows for a context', async () => {
