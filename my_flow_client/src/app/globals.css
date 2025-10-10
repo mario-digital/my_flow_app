@@ -210,3 +210,36 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-family-primary);
 }
+
+/* ========================================
+   COMPONENT-SPECIFIC ANIMATIONS
+   ======================================== */
+
+/* Typing Indicator - Staggered pulse animation for chat typing dots */
+@keyframes typing-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.typing-dot-1,
+.typing-dot-2,
+.typing-dot-3 {
+  animation: typing-pulse 1.4s ease-in-out infinite;
+}
+
+.typing-dot-1 {
+  animation-delay: 0ms;
+}
+
+.typing-dot-2 {
+  animation-delay: 200ms;
+}
+
+.typing-dot-3 {
+  animation-delay: 400ms;
+}

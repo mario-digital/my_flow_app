@@ -7,6 +7,9 @@ import type { TypingIndicatorProps } from '@/types/chat';
 /**
  * TypingIndicator component displays animated dots
  * to indicate the assistant is typing a response.
+ *
+ * Uses custom animation classes defined in globals.css for
+ * staggered pulse animation with proper timing delays.
  */
 export function TypingIndicator({
   className,
@@ -17,18 +20,9 @@ export function TypingIndicator({
       role="status"
       aria-label="Assistant is typing"
     >
-      <span
-        className="w-2 h-2 bg-text-secondary rounded-full animate-pulse"
-        style={{ animationDelay: '0ms', animationDuration: '1400ms' }}
-      />
-      <span
-        className="w-2 h-2 bg-text-secondary rounded-full animate-pulse"
-        style={{ animationDelay: '200ms', animationDuration: '1400ms' }}
-      />
-      <span
-        className="w-2 h-2 bg-text-secondary rounded-full animate-pulse"
-        style={{ animationDelay: '400ms', animationDuration: '1400ms' }}
-      />
+      <span className="w-2 h-2 bg-text-secondary rounded-full typing-dot-1" />
+      <span className="w-2 h-2 bg-text-secondary rounded-full typing-dot-2" />
+      <span className="w-2 h-2 bg-text-secondary rounded-full typing-dot-3" />
     </div>
   );
 }
