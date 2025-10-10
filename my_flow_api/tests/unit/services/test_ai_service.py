@@ -522,16 +522,6 @@ async def test_stream_chat_response_wraps_provider_errors(mock_openai_class, moc
             pass
 
 
-@pytest.mark.asyncio
-@patch("src.services.ai_service.settings")
-@patch("src.services.ai_service.AsyncOpenAI")
-async def test_extract_flows_from_text_stub(mock_openai_class, mock_settings):
-    """Test extract_flows_from_text returns empty list (stub implementation)."""
-    mock_settings.AI_PROVIDER = "openai"
-    mock_settings.AI_MODEL = "gpt-4"
-    mock_settings.OPENAI_API_KEY = "test-key"
-
-    service = AIService()
-    result = await service.extract_flows_from_text("Test conversation", "work")
-
-    assert result == []
+# Note: extract_flows_from_text is now fully implemented in Story 3.3
+# Comprehensive tests are in tests/unit/services/test_flow_extraction.py
+# The old stub test has been removed as the method now has full functionality
