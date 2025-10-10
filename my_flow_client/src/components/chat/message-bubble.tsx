@@ -35,8 +35,8 @@ export function MessageBubble({
         <div className="flex flex-col items-end max-w-[70%]">
           <div
             className="
-              bg-[var(--message-bg-user)]
-              text-[var(--message-text-user)]
+              bg-message-bg-user
+              text-message-text-user
               px-4 py-3
               rounded-lg rounded-br-[4px]
               text-base leading-relaxed
@@ -75,8 +75,8 @@ export function MessageBubble({
         <div className="flex flex-col max-w-[70%]">
           <div
             className="
-              bg-[var(--message-bg-ai)]
-              text-[var(--message-text-ai)]
+              bg-message-bg-ai
+              text-message-text-ai
               border border-border-subtle
               px-4 py-3
               rounded-lg rounded-bl-[4px]
