@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from 'sonner';
+import { AppProviders } from '@/components/providers/app-providers';
 import { CurrentUserServerProvider } from '@/components/providers/current-user-provider';
 import { ReactNode, ReactElement } from 'react';
 
@@ -36,9 +37,11 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CurrentUserServerProvider>
-          <Navigation />
-          {children}
-          <Toaster />
+          <AppProviders>
+            <Navigation />
+            {children}
+            <Toaster />
+          </AppProviders>
         </CurrentUserServerProvider>
       </body>
     </html>

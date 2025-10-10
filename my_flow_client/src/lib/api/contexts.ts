@@ -13,6 +13,8 @@ type ContextUpdate = components['schemas']['ContextUpdate'];
  * Returns a list of all contexts owned by the user. The backend enforces
  * authorization using the JWT token passed via server action.
  *
+ * The backend returns a paginated response, but we extract just the items array.
+ *
  * @returns Promise resolving to array of Context objects
  * @throws {AppError} When request fails or user is unauthorized
  *
@@ -23,7 +25,15 @@ type ContextUpdate = components['schemas']['ContextUpdate'];
  * ```
  */
 export async function fetchContexts(): Promise<Context[]> {
-  return apiRequest<Context[]>('/api/v1/contexts');
+  const response = await apiRequest<{
+    items: Context[];
+    total: number;
+    limit: number;
+    offset: number;
+    has_more: boolean;
+  }>('/api/v1/contexts');
+
+  return response.items;
 }
 
 /**

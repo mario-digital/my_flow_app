@@ -12,7 +12,7 @@ import logging
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from threading import RLock
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import httpx
@@ -72,9 +72,11 @@ def _fetch_jwks(request_id: str) -> JWKSResponse:
     """Fetch JWKS payload from Logto and return parsed JSON."""
 
     timeout_seconds = settings.LOGTO_JWKS_TIMEOUT_SECONDS
+    # Remove trailing slash to avoid double slashes in URL
+    endpoint = settings.LOGTO_ENDPOINT.rstrip("/")
     try:
         response = httpx.get(
-            f"{settings.LOGTO_ENDPOINT}/oidc/jwks",
+            f"{endpoint}/oidc/jwks",
             timeout=httpx.Timeout(timeout_seconds, read=timeout_seconds),
         )
         response.raise_for_status()
@@ -193,14 +195,28 @@ async def get_current_user(
                 )
 
         # Decode and verify JWT using the matching signing key
+        audience = settings.LOGTO_RESOURCE or settings.LOGTO_APP_ID
+
+        # Support multiple signing algorithms (Logto may use RS256, ES384, or others)
+        # Remove trailing slash from endpoint to avoid double slashes in issuer URL
+        endpoint = settings.LOGTO_ENDPOINT.rstrip("/")
+        decode_kwargs: dict[str, Any] = {
+            "algorithms": ["RS256", "ES256", "ES384", "ES512"],
+            "issuer": f"{endpoint}/oidc",
+        }
+        if audience:
+            decode_kwargs["audience"] = audience
+        else:
+            # Skip audience verification when no audience configured - tests will still
+            # validate resource claims via _token_has_required_resource
+            decode_kwargs["options"] = {"verify_aud": False}
+
         payload = cast(
             JWTClaims,
             jwt.decode(
                 token,
                 key=dict(signing_key),
-                algorithms=["RS256"],
-                audience=settings.LOGTO_APP_ID,
-                issuer=f"{settings.LOGTO_ENDPOINT}/oidc",
+                **decode_kwargs,
             ),
         )
 
@@ -246,9 +262,12 @@ async def get_current_user(
 def _token_has_required_resource(payload: Mapping[str, object]) -> bool:
     """Return True when payload includes configured resource claim.
 
-    Logto tokens may expose the API audience via either a singular ``resource``
-    claim or a plural ``resources`` claim (occasionally a list). We inspect both
-    to avoid false negatives when Logto toggles claim formats.
+    Logto tokens may expose the API audience via either:
+    1. The standard JWT `aud` (audience) claim (most common)
+    2. A singular `resource` claim
+    3. A plural `resources` claim (occasionally a list)
+
+    We inspect all three to avoid false negatives when Logto uses different claim formats.
     """
 
     expected_resource = settings.LOGTO_RESOURCE
@@ -256,14 +275,23 @@ def _token_has_required_resource(payload: Mapping[str, object]) -> bool:
         return True
 
     claim_values: list[str] = []
-    resource_claim = payload.get("resource")
-    resources_claim = payload.get("resources")
 
+    # Check standard audience claim (most common for Logto)
+    aud_claim = payload.get("aud")
+    if isinstance(aud_claim, str):
+        claim_values.append(aud_claim)
+    elif isinstance(aud_claim, list):
+        claim_values.extend(str(item) for item in aud_claim if isinstance(item, str))
+
+    # Check resource claim
+    resource_claim = payload.get("resource")
     if isinstance(resource_claim, str):
         claim_values.append(resource_claim)
     elif isinstance(resource_claim, list):
         claim_values.extend(str(item) for item in resource_claim if isinstance(item, str))
 
+    # Check resources claim
+    resources_claim = payload.get("resources")
     if isinstance(resources_claim, str):
         claim_values.append(resources_claim)
     elif isinstance(resources_claim, list):

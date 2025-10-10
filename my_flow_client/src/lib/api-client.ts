@@ -1,3 +1,5 @@
+'use server';
+
 import { getAccessToken } from '@logto/next/server-actions';
 import { logtoConfig } from './logto';
 import { AppError } from './errors';
@@ -16,7 +18,6 @@ const API_BASE_URL =
  *
  * @example
  * ```typescript
- * 'use server';
  * const token = await getApiAccessToken();
  * if (token) {
  *   // Use token for API request
@@ -24,7 +25,6 @@ const API_BASE_URL =
  * ```
  */
 export async function getApiAccessToken(): Promise<string | null> {
-  'use server';
   try {
     const resource = process.env['NEXT_PUBLIC_LOGTO_RESOURCE'];
     if (!resource) {
@@ -58,7 +58,6 @@ export async function getApiAccessToken(): Promise<string | null> {
  *
  * @example
  * ```typescript
- * 'use server';
  * import type { ProtectedResponse } from '@/types/api';
  *
  * // GET request
@@ -75,7 +74,6 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  'use server';
   const token = await getApiAccessToken();
 
   const headers: Record<string, string> = {
