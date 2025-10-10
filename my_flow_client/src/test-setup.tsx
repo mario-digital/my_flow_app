@@ -1,4 +1,4 @@
-import React from 'react';
+import { createElement } from 'react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
@@ -35,7 +35,7 @@ vi.mock('@logto/next/server-actions', () => ({
 // Mock Navigation component (async server component)
 vi.mock('@/components/navigation', () => ({
   Navigation: () =>
-    React.createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
+    createElement('nav', { 'data-testid': 'navigation' }, 'Navigation'),
 }));
 
 // Mock Next.js fonts with proper function structure
@@ -72,7 +72,7 @@ vi.mock('next/image', () => ({
     void _fill;
     void _placeholder;
     void _blur;
-    return React.createElement(
+    return createElement(
       'img',
       props as React.ImgHTMLAttributes<HTMLImageElement>
     );
