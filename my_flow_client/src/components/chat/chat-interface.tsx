@@ -43,11 +43,11 @@ export function ChatInterface({
   }, [messages, isAssistantTyping]);
 
   // Handle sending a message
-  const handleSendMessage = (e?: FormEvent): void => {
+  const handleSendMessage = async (e?: FormEvent): Promise<void> => {
     e?.preventDefault();
 
     const trimmedInput = inputValue.trim();
-    if (!trimmedInput) return;
+    if (!trimmedInput || !_contextId) return;
 
     // Create new user message
     const newMessage: Message = {
@@ -58,19 +58,72 @@ export function ChatInterface({
     };
 
     // Add message to list
-    setMessages((prev) => [...prev, newMessage]);
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
 
     // Clear input
     setInputValue('');
 
-    // Simulate assistant typing (in real implementation, this would trigger API call)
+    // Start streaming assistant response
     setIsAssistantTyping(true);
 
-    // TODO: Replace with actual API call to backend
-    // For now, just simulate a delay
-    setTimeout(() => {
+    // Import streaming function dynamically
+    const { streamChat } = await import('@/lib/api/chat');
+
+    // Create assistant message placeholder
+    const assistantMessageId = crypto.randomUUID();
+    let assistantContent = '';
+
+    try {
+      // Stream the response
+      for await (const event of streamChat(_contextId, updatedMessages)) {
+        if (event.type === 'token' && event.data) {
+          // Append token to assistant message
+          assistantContent += event.data;
+
+          // Update assistant message in real-time
+          setMessages((prev) => {
+            const existing = prev.find((m) => m.id === assistantMessageId);
+            if (existing) {
+              // Update existing message
+              return prev.map((m) =>
+                m.id === assistantMessageId
+                  ? { ...m, content: assistantContent }
+                  : m
+              );
+            } else {
+              // Add new assistant message
+              return [
+                ...prev,
+                {
+                  id: assistantMessageId,
+                  role: 'assistant' as const,
+                  content: assistantContent,
+                  timestamp: new Date().toISOString(),
+                },
+              ];
+            }
+          });
+        } else if (event.type === 'metadata' && event.metadata) {
+          // Flow extraction completed
+          if (event.metadata.extracted_flows.length > 0) {
+            console.log('Flows extracted:', event.metadata.extracted_flows);
+            // Note: Could call _onFlowsExtracted callback here if needed
+            // Would need to fetch the actual Flow objects from the IDs
+          }
+        } else if (event.type === 'error') {
+          console.error('Chat stream error:', event.error);
+          // Optionally show error to user
+        } else if (event.type === 'done') {
+          console.log('Chat stream complete');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to stream chat:', error);
+      // Optionally show error message to user
+    } finally {
       setIsAssistantTyping(false);
-    }, 1000);
+    }
   };
 
   // Handle keyboard shortcuts
@@ -78,7 +131,7 @@ export function ChatInterface({
     // Ctrl+Enter or Cmd+Enter to send
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -136,7 +189,9 @@ export function ChatInterface({
 
       {/* Input Area */}
       <form
-        onSubmit={handleSendMessage}
+        onSubmit={(e): void => {
+          void handleSendMessage(e);
+        }}
         className="p-4 border-t border-border bg-bg-secondary"
       >
         <div className="flex gap-2">
