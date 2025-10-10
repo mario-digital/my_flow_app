@@ -21,10 +21,10 @@ fi
 # Frontend checks (only if frontend files staged AND directory exists)
 if [ "$FRONTEND_STAGED" = "true" ] && [ -d "my_flow_client" ]; then
   echo "🧹 Linting frontend..."
-  bun --cwd my_flow_client run lint || { echo "❌ Frontend lint failed"; exit 1; }
+  (cd my_flow_client && bun run lint) || { echo "❌ Frontend lint failed"; exit 1; }
 
   echo "📝 Type checking frontend..."
-  bun --cwd my_flow_client run typecheck || { echo "❌ Frontend type check failed"; exit 1; }
+  (cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
 elif [ "$FRONTEND_STAGED" = "true" ]; then
   echo "⚠️ Frontend files staged but my_flow_client directory not found (worktree?)."
   echo "   Skipping frontend checks - ensure they pass in main repo."
