@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from src import config
 from src.models.flow import FlowCreate, FlowPriority
 from src.services.ai_service import AIService
 
@@ -41,7 +42,11 @@ async def test_extract_and_create_flows_e2e(monkeypatch: pytest.MonkeyPatch) -> 
                                 "description": "Due Monday morning",
                                 "priority": "high",
                             },
-                            {"title": "Call client", "description": "Discuss project status", "priority": "medium"},
+                            {
+                                "title": "Call client",
+                                "description": "Discuss project status",
+                                "priority": "medium",
+                            },
                             {"title": "Book flight to SF", "priority": "medium"},
                         ]
                     }
@@ -184,7 +189,10 @@ async def test_extraction_with_mixed_valid_invalid_tasks(monkeypatch: pytest.Mon
                             {"title": "Valid task 1", "priority": "high"},
                             {"description": "Missing title", "priority": "medium"},  # Invalid
                             {"title": "Valid task 2", "priority": "low"},
-                            {"title": "Valid task 3", "priority": "INVALID_PRIORITY"},  # Invalid priority
+                            {
+                                "title": "Valid task 3",
+                                "priority": "INVALID_PRIORITY",
+                            },  # Invalid priority
                         ]
                     }
                 )
@@ -207,7 +215,6 @@ async def test_extraction_with_mixed_valid_invalid_tasks(monkeypatch: pytest.Mon
 async def test_extraction_respects_context_id(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that all extracted flows have correct context_id."""
     # Setup AIService with Anthropic
-    from src import config
     monkeypatch.setattr(config.settings, "AI_PROVIDER", "anthropic")
     monkeypatch.setattr(config.settings, "ANTHROPIC_API_KEY", "test-key")
     monkeypatch.setattr(config.settings, "AI_MODEL", "claude-3-5-sonnet-20241022")
