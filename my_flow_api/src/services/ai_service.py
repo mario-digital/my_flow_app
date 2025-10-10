@@ -249,9 +249,7 @@ class AIService:
                 try:
                     priority = FlowPriority[priority_str.upper()]
                 except KeyError:
-                    logger.warning(
-                        "Invalid priority '%s', defaulting to medium", priority_str
-                    )
+                    logger.warning("Invalid priority '%s', defaulting to medium", priority_str)
                     priority = FlowPriority.MEDIUM
 
                 flow = FlowCreate(
@@ -446,7 +444,14 @@ Output: {
                 temperature=0.3,
             )
 
-            json_str = message.content[0].text if message.content else ""
+            # Extract text from TextBlock (Anthropic returns union of block types)
+            json_str = ""
+            if message.content:
+                first_block = message.content[0]
+                # Type narrowing: only TextBlock has .text attribute
+                if hasattr(first_block, "text"):
+                    json_str = first_block.text
+
             return self._parse_flow_json(json_str, context_id)
 
         except AnthropicRateLimitError as e:
