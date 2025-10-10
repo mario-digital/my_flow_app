@@ -107,6 +107,13 @@
   --color-input-text: var(--input-text);
   --color-input-placeholder: var(--input-placeholder);
 
+  /* Component Colors - Message Bubbles */
+  --color-message-bg-user: var(--message-bg-user);
+  --color-message-bg-ai: var(--message-bg-ai);
+  --color-message-bg-system: var(--message-bg-system);
+  --color-message-text-user: var(--message-text-user);
+  --color-message-text-ai: var(--message-text-ai);
+
   /* ========================================
      SPACING - Reference spacing.css tokens
      Maps to Tailwind's p-*, m-*, gap-* utilities
