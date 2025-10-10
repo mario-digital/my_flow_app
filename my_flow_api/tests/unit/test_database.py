@@ -99,15 +99,18 @@ async def test_create_indexes(cleanup_db_instance: None) -> None:
     mock_contexts = MagicMock()
     mock_flows = MagicMock()
     mock_user_prefs = MagicMock()
+    mock_conversations = MagicMock()
 
     mock_db.contexts = mock_contexts
     mock_db.flows = mock_flows
     mock_db.user_preferences = mock_user_prefs
+    mock_db.conversations = mock_conversations
 
     # Mock create_index as async
     mock_contexts.create_index = AsyncMock()
     mock_flows.create_index = AsyncMock()
     mock_user_prefs.create_index = AsyncMock()
+    mock_conversations.create_index = AsyncMock()
 
     db_instance.db = mock_db
 
@@ -134,6 +137,14 @@ async def test_create_indexes(cleanup_db_instance: None) -> None:
 
     # Verify user_preferences indexes
     mock_user_prefs.create_index.assert_called_once_with("user_id", unique=True)
+
+    # Verify conversations indexes
+    assert mock_conversations.create_index.call_count == 5
+    mock_conversations.create_index.assert_any_call("user_id")
+    mock_conversations.create_index.assert_any_call("context_id")
+    mock_conversations.create_index.assert_any_call([("user_id", 1), ("context_id", 1)])
+    mock_conversations.create_index.assert_any_call([("context_id", 1), ("updated_at", -1)])
+    mock_conversations.create_index.assert_any_call([("user_id", 1), ("_id", 1)])
 
 
 @pytest.mark.asyncio
