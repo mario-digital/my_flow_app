@@ -1,3 +1,4 @@
+# ruff: noqa: PLR0915
 """Manual testing script for flow extraction functionality.
 
 Run with: cd my_flow_api && op run -- poetry run python scripts/test_flow_extraction.py

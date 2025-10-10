@@ -7,10 +7,10 @@ import pytest
 from anthropic import APIError as AnthropicAPIError
 from openai import APIError as OpenAIAPIError
 
-from src.models.flow import FlowCreate, FlowPriority
+from src import config
+from src.models.flow import FlowPriority
 from src.services.ai_service import AIService
-from src.utils.exceptions import AIRateLimitError, AIServiceError
-
+from src.utils.exceptions import AIServiceError
 
 # ============================================================================
 # Test Fixtures
@@ -21,7 +21,6 @@ from src.utils.exceptions import AIRateLimitError, AIServiceError
 def ai_service_openai(monkeypatch: pytest.MonkeyPatch) -> AIService:
     """Create AIService configured for OpenAI."""
     # Directly patch settings attributes
-    from src import config
     monkeypatch.setattr(config.settings, "AI_PROVIDER", "openai")
     monkeypatch.setattr(config.settings, "OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(config.settings, "AI_MODEL", "gpt-4")
@@ -39,7 +38,6 @@ def ai_service_openai(monkeypatch: pytest.MonkeyPatch) -> AIService:
 def ai_service_anthropic(monkeypatch: pytest.MonkeyPatch) -> AIService:
     """Create AIService configured for Anthropic."""
     # Directly patch settings attributes
-    from src import config
     monkeypatch.setattr(config.settings, "AI_PROVIDER", "anthropic")
     monkeypatch.setattr(config.settings, "ANTHROPIC_API_KEY", "test-key")
     monkeypatch.setattr(config.settings, "AI_MODEL", "claude-3-5-sonnet-20241022")
