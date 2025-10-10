@@ -38,6 +38,13 @@
     "bun": ">=1.0.0",
     "python": ">=3.12"
   },
+  "trustedDependencies": [
+    "@tailwindcss/oxide",
+    "esbuild",
+    "msw",
+    "sharp",
+    "unrs-resolver"
+  ],
   "lint-staged": {
     "my_flow_client/**/*.{ts,tsx,mjs}": [
       "sh -c 'cd my_flow_client && bun run format'",

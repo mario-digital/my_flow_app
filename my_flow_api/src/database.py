@@ -60,3 +60,10 @@ async def create_indexes() -> None:
 
     # UserPreferences collection indexes
     await db.user_preferences.create_index("user_id", unique=True)
+
+    # Conversations collection indexes (user isolation optimized)
+    await db.conversations.create_index("user_id")
+    await db.conversations.create_index("context_id")
+    await db.conversations.create_index([("user_id", 1), ("context_id", 1)])
+    await db.conversations.create_index([("context_id", 1), ("updated_at", -1)])
+    await db.conversations.create_index([("user_id", 1), ("_id", 1)])
