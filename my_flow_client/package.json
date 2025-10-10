@@ -57,6 +57,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "jsdom": "^27.0.0",
     "msw": "^2.11.4",
     "openapi-typescript": "^7.9.1",
