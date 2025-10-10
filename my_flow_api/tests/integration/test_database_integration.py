@@ -36,6 +36,7 @@ async def test_indexes_created() -> None:
         mock_db.contexts.create_index = AsyncMock()
         mock_db.flows.create_index = AsyncMock()
         mock_db.user_preferences.create_index = AsyncMock()
+        mock_db.conversations.create_index = AsyncMock()
 
         # Mock index lists for each collection
         mock_contexts_cursor = MagicMock()
@@ -61,6 +62,14 @@ async def test_indexes_created() -> None:
         ])
         mock_db.user_preferences.list_indexes = MagicMock(return_value=mock_prefs_cursor)
 
+        mock_conversations_cursor = MagicMock()
+        mock_conversations_cursor.to_list = AsyncMock(return_value=[
+            {"name": "_id_"},
+            {"name": "user_id_1"},
+            {"name": "context_id_1"}
+        ])
+        mock_db.conversations.list_indexes = MagicMock(return_value=mock_conversations_cursor)
+
         mock_client.return_value.__getitem__.return_value = mock_db
 
         await connect_to_mongo()
@@ -73,6 +82,9 @@ async def test_indexes_created() -> None:
 
         # Verify create_index was called for user_preferences
         assert mock_db.user_preferences.create_index.call_count >= 1
+
+        # Verify create_index was called for conversations
+        assert mock_db.conversations.create_index.call_count >= 5
 
         # Get indexes for contexts collection
         contexts_indexes = await db_instance.db.contexts.list_indexes().to_list(length=None)
@@ -96,6 +108,16 @@ async def test_indexes_created() -> None:
 
         # Verify user_preferences unique index exists
         assert "user_id_1" in prefs_index_names
+
+        # Get indexes for conversations collection
+        conversations_indexes = await (
+            db_instance.db.conversations.list_indexes().to_list(length=None)
+        )
+        conversations_index_names = [idx["name"] for idx in conversations_indexes]
+
+        # Verify conversations indexes exist
+        assert "user_id_1" in conversations_index_names
+        assert "context_id_1" in conversations_index_names
 
         await close_mongo_connection()
 
