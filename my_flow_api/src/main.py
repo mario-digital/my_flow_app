@@ -14,7 +14,7 @@ from src.config import settings
 from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.middleware.auth import get_current_user
 from src.rate_limit import limiter, rate_limit_exceeded_handler
-from src.routers import contexts, flows
+from src.routers import contexts, conversations, flows
 
 
 async def ensure_indexes() -> None:
@@ -94,6 +94,7 @@ app.add_middleware(
 
 # Register API routers
 app.include_router(contexts.router)
+app.include_router(conversations.router)
 app.include_router(flows.router)
 
 
