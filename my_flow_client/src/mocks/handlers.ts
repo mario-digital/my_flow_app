@@ -112,7 +112,13 @@ export const handlers: HttpHandler[] = [
   // GET /api/v1/contexts - List all contexts
   http.get('*/api/v1/contexts', async () => {
     await delay(100); // Simulate network latency
-    return HttpResponse.json(mockContexts);
+    return HttpResponse.json({
+      items: mockContexts,
+      total: mockContexts.length,
+      limit: 50,
+      offset: 0,
+      has_more: false,
+    });
   }),
 
   // GET /api/v1/contexts/:id - Get single context

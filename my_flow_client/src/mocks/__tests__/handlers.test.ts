@@ -421,9 +421,9 @@ describe('MSW Handlers', () => {
       // Verify original data is restored
       const response = await fetch('http://localhost/api/v1/contexts');
       const contexts = await response.json();
-      expect(contexts).toHaveLength(3); // Original count
+      expect(contexts.items).toHaveLength(3); // Original count
       expect(
-        contexts.find((c: { name: string }) => c.name === 'Work')
+        contexts.items.find((c: { name: string }) => c.name === 'Work')
       ).toBeDefined();
     });
 
