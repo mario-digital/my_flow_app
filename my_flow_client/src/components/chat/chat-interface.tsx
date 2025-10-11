@@ -67,8 +67,10 @@ export function ChatInterface({
     // Start streaming assistant response
     setIsAssistantTyping(true);
 
-    // Import streaming function dynamically
+    // Import streaming function and get auth token
     const { streamChat } = await import('@/lib/api/chat');
+    const { getApiAccessToken } = await import('@/lib/api-client');
+    const token = await getApiAccessToken();
 
     // Create assistant message placeholder
     const assistantMessageId = crypto.randomUUID();
@@ -76,7 +78,11 @@ export function ChatInterface({
 
     try {
       // Stream the response
-      for await (const event of streamChat(_contextId, updatedMessages)) {
+      for await (const event of streamChat(
+        _contextId,
+        updatedMessages,
+        token
+      )) {
         if (event.type === 'token' && event.data) {
           // Append token to assistant message
           assistantContent += event.data;

@@ -8,17 +8,18 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from src.database import get_database
 from src.middleware.auth import get_current_user
 from src.models.conversation import Message
 from src.models.flow import FlowCreate
+from src.repositories.context_repository import ContextRepository
 from src.repositories.flow_repository import FlowRepository
 from src.services.ai_service import AIService
-from src.utils.database import get_db  # type: ignore[import-untyped]
 from src.utils.exceptions import AIServiceError
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/conversations", tags=["conversations"])
+router = APIRouter(prefix="/api/v1/conversations", tags=["conversations"])
 
 
 class ChatRequest(BaseModel):
@@ -38,11 +39,18 @@ class ChatStreamMetadata(BaseModel):
     )
 
 
+async def get_flow_repository() -> FlowRepository:
+    """Dependency for FlowRepository."""
+    db = await get_database()
+    context_repo = ContextRepository(db)
+    return FlowRepository(db, context_repo)
+
+
 @router.post("/stream")
 async def stream_chat(
     chat_request: ChatRequest,
     user_id: Annotated[str, Depends(get_current_user)],
-    db: Annotated[FlowRepository, Depends(lambda: FlowRepository(get_db()))],
+    flow_repo: Annotated[FlowRepository, Depends(get_flow_repository)],
 ) -> StreamingResponse:
     """Stream AI chat response and extract flows.
 
@@ -53,10 +61,9 @@ async def stream_chat(
     4. Sends flow IDs as final SSE event
 
     Args:
-        request: FastAPI request object
         chat_request: Chat request with context_id and messages
         user_id: Authenticated user ID from JWT token
-        db: Flow repository for storing extracted flows
+        flow_repo: Flow repository for storing extracted flows
 
     Returns:
         StreamingResponse with text/event-stream content type
@@ -108,7 +115,7 @@ async def stream_chat(
             flow_ids: list[str] = []
             for flow in extracted_flows:
                 try:
-                    created_flow = await db.create(
+                    created_flow = await flow_repo.create(
                         user_id=user_id,
                         context_id=chat_request.context_id,
                         flow_data=flow,
