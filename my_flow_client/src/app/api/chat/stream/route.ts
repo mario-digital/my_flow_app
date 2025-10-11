@@ -13,6 +13,9 @@ interface StreamRequestBody {
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
+  // Tokens stay server-side so browser bundles never hold bearer creds.
+  // This BFF hop aligns with our security posture even if it adds an
+  // extra network hop compared to direct client fetches.
   const token = await getApiAccessToken();
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

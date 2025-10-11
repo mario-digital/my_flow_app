@@ -27,7 +27,10 @@ class ChatRequest(BaseModel):
 
     context_id: str = Field(..., description="Context ID for the conversation")
     messages: list[Message] = Field(
-        ..., min_length=1, description="Conversation history including new user message"
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Conversation history including new user message",
     )
 
 
@@ -142,7 +145,7 @@ async def stream_chat(
 
         except AIServiceError as e:
             logger.error("AI service error during streaming: %s", str(e))
-            error_msg = f"event: error\ndata: {{'error': 'AI service error: {e!s}'}}\n\n"
+            error_msg = "event: error\ndata: {'error': 'AI service temporarily unavailable'}\n\n"
             yield error_msg
         except Exception as e:
             logger.exception("Unexpected error during streaming: %s", str(e))
