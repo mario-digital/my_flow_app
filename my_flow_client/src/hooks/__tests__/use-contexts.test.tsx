@@ -229,22 +229,21 @@ describe('useContext(id)', () => {
 
 describe('useCreateContext()', () => {
   it('creates context with optimistic update', async () => {
-    const wrapper = createWrapper();
-
-    // Render both query and mutation hooks
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
-    const { result: mutationResult } = renderHook(() => useCreateContext(), {
-      wrapper,
-    });
+    // Render both query and mutation hooks in a SINGLE renderHook with shared QueryClient
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        createContext: useCreateContext(),
+      }),
+      { wrapper: createWrapper() }
+    );
 
     // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-    const initialCount = queryResult.current.data?.length || 0;
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+    const initialCount = result.current.contexts.data?.length || 0;
 
     // Trigger mutation
-    mutationResult.current.mutate({
+    result.current.createContext.mutate({
       name: 'New Context',
       color: '#3B82F6',
       icon: '🎉',
@@ -252,14 +251,16 @@ describe('useCreateContext()', () => {
 
     // Verify optimistic update (context appears immediately)
     await waitFor(() => {
-      expect(queryResult.current.data?.length).toBe(initialCount + 1);
+      expect(result.current.contexts.data?.length).toBe(initialCount + 1);
     });
 
     // Wait for mutation to settle
-    await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
+    await waitFor(() =>
+      expect(result.current.createContext.isSuccess).toBe(true)
+    );
 
     // Verify context has real ID from server
-    const newContext = queryResult.current.data?.find(
+    const newContext = result.current.contexts.data?.find(
       (c) => c.name === 'New Context'
     );
     expect(newContext?.id).not.toContain('temp-');
@@ -277,68 +278,72 @@ describe('useCreateContext()', () => {
       })
     );
 
-    const wrapper = createWrapper();
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
-    const { result: mutationResult } = renderHook(() => useCreateContext(), {
-      wrapper,
-    });
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        createContext: useCreateContext(),
+      }),
+      { wrapper: createWrapper() }
+    );
 
     // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-    const initialCount = queryResult.current.data?.length || 0;
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+    const initialCount = result.current.contexts.data?.length || 0;
 
     // Trigger mutation
-    mutationResult.current.mutate({
+    result.current.createContext.mutate({
       name: 'Invalid Context',
       color: '#3B82F6',
       icon: '🎉',
     });
 
     // Wait for mutation error
-    await waitFor(() => expect(mutationResult.current.isError).toBe(true));
+    await waitFor(() =>
+      expect(result.current.createContext.isError).toBe(true)
+    );
 
     // Verify rollback (count returns to initial)
-    expect(queryResult.current.data?.length).toBe(initialCount);
+    expect(result.current.contexts.data?.length).toBe(initialCount);
     expect(toast.error).toHaveBeenCalled();
   });
 });
 
 describe('useUpdateContext()', () => {
   it('updates context with optimistic update', async () => {
-    const wrapper = createWrapper();
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
+    // Use known context ID from mock data
+    const contextId = '507f1f77bcf86cd799439011';
 
-    // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-
-    const contextId = queryResult.current.data?.[0]?.id || '';
-    const { result: mutationResult } = renderHook(
-      () => useUpdateContext(contextId),
-      { wrapper }
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        updateContext: useUpdateContext(contextId),
+      }),
+      { wrapper: createWrapper() }
     );
 
+    // Wait for initial data to load
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+
     // Trigger mutation
-    mutationResult.current.mutate({
+    result.current.updateContext.mutate({
       name: 'Updated Work',
     });
 
     // Verify optimistic update (name changes immediately)
     await waitFor(() => {
-      const updatedContext = queryResult.current.data?.find(
+      const updatedContext = result.current.contexts.data?.find(
         (c) => c.id === contextId
       );
       expect(updatedContext?.name).toBe('Updated Work');
     });
 
     // Wait for mutation to settle
-    await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
+    await waitFor(() =>
+      expect(result.current.updateContext.isSuccess).toBe(true)
+    );
 
     // Verify context remains updated
-    const finalContext = queryResult.current.data?.find(
+    const finalContext = result.current.contexts.data?.find(
       (c) => c.id === contextId
     );
     expect(finalContext?.name).toBe('Updated Work');
@@ -356,32 +361,34 @@ describe('useUpdateContext()', () => {
       })
     );
 
-    const wrapper = createWrapper();
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
+    // Use known context ID from mock data
+    const contextId = '507f1f77bcf86cd799439011';
 
-    // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-
-    const contextId = queryResult.current.data?.[0]?.id || '';
-    const originalName = queryResult.current.data?.[0]?.name || '';
-
-    const { result: mutationResult } = renderHook(
-      () => useUpdateContext(contextId),
-      { wrapper }
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        updateContext: useUpdateContext(contextId),
+      }),
+      { wrapper: createWrapper() }
     );
 
+    // Wait for initial data
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+
+    const originalName = result.current.contexts.data?.[0]?.name || '';
+
     // Trigger mutation
-    mutationResult.current.mutate({
+    result.current.updateContext.mutate({
       name: 'Should Fail',
     });
 
     // Wait for mutation error
-    await waitFor(() => expect(mutationResult.current.isError).toBe(true));
+    await waitFor(() =>
+      expect(result.current.updateContext.isError).toBe(true)
+    );
 
     // Verify rollback (name reverts to original)
-    const revertedContext = queryResult.current.data?.find(
+    const revertedContext = result.current.contexts.data?.find(
       (c) => c.id === contextId
     );
     expect(revertedContext?.name).toBe(originalName);
@@ -391,35 +398,37 @@ describe('useUpdateContext()', () => {
 
 describe('useDeleteContext(id)', () => {
   it('removes context with optimistic update', async () => {
-    const wrapper = createWrapper();
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
+    // Use known context ID from mock data
+    const contextId = '507f1f77bcf86cd799439011';
 
-    // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-
-    const contextId = queryResult.current.data?.[0]?.id || '';
-    const initialCount = queryResult.current.data?.length || 0;
-
-    const { result: mutationResult } = renderHook(
-      () => useDeleteContext(contextId),
-      { wrapper }
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        deleteContext: useDeleteContext(contextId),
+      }),
+      { wrapper: createWrapper() }
     );
 
+    // Wait for initial data
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+
+    const initialCount = result.current.contexts.data?.length || 0;
+
     // Trigger mutation
-    mutationResult.current.mutate();
+    result.current.deleteContext.mutate();
 
     // Verify optimistic update (context disappears immediately)
     await waitFor(() => {
-      expect(queryResult.current.data?.length).toBe(initialCount - 1);
+      expect(result.current.contexts.data?.length).toBe(initialCount - 1);
     });
 
     // Wait for mutation to settle
-    await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
+    await waitFor(() =>
+      expect(result.current.deleteContext.isSuccess).toBe(true)
+    );
 
     // Verify context remains deleted
-    expect(queryResult.current.data?.length).toBe(initialCount - 1);
+    expect(result.current.contexts.data?.length).toBe(initialCount - 1);
     expect(toast.success).toHaveBeenCalledWith(CONTEXT_MESSAGES.deleteSuccess);
   });
 
@@ -434,30 +443,32 @@ describe('useDeleteContext(id)', () => {
       })
     );
 
-    const wrapper = createWrapper();
-    const { result: queryResult } = renderHook(() => useContexts(), {
-      wrapper,
-    });
+    // Use known context ID from mock data
+    const contextId = '507f1f77bcf86cd799439011';
 
-    // Wait for initial data
-    await waitFor(() => expect(queryResult.current.isSuccess).toBe(true));
-
-    const contextId = queryResult.current.data?.[0]?.id || '';
-    const initialCount = queryResult.current.data?.length || 0;
-
-    const { result: mutationResult } = renderHook(
-      () => useDeleteContext(contextId),
-      { wrapper }
+    const { result } = renderHook(
+      () => ({
+        contexts: useContexts(),
+        deleteContext: useDeleteContext(contextId),
+      }),
+      { wrapper: createWrapper() }
     );
 
+    // Wait for initial data
+    await waitFor(() => expect(result.current.contexts.isSuccess).toBe(true));
+
+    const initialCount = result.current.contexts.data?.length || 0;
+
     // Trigger mutation
-    mutationResult.current.mutate();
+    result.current.deleteContext.mutate();
 
     // Wait for mutation error
-    await waitFor(() => expect(mutationResult.current.isError).toBe(true));
+    await waitFor(() =>
+      expect(result.current.deleteContext.isError).toBe(true)
+    );
 
     // Verify rollback (context is restored)
-    expect(queryResult.current.data?.length).toBe(initialCount);
+    expect(result.current.contexts.data?.length).toBe(initialCount);
     expect(toast.error).toHaveBeenCalled();
   });
 });
