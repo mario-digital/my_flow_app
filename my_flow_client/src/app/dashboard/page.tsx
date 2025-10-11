@@ -1,7 +1,8 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { FlowList } from '@/components/flows/flow-list';
 import { useCurrentContext } from '@/components/providers/app-providers';
@@ -9,12 +10,26 @@ import { useContexts } from '@/hooks/use-contexts';
 import { useFlows } from '@/hooks/use-flows';
 import type { Flow } from '@/types/flow';
 
+const CHAT_PANEL_HEIGHT = 'var(--dashboard-chat-panel-height, 37.5rem)';
+
 export default function DashboardPage(): JSX.Element {
   const { currentContextId, setCurrentContextId } = useCurrentContext();
   const { data: contexts, error: contextsError } = useContexts();
   const { data: flows, isLoading: flowsLoading } = useFlows(
     currentContextId ?? ''
   );
+
+  const handleFlowClick = useCallback((id: string): void => {
+    toast.info(`Flow ${id} navigation is coming soon.`);
+  }, []);
+
+  const handleFlowComplete = useCallback((id: string): void => {
+    toast.info(`Toggle completion for flow ${id} is not available yet.`);
+  }, []);
+
+  const handleFlowDelete = useCallback((id: string): void => {
+    toast.info(`Deleting flow ${id} is not supported yet.`);
+  }, []);
 
   // Auto-select first context if none selected
   useEffect(() => {
@@ -93,9 +108,9 @@ export default function DashboardPage(): JSX.Element {
           {flows && flows.length > 0 && (
             <FlowList
               flows={flows as Flow[]}
-              onFlowClick={(id): void => console.log('Flow clicked:', id)}
-              onFlowComplete={(id): void => console.log('Flow completed:', id)}
-              onFlowDelete={(id): void => console.log('Flow deleted:', id)}
+              onFlowClick={handleFlowClick}
+              onFlowComplete={handleFlowComplete}
+              onFlowDelete={handleFlowDelete}
             />
           )}
         </div>
@@ -122,14 +137,23 @@ export default function DashboardPage(): JSX.Element {
 
           {/* Chat interface */}
           {currentContextId && (
-            <ChatInterface
-              contextId={currentContextId}
-              onFlowsExtracted={(flows: Flow[]) => {
-                console.log('Flows extracted from conversation:', flows);
-                // Future: Show toast notification
-              }}
-              className="h-[600px]"
-            />
+            <div style={{ height: CHAT_PANEL_HEIGHT }} className="h-full">
+              <ChatInterface
+                contextId={currentContextId}
+                onFlowsExtracted={(flows: Flow[]) => {
+                  if (flows.length > 0) {
+                    toast.success(
+                      `${flows.length} flow${
+                        flows.length > 1 ? 's' : ''
+                      } refreshed from conversation.`
+                    );
+                  } else {
+                    toast.info('Flow suggestions are refreshing.');
+                  }
+                }}
+                className="h-full"
+              />
+            </div>
           )}
         </div>
       </div>

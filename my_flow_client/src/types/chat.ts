@@ -26,9 +26,6 @@ export interface ChatInterfaceProps {
   /** Context ID for the current conversation */
   contextId: string;
 
-  /** Optional conversation ID for resuming existing chats */
-  conversationId?: string;
-
   /** Callback invoked when AI extracts flows from conversation */
   onFlowsExtracted: (flows: Flow[]) => void;
 
