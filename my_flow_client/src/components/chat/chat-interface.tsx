@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Send, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,14 +19,17 @@ import type { Flow } from '@/types/flow';
 import { cn } from '@/lib/utils';
 import { flowKeys } from '@/hooks/use-flows';
 
+const CHAT_EMPTY_STATE_MIN_HEIGHT = 'var(--chat-empty-state-min-height, 25rem)';
+const CHAT_TEXTAREA_MIN_HEIGHT = 'var(--chat-textarea-min-height, 3.75rem)';
+const CHAT_TEXTAREA_MAX_HEIGHT = 'var(--chat-textarea-max-height, 12.5rem)';
+
 /**
  * ChatInterface component manages the chat conversation UI.
  * Handles message display, input, auto-scroll, and user interactions.
  */
 export function ChatInterface({
-  contextId: _contextId,
-  conversationId: _conversationId,
-  onFlowsExtracted: _onFlowsExtracted,
+  contextId,
+  onFlowsExtracted,
   className,
 }: ChatInterfaceProps): ReactElement {
   // State management
@@ -51,7 +55,7 @@ export function ChatInterface({
     e?.preventDefault();
 
     const trimmedInput = inputValue.trim();
-    if (!trimmedInput || !_contextId) return;
+    if (!trimmedInput || !contextId) return;
 
     // Create new user message
     const newMessage: Message = {
@@ -80,7 +84,7 @@ export function ChatInterface({
 
     try {
       // Stream the response
-      for await (const event of streamChat(_contextId, updatedMessages)) {
+      for await (const event of streamChat(contextId, updatedMessages)) {
         if (event.type === 'token' && event.data) {
           // Append token to assistant message
           assistantContent += event.data;
@@ -113,7 +117,7 @@ export function ChatInterface({
           if (extractedFlowIds.length > 0) {
             const uniqueFlowIds = Array.from(new Set(extractedFlowIds));
             const cachedFlows = queryClient.getQueryData<Flow[]>(
-              flowKeys.list(_contextId)
+              flowKeys.list(contextId)
             );
 
             const matchedFlows = uniqueFlowIds
@@ -122,25 +126,18 @@ export function ChatInterface({
               )
               .filter((flow): flow is Flow => Boolean(flow));
 
-            if (matchedFlows.length > 0) {
-              _onFlowsExtracted(matchedFlows);
-            } else {
-              console.warn(
-                'Extracted flow IDs not found in cache',
-                extractedFlowIds
-              );
-            }
+            void queryClient.invalidateQueries({
+              queryKey: flowKeys.list(contextId),
+            });
+
+            onFlowsExtracted(matchedFlows);
           }
         } else if (event.type === 'error') {
-          console.error('Chat stream error:', event.error);
-          // Optionally show error to user
-        } else if (event.type === 'done') {
-          console.log('Chat stream complete');
+          toast.error(event.error ?? 'Chat stream failed. Please try again.');
         }
       }
-    } catch (error) {
-      console.error('Failed to stream chat:', error);
-      // Optionally show error message to user
+    } catch (_error) {
+      toast.error('Unable to send message. Please try again.');
     } finally {
       setIsAssistantTyping(false);
     }
@@ -170,7 +167,10 @@ export function ChatInterface({
         <div ref={scrollViewportRef} className="space-y-2">
           {isEmpty ? (
             // Empty state
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
+            <div
+              className="flex flex-col items-center justify-center h-full text-center"
+              style={{ minHeight: CHAT_EMPTY_STATE_MIN_HEIGHT }}
+            >
               <MessageSquare className="w-16 h-16 text-text-muted mb-4" />
               <h3 className="text-lg font-medium text-text-primary mb-2">
                 Start a conversation
@@ -220,8 +220,12 @@ export function ChatInterface({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message... (Ctrl+Enter to send)"
-            className="flex-1 min-h-[60px] max-h-[200px] resize-none bg-input border-input-border focus:border-input-border-focus"
+            className="flex-1 resize-none bg-input border-input-border focus:border-input-border-focus"
             aria-label="Message input"
+            style={{
+              minHeight: CHAT_TEXTAREA_MIN_HEIGHT,
+              maxHeight: CHAT_TEXTAREA_MAX_HEIGHT,
+            }}
           />
           <Button
             type="submit"
