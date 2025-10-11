@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.database import get_database
-from src.middleware.auth import get_current_user
+from src.middleware.auth import get_current_user, verify_context_ownership
 from src.models.conversation import Message
 from src.models.flow import FlowCreate
 from src.repositories.context_repository import ContextRepository
@@ -76,6 +76,13 @@ async def stream_chat(
         user_id,
         chat_request.context_id,
         len(chat_request.messages),
+    )
+
+    # Ensure the user owns the context before streaming any data
+    await verify_context_ownership(
+        chat_request.context_id,
+        user_id,
+        flow_repo.context_repo,
     )
 
     ai_service = AIService()
