@@ -2,7 +2,15 @@
 
 import type { ReactElement, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  startTransition,
+} from 'react';
+
+const CONTEXT_STORAGE_KEY = 'my-flow-current-context';
 
 /**
  * QueryClient instance configured for the application.
@@ -57,23 +65,45 @@ function ContextSelectionProvider({
   const [currentContextId, setCurrentContextIdState] = useState<string | null>(
     null
   );
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load saved context ID from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('my-flow-current-context');
-    if (saved) {
-      setCurrentContextIdState(saved);
+    if (typeof window === 'undefined') {
+      return;
     }
-    setIsInitialized(true);
+
+    const savedId = window.localStorage.getItem(CONTEXT_STORAGE_KEY);
+    const setIdTimeout = savedId
+      ? window.setTimeout(() => {
+          startTransition(() => {
+            setCurrentContextIdState(savedId);
+          });
+        }, 0)
+      : undefined;
+
+    const hydrationTimeout = window.setTimeout(() => {
+      setIsHydrated(true);
+    }, 0);
+
+    return () => {
+      if (setIdTimeout !== undefined) {
+        window.clearTimeout(setIdTimeout);
+      }
+      window.clearTimeout(hydrationTimeout);
+    };
   }, []);
 
   // Persist context ID to localStorage when it changes
   useEffect(() => {
-    if (isInitialized && currentContextId) {
-      localStorage.setItem('my-flow-current-context', currentContextId);
+    if (typeof window === 'undefined' || !isHydrated) {
+      return;
     }
-  }, [currentContextId, isInitialized]);
+    if (currentContextId) {
+      window.localStorage.setItem(CONTEXT_STORAGE_KEY, currentContextId);
+    } else {
+      window.localStorage.removeItem(CONTEXT_STORAGE_KEY);
+    }
+  }, [currentContextId, isHydrated]);
 
   const setCurrentContextId = (id: string): void => {
     setCurrentContextIdState(id);

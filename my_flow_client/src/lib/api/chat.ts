@@ -1,8 +1,5 @@
 import type { Message } from '@/types/chat';
 
-const API_BASE_URL =
-  process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8000';
-
 export interface ChatStreamEvent {
   type: 'token' | 'metadata' | 'done' | 'error';
   data?: string;
@@ -20,13 +17,11 @@ export interface ChatStreamEvent {
  *
  * @param contextId - Context ID for the conversation
  * @param messages - Array of messages including the new user message
- * @param token - Authentication token for API requests
  * @returns Async generator yielding chat events
  *
  * @example
  * ```typescript
- * const token = await getApiAccessToken();
- * for await (const event of streamChat(contextId, messages, token)) {
+ * for await (const event of streamChat(contextId, messages)) {
  *   if (event.type === 'token') {
  *     // Append token to assistant message
  *   } else if (event.type === 'metadata') {
@@ -37,30 +32,16 @@ export interface ChatStreamEvent {
  */
 export async function* streamChat(
   contextId: string,
-  messages: Message[],
-  token: string | null
+  messages: Message[]
 ): AsyncGenerator<ChatStreamEvent> {
-  if (!token) {
-    yield {
-      type: 'error',
-      error: 'Not authenticated',
-    };
-    return;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/api/v1/conversations/stream`, {
+  const response = await fetch(`/api/chat/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      context_id: contextId,
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-      })),
+      contextId,
+      messages,
     }),
   });
 

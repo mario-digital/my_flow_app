@@ -7,13 +7,16 @@ import {
   type ReactElement,
   type FormEvent,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Send, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './message-bubble';
 import type { ChatInterfaceProps, Message } from '@/types/chat';
+import type { Flow } from '@/types/flow';
 import { cn } from '@/lib/utils';
+import { flowKeys } from '@/hooks/use-flows';
 
 /**
  * ChatInterface component manages the chat conversation UI.
@@ -29,6 +32,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isAssistantTyping, setIsAssistantTyping] = useState(false);
+  const queryClient = useQueryClient();
 
   // Ref for auto-scroll functionality
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -67,10 +71,8 @@ export function ChatInterface({
     // Start streaming assistant response
     setIsAssistantTyping(true);
 
-    // Import streaming function and get auth token
+    // Import streaming function
     const { streamChat } = await import('@/lib/api/chat');
-    const { getApiAccessToken } = await import('@/lib/api-client');
-    const token = await getApiAccessToken();
 
     // Create assistant message placeholder
     const assistantMessageId = crypto.randomUUID();
@@ -78,11 +80,7 @@ export function ChatInterface({
 
     try {
       // Stream the response
-      for await (const event of streamChat(
-        _contextId,
-        updatedMessages,
-        token
-      )) {
+      for await (const event of streamChat(_contextId, updatedMessages)) {
         if (event.type === 'token' && event.data) {
           // Append token to assistant message
           assistantContent += event.data;
@@ -111,11 +109,27 @@ export function ChatInterface({
             }
           });
         } else if (event.type === 'metadata' && event.metadata) {
-          // Flow extraction completed
-          if (event.metadata.extracted_flows.length > 0) {
-            console.log('Flows extracted:', event.metadata.extracted_flows);
-            // Note: Could call _onFlowsExtracted callback here if needed
-            // Would need to fetch the actual Flow objects from the IDs
+          const { extracted_flows: extractedFlowIds } = event.metadata;
+          if (extractedFlowIds.length > 0) {
+            const uniqueFlowIds = Array.from(new Set(extractedFlowIds));
+            const cachedFlows = queryClient.getQueryData<Flow[]>(
+              flowKeys.list(_contextId)
+            );
+
+            const matchedFlows = uniqueFlowIds
+              .map((flowId) =>
+                cachedFlows?.find((cachedFlow) => cachedFlow.id === flowId)
+              )
+              .filter((flow): flow is Flow => Boolean(flow));
+
+            if (matchedFlows.length > 0) {
+              _onFlowsExtracted(matchedFlows);
+            } else {
+              console.warn(
+                'Extracted flow IDs not found in cache',
+                extractedFlowIds
+              );
+            }
           }
         } else if (event.type === 'error') {
           console.error('Chat stream error:', event.error);
