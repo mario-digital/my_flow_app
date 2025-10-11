@@ -1,6 +1,3 @@
-'use server';
-
-import { getApiAccessToken } from '@/lib/api-client';
 import type { Message } from '@/types/chat';
 
 const API_BASE_URL =
@@ -23,11 +20,13 @@ export interface ChatStreamEvent {
  *
  * @param contextId - Context ID for the conversation
  * @param messages - Array of messages including the new user message
+ * @param token - Authentication token for API requests
  * @returns Async generator yielding chat events
  *
  * @example
  * ```typescript
- * for await (const event of streamChat(contextId, messages)) {
+ * const token = await getApiAccessToken();
+ * for await (const event of streamChat(contextId, messages, token)) {
  *   if (event.type === 'token') {
  *     // Append token to assistant message
  *   } else if (event.type === 'metadata') {
@@ -38,10 +37,9 @@ export interface ChatStreamEvent {
  */
 export async function* streamChat(
   contextId: string,
-  messages: Message[]
+  messages: Message[],
+  token: string | null
 ): AsyncGenerator<ChatStreamEvent> {
-  const token = await getApiAccessToken();
-
   if (!token) {
     yield {
       type: 'error',
