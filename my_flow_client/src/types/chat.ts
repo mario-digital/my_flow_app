@@ -26,7 +26,11 @@ export interface ChatInterfaceProps {
   /** Context ID for the current conversation */
   contextId: string;
 
-  /** Callback invoked when AI extracts flows from conversation */
+  /**
+   * Callback invoked when AI extracts flows from conversation.
+   * Implementations should expect up to 50 flows; the backend caps
+   * conversation history and resulting creations to prevent abuse.
+   */
   onFlowsExtracted: (flows: Flow[]) => void;
 
   /** Optional className for styling */

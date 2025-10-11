@@ -116,19 +116,20 @@ export function ChatInterface({
           const { extracted_flows: extractedFlowIds } = event.metadata;
           if (extractedFlowIds.length > 0) {
             const uniqueFlowIds = Array.from(new Set(extractedFlowIds));
-            const cachedFlows = queryClient.getQueryData<Flow[]>(
+
+            await queryClient.refetchQueries({
+              queryKey: flowKeys.list(contextId),
+            });
+
+            const refreshedFlows = queryClient.getQueryData<Flow[]>(
               flowKeys.list(contextId)
             );
 
             const matchedFlows = uniqueFlowIds
               .map((flowId) =>
-                cachedFlows?.find((cachedFlow) => cachedFlow.id === flowId)
+                refreshedFlows?.find((flow) => flow.id === flowId)
               )
               .filter((flow): flow is Flow => Boolean(flow));
-
-            void queryClient.invalidateQueries({
-              queryKey: flowKeys.list(contextId),
-            });
 
             onFlowsExtracted(matchedFlows);
           }

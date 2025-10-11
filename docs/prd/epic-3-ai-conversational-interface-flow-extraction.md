@@ -308,7 +308,7 @@ GET    /api/conversations/{id}    → Get conversation history
 3. **Chat persistence:**
    - Messages are automatically saved to backend after each send/receive
    - No manual save button required
-   - Conversation history survives page refresh
+   - Conversation history survives page refresh, up to 50 recent messages (API hard limit)
 
 4. **Integration with Context Switcher:**
    - When user switches context, chat immediately clears and shows loading state

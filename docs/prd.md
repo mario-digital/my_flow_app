@@ -1580,7 +1580,7 @@ POST   /api/mock-data/generate              → Generate mock data
 
 2. **Data retention policies implemented:**
    - Completed flows older than 90 days are archived or deleted
-   - Conversation history older than 30 days is truncated (keep last 50 messages per context)
+   - Conversation history older than 30 days is truncated (keep last 50 messages per context) and API accepts at most 50 messages per request.
    - Script: `scripts/cleanup_old_data.py` (runs weekly via cron or scheduled task)
 
 3. **TTL indexes created:**

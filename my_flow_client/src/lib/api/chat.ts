@@ -34,6 +34,8 @@ export async function* streamChat(
   contextId: string,
   messages: Message[]
 ): AsyncGenerator<ChatStreamEvent> {
+  // We intentionally route through the Next.js API layer so bearer tokens
+  // never ship to the browser; see /app/api/chat/stream.
   const response = await fetch(`/api/chat/stream`, {
     method: 'POST',
     headers: {
