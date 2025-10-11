@@ -31,8 +31,8 @@ if [ "$FRONTEND_CHANGED" = "true" ] && [ -d "my_flow_client" ]; then
   echo "📝 Type checking frontend..."
   (cd my_flow_client && bun run typecheck) || { echo "❌ Frontend type check failed"; exit 1; }
 
-  echo "🔬 Running frontend tests..."
-  bun --cwd my_flow_client test || { echo "❌ Frontend tests failed"; exit 1; }
+  echo "🔬 Running frontend tests with coverage..."
+  bun --cwd my_flow_client test -- --coverage || { echo "❌ Frontend tests (with coverage) failed"; exit 1; }
 
   # Production build check with secrets (if 1Password CLI is available)
   if command -v op >/dev/null 2>&1; then
