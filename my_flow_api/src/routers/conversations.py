@@ -158,7 +158,7 @@ async def stream_chat(  # noqa: PLR0915
     # Get tool schemas for function calling
     tool_schemas = ai_tools.get_tool_schemas()
 
-    async def generate_sse_stream() -> AsyncGenerator[str, None]:  # noqa: PLR0915
+    async def generate_sse_stream() -> AsyncGenerator[str, None]:  # noqa: PLR0915, PLR0912
         """Generate Server-Sent Events stream with function calling support."""
         try:
             # Step 1: Stream AI response with function calling
@@ -184,7 +184,8 @@ async def stream_chat(  # noqa: PLR0915
 
                 elif chunk["type"] == "tool_call":
                     # Execute tool
-                    logger.info("Executing tool: %s", chunk["name"])
+                    tool_name = chunk["name"]
+                    logger.info("Executing tool: %s with args: %s", tool_name, chunk["arguments"])
                     try:
                         arguments = json.loads(chunk["arguments"])
                     except json.JSONDecodeError:
@@ -193,17 +194,19 @@ async def stream_chat(  # noqa: PLR0915
 
                     # Execute the tool
                     result = await ai_tools.execute_tool(
-                        chunk["name"],
+                        tool_name,
                         arguments,
                         user_id,
                         flow_repo,
                     )
 
+                    logger.info("Tool execution result: %s", result)
+
                     # Send tool execution event to frontend
                     tool_event = {
                         "type": "tool_executed",
                         "payload": {
-                            "tool_name": chunk["name"],
+                            "tool_name": tool_name,
                             "tool_id": chunk["id"],
                             "arguments": arguments,
                             "result": result,
@@ -211,9 +214,25 @@ async def stream_chat(  # noqa: PLR0915
                     }
                     yield f"data: {json.dumps(tool_event)}\n\n"
 
-                    # Add tool result to response for user feedback
+                    # Send tool result as visible text token to user
+                    result_message = ""
                     if result.get("success"):
-                        full_response += f"\n\n✓ {result.get('message', 'Action completed')}"
+                        result_message = f"\n\n✓ {result.get('message', 'Action completed')}"
+                    else:
+                        result_message = f"\n\n✗ {result.get('error', 'Action failed')}"
+
+                    full_response += result_message
+
+                    # Send result message as text tokens so it appears in the chat
+                    event_data = {
+                        "type": "assistant_token",
+                        "payload": {
+                            "token": result_message,
+                            "messageId": message_id,
+                            "isComplete": False,
+                        },
+                    }
+                    yield f"data: {json.dumps(event_data)}\n\n"
 
             # Send completion token
             completion_event = {

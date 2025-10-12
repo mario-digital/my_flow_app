@@ -152,21 +152,34 @@ class AITools:
         flow_repo: FlowRepository,
     ) -> dict[str, Any]:
         """Execute mark_flow_complete tool."""
-        flow_id = arguments["flow_id"]
+        flow_id = arguments.get("flow_id")
+
+        if not flow_id:
+            logger.error("mark_flow_complete called without flow_id")
+            return {
+                "success": False,
+                "error": "Missing flow_id parameter",
+            }
+
+        logger.info("Attempting to mark flow %s as complete for user %s", flow_id, user_id)
 
         # Get flow to verify ownership and existence
         flow = await flow_repo.get_by_id(flow_id, user_id)
         if not flow:
+            logger.warning("Flow %s not found for user %s", flow_id, user_id)
             return {
                 "success": False,
                 "error": f"Flow {flow_id} not found or you don't have access",
             }
 
         # Mark as complete
+        logger.info("Marking flow %s (%s) as complete", flow_id, flow.title)
         updated_flow = await flow_repo.mark_complete(flow_id, user_id)
         if not updated_flow:
+            logger.error("Failed to mark flow %s as complete", flow_id)
             return {"success": False, "error": "Failed to mark flow as complete"}
 
+        logger.info("Successfully marked flow %s as complete", flow_id)
         return {
             "success": True,
             "message": f"Marked '{flow.title}' as complete",
