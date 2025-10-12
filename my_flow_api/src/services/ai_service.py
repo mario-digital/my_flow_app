@@ -86,7 +86,7 @@ class AIService:
                 msg = "OpenAI client not initialized"
                 raise AIStreamingError(msg)
 
-            # Build context-aware system prompt
+            # Build context-aware system prompt with STRONG tool usage instruction
             system_prompt = f"You are a helpful assistant for the user's '{context_id}' context. "
             if available_flows:
                 system_prompt += "\n\nAvailable flows (tasks):\n"
@@ -97,13 +97,26 @@ class AIService:
                         f"- [{status}] {flow['title']} (ID: {flow['id']}, Priority: {priority})\n"
                     )
                 system_prompt += (
-                    "\nWhen the user asks to complete, delete, or modify a task, "
-                    "use the appropriate tool with the correct flow ID."
+                    "\n**IMPORTANT: When the user asks you to complete, delete, or modify a task, "
+                    "you MUST use the appropriate function tool "
+                    "(mark_flow_complete, delete_flow, or update_flow_priority). "
+                    "Match the task name from the user's request to the flow title above "
+                    "(case-insensitive, partial match is OK). "
+                    "DO NOT just respond with text - actually call the function with the "
+                    "correct flow_id. The user expects you to take ACTION, not just "
+                    "acknowledge the request.**"
+                )
+            else:
+                system_prompt += (
+                    "\n\n**Note: There are currently no incomplete tasks in this context. "
+                    "If the user asks to complete or delete a task, "
+                    "let them know no tasks are currently available.**"
                 )
 
             openai_messages = [{"role": "system", "content": system_prompt}]
             openai_messages.extend([{"role": msg.role, "content": msg.content} for msg in messages])
 
+            print(f"🔧 SYSTEM PROMPT:\n{system_prompt}\n")
             logger.debug("Starting OpenAI stream with tools: %s", bool(tools))
 
             # Create streaming completion with optional tools
