@@ -44,6 +44,10 @@ export function useChatStream(
     'connecting' | 'connected' | 'disconnected' | 'error'
   >('disconnected');
 
+  // Flow extraction notification state
+  const [pendingFlows, setPendingFlows] = useState<Flow[]>([]);
+  const [showNotification, setShowNotification] = useState(false);
+
   // Refs for current assistant message and retry logic
   const currentAssistantMessageRef = useRef<Message | null>(null);
   const retryCountRef = useRef<number>(0);
@@ -93,17 +97,16 @@ export function useChatStream(
     (payload: { flows: Flow[] }) => {
       const { flows } = payload;
 
+      // Store flows and show notification
+      setPendingFlows(flows);
+      setShowNotification(true);
+
       // Call optional callback
       if (options?.onFlowsExtracted) {
         options.onFlowsExtracted(flows);
       }
-
-      // Invalidate TanStack Query cache to trigger refetch
-      void queryClient.invalidateQueries({
-        queryKey: flowKeys.list(contextId),
-      });
     },
-    [contextId, options, queryClient]
+    [options]
   );
 
   /**
@@ -151,6 +154,49 @@ export function useChatStream(
       // Connection will be re-established by the main effect
     }, delay);
   }, []);
+
+  /**
+   * Accept extracted flows (optimistic UI update).
+   * Immediately adds flows to cache, then triggers background refetch for server confirmation.
+   */
+  const acceptFlows = useCallback(() => {
+    // Optimistically update cache (instant UI feedback)
+    queryClient.setQueryData<Flow[]>(flowKeys.list(contextId), (old) => [
+      ...(old || []),
+      ...pendingFlows,
+    ]);
+
+    // Invalidate to trigger background refetch (server confirmation)
+    void queryClient.invalidateQueries({
+      queryKey: flowKeys.list(contextId),
+    });
+
+    // Clear notification
+    setPendingFlows([]);
+    setShowNotification(false);
+  }, [contextId, pendingFlows, queryClient]);
+
+  /**
+   * Dismiss extracted flows.
+   * Deletes flows from backend via BFF proxy, then hides notification.
+   */
+  const dismissFlows = useCallback(async () => {
+    try {
+      // Delete flows from backend via Next.js BFF proxy (not FastAPI directly)
+      await Promise.all(
+        pendingFlows.map((flow) =>
+          fetch(`/api/flows/${flow.id}`, { method: 'DELETE' })
+        )
+      );
+
+      // Clear notification
+      setPendingFlows([]);
+      setShowNotification(false);
+    } catch (err) {
+      console.error('Failed to dismiss flows:', err);
+      setError(err instanceof Error ? err.message : 'Failed to dismiss flows');
+    }
+  }, [pendingFlows]);
 
   /**
    * Sends a user message through the BFF endpoint.
@@ -319,5 +365,9 @@ export function useChatStream(
     isStreaming,
     error,
     connectionStatus,
+    pendingFlows,
+    showNotification,
+    acceptFlows,
+    dismissFlows,
   };
 }
