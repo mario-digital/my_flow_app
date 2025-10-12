@@ -22,6 +22,10 @@ export interface ChatStreamOptions {
   contextId: string;
   conversationId?: string;
   onFlowsExtracted?: (flows: Flow[]) => void;
+  onToolExecuted?: (
+    toolName: string,
+    result: { success: boolean; message?: string; error?: string }
+  ) => void;
   onError?: (error: Error) => void;
 }
 

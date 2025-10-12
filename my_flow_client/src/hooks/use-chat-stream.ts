@@ -224,6 +224,35 @@ export function useChatStream(
   }, [pendingFlows]);
 
   /**
+   * Handle tool execution from AI.
+   * Shows a toast notification and invalidates flows query to update UI.
+   */
+  const handleToolExecuted = useCallback(
+    (payload: {
+      tool_name: string;
+      result: { success: boolean; message?: string; error?: string };
+    }) => {
+      console.log('[useChatStream] Tool executed:', payload);
+
+      // Show toast notification
+      if (payload.result.success) {
+        options?.onToolExecuted?.(payload.tool_name, payload.result);
+
+        // Invalidate flows query to refresh the list
+        void queryClient.invalidateQueries({
+          queryKey: ['flows', contextId],
+        });
+      } else {
+        console.error('Tool execution failed:', payload.result.error);
+        options?.onError?.(
+          new Error(payload.result.error || 'Tool execution failed')
+        );
+      }
+    },
+    [contextId, queryClient, options]
+  );
+
+  /**
    * Sends a user message through the BFF endpoint.
    */
   const sendMessage = useCallback(
@@ -350,6 +379,18 @@ export function useChatStream(
                   case 'flows_extracted':
                     handleFlowsExtracted(parsed.payload as { flows: Flow[] });
                     break;
+                  case 'tool_executed':
+                    handleToolExecuted(
+                      parsed.payload as {
+                        tool_name: string;
+                        result: {
+                          success: boolean;
+                          message?: string;
+                          error?: string;
+                        };
+                      }
+                    );
+                    break;
                   case 'error':
                     handleError(
                       parsed.payload as { message?: string; code?: string }
@@ -388,6 +429,7 @@ export function useChatStream(
       messages,
       handleAssistantToken,
       handleFlowsExtracted,
+      handleToolExecuted,
       handleError,
       options,
       attemptReconnect,

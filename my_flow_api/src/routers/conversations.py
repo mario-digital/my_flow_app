@@ -18,6 +18,7 @@ from src.repositories.context_repository import ContextRepository
 from src.repositories.conversation_repository import ConversationRepository
 from src.repositories.flow_repository import FlowRepository
 from src.services.ai_service import AIService
+from src.services.ai_tools import ai_tools
 from src.utils.exceptions import AIServiceError
 
 logger = logging.getLogger(__name__)
@@ -100,7 +101,7 @@ async def get_conversations(
 
 
 @router.post("/stream")
-async def stream_chat(
+async def stream_chat(  # noqa: PLR0915
     chat_request: ChatRequest,
     user_id: Annotated[str, Depends(get_current_user)],
     flow_repo: Annotated[FlowRepository, Depends(get_flow_repository)],
@@ -140,24 +141,79 @@ async def stream_chat(
 
     ai_service = AIService()
 
-    async def generate_sse_stream() -> AsyncGenerator[str, None]:
-        """Generate Server-Sent Events stream."""
+    # Get available flows for tool context
+    flows = await flow_repo.get_all_by_context(
+        chat_request.context_id, user_id, include_completed=False
+    )
+    available_flows = [
+        {
+            "id": str(flow.id),
+            "title": flow.title,
+            "priority": flow.priority.value,
+            "is_completed": flow.is_completed,
+        }
+        for flow in flows
+    ]
+
+    # Get tool schemas for function calling
+    tool_schemas = ai_tools.get_tool_schemas()
+
+    async def generate_sse_stream() -> AsyncGenerator[str, None]:  # noqa: PLR0915
+        """Generate Server-Sent Events stream with function calling support."""
         try:
-            # Step 1: Stream AI response
+            # Step 1: Stream AI response with function calling
             full_response = ""
             # Generate unique message ID for each assistant response
             message_id = f"assistant-{uuid.uuid4()}"
 
-            async for token in ai_service.stream_chat_response(
-                chat_request.messages, chat_request.context_id
+            async for chunk in ai_service.stream_chat_response(
+                chat_request.messages,
+                chat_request.context_id,
+                tools=tool_schemas,
+                available_flows=available_flows,
             ):
-                # Send token as SSE data event with proper JSON format
-                full_response += token
-                event_data = {
-                    "type": "assistant_token",
-                    "payload": {"token": token, "messageId": message_id, "isComplete": False},
-                }
-                yield f"data: {json.dumps(event_data)}\n\n"
+                if chunk["type"] == "text":
+                    # Send text token
+                    token = chunk["content"]
+                    full_response += token
+                    event_data = {
+                        "type": "assistant_token",
+                        "payload": {"token": token, "messageId": message_id, "isComplete": False},
+                    }
+                    yield f"data: {json.dumps(event_data)}\n\n"
+
+                elif chunk["type"] == "tool_call":
+                    # Execute tool
+                    logger.info("Executing tool: %s", chunk["name"])
+                    try:
+                        arguments = json.loads(chunk["arguments"])
+                    except json.JSONDecodeError:
+                        logger.error("Failed to parse tool arguments: %s", chunk["arguments"])
+                        arguments = {}
+
+                    # Execute the tool
+                    result = await ai_tools.execute_tool(
+                        chunk["name"],
+                        arguments,
+                        user_id,
+                        flow_repo,
+                    )
+
+                    # Send tool execution event to frontend
+                    tool_event = {
+                        "type": "tool_executed",
+                        "payload": {
+                            "tool_name": chunk["name"],
+                            "tool_id": chunk["id"],
+                            "arguments": arguments,
+                            "result": result,
+                        },
+                    }
+                    yield f"data: {json.dumps(tool_event)}\n\n"
+
+                    # Add tool result to response for user feedback
+                    if result.get("success"):
+                        full_response += f"\n\n✓ {result.get('message', 'Action completed')}"
 
             # Send completion token
             completion_event = {

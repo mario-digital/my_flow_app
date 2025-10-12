@@ -9,6 +9,7 @@ import {
   type FormEvent,
 } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,14 @@ export function ChatInterface({
     dismissFlows,
   } = useChatStream(contextId, conversationId ?? undefined, {
     onFlowsExtracted,
+    onToolExecuted: (toolName, result) => {
+      // Show toast notification when AI executes a tool
+      if (result.success) {
+        toast.success(result.message || `Action completed: ${toolName}`);
+      } else {
+        toast.error(result.error || `Failed to execute: ${toolName}`);
+      }
+    },
   });
 
   // Update streaming messages when live messages change

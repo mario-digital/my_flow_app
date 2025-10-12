@@ -3,7 +3,7 @@
 import json
 import logging
 from collections.abc import AsyncGenerator
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from anthropic import APIError as AnthropicAPIError
 from anthropic import APITimeoutError as AnthropicAPITimeoutError
@@ -59,17 +59,23 @@ class AIService:
             "AI service initialized with provider: %s, model: %s", self.provider, self.model
         )
 
-    async def _stream_openai(
-        self, messages: list[Message], context_id: str
-    ) -> AsyncGenerator[str, None]:
-        """Stream response from OpenAI.
+    async def _stream_openai(  # noqa: PLR0912
+        self,
+        messages: list[Message],
+        context_id: str,
+        tools: list[dict] | None = None,
+        available_flows: list[dict] | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Stream response from OpenAI with function calling support.
 
         Args:
             messages: List of conversation messages
             context_id: Context identifier for system prompt
+            tools: Optional list of tool schemas for function calling
+            available_flows: Optional list of available flows for context in tool use
 
         Yields:
-            str: Token chunks from the AI response
+            dict: Either {"type": "text", "content": str} or {"type": "tool_call", ...}
 
         Raises:
             AIRateLimitError: If rate limit is exceeded
@@ -80,24 +86,75 @@ class AIService:
                 msg = "OpenAI client not initialized"
                 raise AIStreamingError(msg)
 
-            # Convert messages to OpenAI format and add context-specific system prompt
-            system_prompt = f"You are an assistant for the user's {context_id} context"
+            # Build context-aware system prompt
+            system_prompt = f"You are a helpful assistant for the user's '{context_id}' context. "
+            if available_flows:
+                system_prompt += "\n\nAvailable flows (tasks):\n"
+                for flow in available_flows:
+                    status = "✓ Complete" if flow.get("is_completed") else "○ Incomplete"
+                    priority = flow.get("priority", "medium").upper()
+                    system_prompt += (
+                        f"- [{status}] {flow['title']} (ID: {flow['id']}, Priority: {priority})\n"
+                    )
+                system_prompt += (
+                    "\nWhen the user asks to complete, delete, or modify a task, "
+                    "use the appropriate tool with the correct flow ID."
+                )
+
             openai_messages = [{"role": "system", "content": system_prompt}]
             openai_messages.extend([{"role": msg.role, "content": msg.content} for msg in messages])
 
-            logger.debug("Starting OpenAI stream for context: %s", context_id)
+            logger.debug("Starting OpenAI stream with tools: %s", bool(tools))
 
-            # Create streaming completion
-            stream = await self.openai_client.chat.completions.create(
-                model=self.model,
-                messages=openai_messages,  # type: ignore[arg-type]
-                stream=True,
-            )
+            # Create streaming completion with optional tools
+            create_params: dict[str, Any] = {
+                "model": self.model,
+                "messages": openai_messages,
+                "stream": True,
+            }
+            if tools:
+                create_params["tools"] = tools
+                create_params["tool_choice"] = "auto"
 
-            # Yield tokens as they arrive
+            stream = await self.openai_client.chat.completions.create(**create_params)
+
+            # Track tool calls being built across chunks
+            tool_calls_buffer: dict[int, dict[str, Any]] = {}
+
+            # Yield tokens and tool calls as they arrive
             async for chunk in stream:  # type: ignore[union-attr]
-                if chunk.choices and chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
+                if not chunk.choices:
+                    continue
+
+                delta = chunk.choices[0].delta
+
+                # Handle text content
+                if delta.content:
+                    yield {"type": "text", "content": delta.content}
+
+                # Handle tool calls
+                if delta.tool_calls:
+                    for tool_call in delta.tool_calls:
+                        idx = tool_call.index
+                        if idx not in tool_calls_buffer:
+                            tool_calls_buffer[idx] = {
+                                "id": tool_call.id or "",
+                                "name": tool_call.function.name if tool_call.function else "",
+                                "arguments": "",
+                            }
+
+                        # Accumulate function arguments
+                        if tool_call.function and tool_call.function.arguments:
+                            tool_calls_buffer[idx]["arguments"] += tool_call.function.arguments
+
+            # Yield complete tool calls at the end
+            for tool_call in tool_calls_buffer.values():
+                yield {
+                    "type": "tool_call",
+                    "id": tool_call["id"],
+                    "name": tool_call["name"],
+                    "arguments": tool_call["arguments"],
+                }
 
             logger.debug("OpenAI stream completed for context: %s", context_id)
 
@@ -171,16 +228,22 @@ class AIService:
             raise AIStreamingError(msg) from e
 
     async def stream_chat_response(
-        self, messages: list[Message], context_id: str
-    ) -> AsyncGenerator[str, None]:
-        """Stream AI chat response token-by-token.
+        self,
+        messages: list[Message],
+        context_id: str,
+        tools: list[dict] | None = None,
+        available_flows: list[dict] | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """Stream AI chat response with function calling support.
 
         Args:
             messages: List of conversation messages (must not be empty)
             context_id: Context identifier for personalized system prompt
+            tools: Optional list of tool schemas for function calling
+            available_flows: Optional list of available flows for AI context
 
         Yields:
-            str: Token chunks from the AI response
+            dict: Streaming chunks - text tokens or tool calls
 
         Raises:
             ValueError: If messages is empty or context_id is missing
@@ -195,17 +258,23 @@ class AIService:
             raise ValueError(msg)
 
         logger.info(
-            "Streaming chat response for context: %s with %d messages", context_id, len(messages)
+            "Streaming chat response for context: %s with %d messages, tools: %s",
+            context_id,
+            len(messages),
+            bool(tools),
         )
 
         try:
             # Delegate to provider-specific streaming method
             if self.provider == "openai":
-                async for token in self._stream_openai(messages, context_id):
-                    yield token
+                async for chunk in self._stream_openai(
+                    messages, context_id, tools, available_flows
+                ):
+                    yield chunk
             elif self.provider == "anthropic":
+                # Anthropic doesn't support function calling yet in our implementation
                 async for token in self._stream_anthropic(messages, context_id):
-                    yield token
+                    yield {"type": "text", "content": token}
             else:
                 raise AIProviderNotSupported(self.provider)
 
