@@ -218,69 +218,149 @@ export const queryClient = new QueryClient({
 
 ---
 
-### 7. API Client Layer (Frontend)
+### 7. BFF Proxy Layer (Next.js API Routes)
 
-**Responsibility:** Thin wrapper around `fetch` API for making authenticated HTTP requests to FastAPI backend. Handles JWT token injection, error handling, and response parsing.
+**Responsibility:** Acts as Backend-for-Frontend (BFF) proxy between browser and FastAPI backend. **Critical:** Browser code NEVER calls FastAPI directly - all requests go through Next.js API routes which handle JWT token retrieval and forwarding.
 
-**Key Interfaces:**
-- `apiClient.get<T>(url: string, options?: RequestInit): Promise<T>`
-- `apiClient.post<T>(url: string, body: unknown, options?: RequestInit): Promise<T>`
-- `apiClient.patch<T>(url: string, body: unknown, options?: RequestInit): Promise<T>`
-- `apiClient.delete<T>(url: string, options?: RequestInit): Promise<T>`
+**Architecture Pattern:**
+```
+Browser → Next.js API Routes (/api/*) → FastAPI Backend (/api/v1/*)
+   (session cookie)  →  (JWT token server-side)  →  (validates JWT)
+```
+
+**Key API Routes:**
+- `GET /api/flows` → proxies to `GET /api/v1/flows`
+- `POST /api/flows` → proxies to `POST /api/v1/flows`
+- `PATCH /api/flows/:id` → proxies to `PATCH /api/v1/flows/:id`
+- `DELETE /api/flows/:id` → proxies to `DELETE /api/v1/flows/:id`
+- `POST /api/chat/stream` → proxies SSE stream from `/api/v1/conversations/stream`
 
 **Dependencies:**
-- Logto Next.js SDK for token retrieval
-- Base URL from environment variable (`NEXT_PUBLIC_API_URL`)
+- Logto Next.js SDK for server-side token retrieval (`getApiAccessToken`)
+- FastAPI backend URL from environment variable (`API_BASE_URL`)
 
 **Technology Specifics:**
-- Uses `fetch` API with automatic JSON serialization
-- Injects `Authorization: Bearer <token>` header on all requests
-- Throws typed errors for 4xx/5xx responses
-- Supports request/response interceptors (future: logging, retries)
+- Uses Next.js App Router API routes (route handlers)
+- JWT tokens retrieved server-side only (NEVER exposed to browser)
+- Proxies requests/responses transparently
+- Supports SSE streaming for AI chat
+- Browser only uses session cookies (HttpOnly, Secure)
 
-**File Location:** `my_flow_client/src/lib/api-client.ts`
+**File Locations:** 
+- `my_flow_client/src/app/api/flows/route.ts`
+- `my_flow_client/src/app/api/flows/[id]/route.ts`
+- `my_flow_client/src/app/api/chat/stream/route.ts`
 
-**Implementation Snippet:**
+**Implementation Pattern:**
+
 ```typescript
-import { getAccessToken } from '@logto/next/server-actions';
+// app/api/flows/route.ts
+import { getApiAccessToken } from '@logto/next/server-actions';
+import { NextResponse } from 'next/server';
 
-class ApiClient {
-  private baseUrl: string;
+const API_BASE_URL = process.env.API_BASE_URL; // FastAPI URL
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+export async function GET() {
+  // 1. Get JWT token server-side (never exposed to browser)
+  const token = await getApiAccessToken();
+  
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  async request<T>(url: string, options: RequestInit = {}): Promise<T> {
-    const token = await getAccessToken();
-    const headers = {
+  
+  // 2. Call FastAPI with JWT token
+  const response = await fetch(`${API_BASE_URL}/api/v1/flows`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    };
-
-    const response = await fetch(`${this.baseUrl}${url}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Request failed');
-    }
-
-    return response.json();
+    },
+  });
+  
+  if (!response.ok) {
+    return NextResponse.json(
+      { error: 'Backend error' },
+      { status: response.status }
+    );
   }
-
-  get<T>(url: string, options?: RequestInit) {
-    return this.request<T>(url, { ...options, method: 'GET' });
-  }
-
-  // ... post, patch, delete methods
+  
+  // 3. Proxy response back to browser (without token)
+  const data = await response.json();
+  return NextResponse.json(data);
 }
 
-export const apiClient = new ApiClient(process.env.NEXT_PUBLIC_API_URL!);
+export async function POST(request: Request) {
+  const token = await getApiAccessToken();
+  const body = await request.json();
+  
+  const response = await fetch(`${API_BASE_URL}/api/v1/flows`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  
+  return NextResponse.json(await response.json(), {
+    status: response.status,
+  });
+}
 ```
+
+**SSE Streaming Pattern:**
+
+```typescript
+// app/api/chat/stream/route.ts
+export async function POST(request: Request) {
+  const token = await getApiAccessToken();
+  const body = await request.json();
+  
+  // Stream from FastAPI with JWT
+  const upstreamResponse = await fetch(
+    `${API_BASE_URL}/api/v1/conversations/stream`,
+    {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  
+  // Pipe stream back to browser (token never exposed)
+  const { readable, writable } = new TransformStream<Uint8Array>();
+  upstreamResponse.body!.pipeTo(writable);
+  
+  return new Response(readable, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
+```
+
+**Browser-Side Usage:**
+
+```typescript
+// ✅ CORRECT: Browser calls Next.js proxy
+const response = await fetch('/api/flows');
+const flows = await response.json();
+
+// ❌ WRONG: Browser calling FastAPI directly
+const response = await fetch('https://api.myflow.app/api/v1/flows', {
+  headers: { Authorization: `Bearer ${token}` } // Token exposed!
+});
+```
+
+**Security Benefits:**
+1. JWT tokens NEVER exposed to browser
+2. Session cookies are HttpOnly, Secure, SameSite=Lax
+3. Token refresh handled server-side by Logto SDK
+4. No CORS configuration needed
+5. Backend URL abstracted from frontend
 
 ---
 

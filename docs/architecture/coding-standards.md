@@ -32,21 +32,138 @@ export type Flow = components['schemas']['Flow'];
 
 **Rationale:** Single source prevents drift. Backend is source of truth because Pydantic validates at runtime.
 
-### 2. **API Call Conventions**
+### 2. **API Call Conventions (BFF Proxy Pattern)**
 
-**Rule:** All API calls MUST go through centralized API client with consistent error handling.
+**Rule:** All API calls from browser MUST go through Next.js API routes (BFF), NEVER directly to FastAPI. JWT tokens are handled server-side only.
+
+**Browser → Next.js API Route → FastAPI Backend**
 
 ```typescript
-// ❌ WRONG: Direct fetch calls
-const response = await fetch('/api/flows');
-const flows = await response.json();
+// ❌ WRONG: Browser calling FastAPI directly with JWT
+const response = await fetch('http://backend.com/api/v1/flows', {
+  headers: { Authorization: `Bearer ${token}` } // Token exposed in browser!
+});
 
-// ✅ CORRECT: Use centralized apiClient
-import { apiClient } from '@/lib/api-client';
-const flows = await apiClient.get<Flow[]>('/api/v1/flows');
+// ❌ WRONG: Browser accessing JWT token
+const token = await getAccessToken(); // Token exposed in browser!
+
+// ✅ CORRECT: Browser calls Next.js API route (uses session cookie)
+const response = await fetch('/api/flows'); // Next.js route, not FastAPI
+const flows = await response.json();
 ```
 
-**Why:** Centralized client handles auth headers, base URL, error transformation, and retry logic.
+**Next.js API Route (BFF Proxy):**
+
+```typescript
+// app/api/flows/route.ts
+import { getApiAccessToken } from '@logto/next/server-actions';
+
+export async function GET() {
+  // 1. Get JWT server-side (never exposed to browser)
+  const token = await getApiAccessToken();
+  
+  // 2. Call FastAPI with token
+  const response = await fetch(`${process.env.API_BASE_URL}/api/v1/flows`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  
+  // 3. Proxy response back (without token)
+  return Response.json(await response.json());
+}
+```
+
+**Why BFF Pattern:**
+- **Security:** JWT tokens never exposed to browser (only session cookies)
+- **Simplicity:** Browser code doesn't handle token refresh logic
+- **Flexibility:** Backend URL changes don't affect frontend code
+- **CORS:** Single origin (Next.js) handles all browser requests
+
+#### **SSE Streaming Through BFF Proxy**
+
+**For streaming endpoints (like AI chat), the BFF pattern is critical:**
+
+```typescript
+// ❌ WRONG: Browser connecting directly to FastAPI SSE
+const eventSource = new EventSource('http://backend.com/api/v1/conversations/stream');
+
+// ✅ CORRECT: Browser connects to Next.js proxy, which streams from FastAPI
+// Browser code:
+const response = await fetch('/api/chat/stream', {
+  method: 'POST',
+  body: JSON.stringify({ context_id, messages }),
+});
+
+const reader = response.body?.getReader();
+// Read SSE stream from Next.js proxy
+
+// Next.js API route (app/api/chat/stream/route.ts):
+export async function POST(request: Request) {
+  const body = await request.json();
+  
+  // 1. Get JWT server-side
+  const token = await getApiAccessToken();
+  
+  // 2. Stream from FastAPI with token
+  const upstreamResponse = await fetch(
+    `${process.env.API_BASE_URL}/api/v1/conversations/stream`,
+    {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  
+  // 3. Pipe stream back to browser (token never exposed)
+  const { readable, writable } = new TransformStream<Uint8Array>();
+  upstreamResponse.body.pipeTo(writable);
+  
+  return new Response(readable, {
+    status: upstreamResponse.status,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
+```
+
+**Authentication Flow Diagram:**
+
+```
+┌─────────────┐         ┌──────────────────┐         ┌─────────────┐
+│   Browser   │         │  Next.js Server  │         │   FastAPI   │
+│ (Frontend)  │         │      (BFF)       │         │  (Backend)  │
+└─────────────┘         └──────────────────┘         └─────────────┘
+       │                         │                          │
+       │ 1. POST /api/chat/stream│                          │
+       │    (session cookie)     │                          │
+       │────────────────────────>│                          │
+       │                         │                          │
+       │                         │ 2. getApiAccessToken()   │
+       │                         │    (calls Logto)         │
+       │                         │<─ returns JWT            │
+       │                         │                          │
+       │                         │ 3. POST /conversations/stream
+       │                         │    Authorization: Bearer <JWT>
+       │                         │─────────────────────────>│
+       │                         │                          │
+       │                         │ 4. SSE stream response   │
+       │                         │<─────────────────────────│
+       │                         │                          │
+       │ 5. SSE stream response  │                          │
+       │<────────────────────────│                          │
+       │   (no token exposed!)   │                          │
+```
+
+**Key Security Benefits:**
+1. **Browser never sees JWT token** - Only session cookie (HttpOnly, Secure flags)
+2. **Token refresh handled server-side** - Logto SDK manages token lifecycle
+3. **No CORS configuration needed** - Same-origin requests only
+4. **Backend URL abstraction** - Frontend doesn't know FastAPI location
 
 ### 3. **Environment Variable Access**
 
