@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from src.models.flow import FlowInDB, FlowResponse
+from src.models.transition import IncompleteFlowWarning
 from src.services.transition_service import TransitionService
 
 
@@ -271,3 +272,137 @@ async def test_urgent_flow_sorting(transition_service, mock_flow_repo):
     # Should be sorted: most overdue first
     assert result.urgent_flows[0].id == "f2"
     assert result.urgent_flows[1].id == "f3"
+
+
+# Tests for check_incomplete_flows() method
+
+
+@pytest.mark.asyncio
+async def test_check_incomplete_flows_no_flows(transition_service, mock_flow_repo):
+    """Test warnings when context has no flows."""
+    # Mock: No flows in context
+    mock_flow_repo.get_all_by_context.return_value = []
+
+    result = await transition_service.check_incomplete_flows(
+        context_id="ctx-work",
+        user_id="user123",
+    )
+
+    assert isinstance(result, IncompleteFlowWarning)
+    assert result.context_id == "ctx-work"
+    assert result.incomplete_count == 0
+    assert result.overdue_count == 0
+    assert len(result.overdue_flows) == 0
+
+
+@pytest.mark.asyncio
+async def test_check_incomplete_flows_all_completed(transition_service, mock_flow_repo):
+    """Test warnings when all flows are completed."""
+    # Mock: All flows completed
+    completed_flows = [
+        create_flow("f1", "Task 1", priority="high", is_completed=True),
+    ]
+
+    mock_flow_repo.get_all_by_context.return_value = [
+        FlowInDB(**flow.model_dump()) for flow in completed_flows
+    ]
+
+    result = await transition_service.check_incomplete_flows(
+        context_id="ctx-work",
+        user_id="user123",
+    )
+
+    assert result.incomplete_count == 0
+    assert result.overdue_count == 0
+
+
+@pytest.mark.asyncio
+async def test_check_incomplete_flows_with_incomplete(transition_service, mock_flow_repo):
+    """Test warnings with incomplete flows."""
+    # Mock: 3 incomplete flows, no overdue
+    incomplete_flows = [
+        create_flow("f1", "Task 1", priority="high", is_completed=False, due_date=None),
+        create_flow("f2", "Task 2", priority="medium", is_completed=False, due_date=None),
+        create_flow("f3", "Task 3", priority="low", is_completed=False, due_date=None),
+    ]
+
+    mock_flow_repo.get_all_by_context.return_value = [
+        FlowInDB(**flow.model_dump()) for flow in incomplete_flows
+    ]
+
+    result = await transition_service.check_incomplete_flows(
+        context_id="ctx-work",
+        user_id="user123",
+    )
+
+    assert result.context_id == "ctx-work"
+    assert result.incomplete_count == 3
+    assert result.overdue_count == 0
+    assert len(result.overdue_flows) == 0
+
+
+@pytest.mark.asyncio
+async def test_check_incomplete_flows_with_overdue(transition_service, mock_flow_repo):
+    """Test warnings with overdue flows."""
+    # Mock: 2 overdue flows
+    overdue_date = datetime.now(UTC) - timedelta(days=2)
+
+    overdue_flows = [
+        create_flow(
+            "f1", "Overdue Task 1", priority="high", is_completed=False, due_date=overdue_date
+        ),
+        create_flow(
+            "f2", "Overdue Task 2", priority="medium", is_completed=False, due_date=overdue_date
+        ),
+    ]
+
+    mock_flow_repo.get_all_by_context.return_value = [
+        FlowInDB(**flow.model_dump()) for flow in overdue_flows
+    ]
+
+    result = await transition_service.check_incomplete_flows(
+        context_id="ctx-work",
+        user_id="user123",
+    )
+
+    assert result.incomplete_count == 2
+    assert result.overdue_count == 2
+    assert len(result.overdue_flows) == 2
+    assert result.overdue_flows[0].id == "f1"
+
+
+@pytest.mark.asyncio
+async def test_check_incomplete_flows_mixed_states(transition_service, mock_flow_repo):
+    """Test warnings with mix of incomplete, completed, and overdue."""
+    now = datetime.now(UTC)
+    overdue_date = now - timedelta(days=1)
+    future_date = now + timedelta(days=7)
+
+    mixed_flows = [
+        # Completed (should be ignored)
+        create_flow("f1", "Completed Task", priority="high", is_completed=True, due_date=None),
+        # Overdue (should count as both incomplete and overdue)
+        create_flow(
+            "f2", "Overdue Task", priority="high", is_completed=False, due_date=overdue_date
+        ),
+        # Incomplete but not overdue
+        create_flow(
+            "f3", "Future Task", priority="medium", is_completed=False, due_date=future_date
+        ),
+        # Incomplete with no due date
+        create_flow("f4", "No Due Date Task", priority="low", is_completed=False, due_date=None),
+    ]
+
+    mock_flow_repo.get_all_by_context.return_value = [
+        FlowInDB(**flow.model_dump()) for flow in mixed_flows
+    ]
+
+    result = await transition_service.check_incomplete_flows(
+        context_id="ctx-work",
+        user_id="user123",
+    )
+
+    assert result.incomplete_count == 3  # f2, f3, f4 (not f1)
+    assert result.overdue_count == 1  # f2 only
+    assert len(result.overdue_flows) == 1
+    assert result.overdue_flows[0].id == "f2"

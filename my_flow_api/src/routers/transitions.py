@@ -2,11 +2,11 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from src.dependencies import get_context_repository, get_flow_repository
 from src.middleware.auth import get_current_user
-from src.models.transition import TransitionSuggestions
+from src.models.transition import IncompleteFlowWarning, TransitionSuggestions
 from src.repositories.context_repository import ContextRepository
 from src.repositories.flow_repository import FlowRepository
 from src.services.transition_service import TransitionService
@@ -59,4 +59,41 @@ async def get_transition_suggestions(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate transition suggestions: {e!s}",
+        ) from e
+
+
+@router.get("/warnings/{context_id}", response_model=IncompleteFlowWarning)
+async def get_incomplete_flow_warnings(
+    context_id: Annotated[str, Path(description="Context ID to check")],
+    user_id: Annotated[str, Depends(get_current_user)],
+    service: Annotated[TransitionService, Depends(get_transition_service)],
+) -> IncompleteFlowWarning:
+    """
+    Get warnings about incomplete flows in a context.
+
+    Used when user attempts to switch away from a context
+    to notify them of pending tasks.
+
+    **Path Parameters:**
+    - `context_id`: Context ID to check for incomplete flows
+
+    **Returns:**
+    - Count of incomplete flows
+    - Count of overdue flows
+    - List of overdue flows for display
+
+    **Example:**
+    ```
+    GET /api/v1/transitions/warnings/ctx-work-123
+    ```
+    """
+    try:
+        return await service.check_incomplete_flows(
+            context_id=context_id,
+            user_id=user_id,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to check incomplete flows: {e!s}",
         ) from e
