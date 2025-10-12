@@ -63,8 +63,8 @@ class AIService:
         self,
         messages: list[Message],
         context_id: str,
-        tools: list[dict] | None = None,
-        available_flows: list[dict] | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        available_flows: list[dict[str, Any]] | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream response from OpenAI with function calling support.
 
@@ -122,7 +122,7 @@ class AIService:
             tool_calls_buffer: dict[int, dict[str, Any]] = {}
 
             # Yield tokens and tool calls as they arrive
-            async for chunk in stream:  # type: ignore[union-attr]
+            async for chunk in stream:
                 if not chunk.choices:
                     continue
 
@@ -231,8 +231,8 @@ class AIService:
         self,
         messages: list[Message],
         context_id: str,
-        tools: list[dict] | None = None,
-        available_flows: list[dict] | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        available_flows: list[dict[str, Any]] | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream AI chat response with function calling support.
 
