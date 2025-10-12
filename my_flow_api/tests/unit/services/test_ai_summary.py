@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from src import config
 from src.models.flow import FlowInDB, FlowPriority
 from src.models.summary import ContextSummary
 from src.services.ai_service import AIService
@@ -28,6 +29,10 @@ def mock_flow_repo():
 @pytest.fixture
 def mock_ai_service(monkeypatch):
     """Mock AIService with mocked AI completion call."""
+    # Mock settings to provide fake API keys for testing
+    monkeypatch.setattr(config.settings, "OPENAI_API_KEY", "fake-test-key")
+    monkeypatch.setattr(config.settings, "AI_PROVIDER", "openai")
+
     service = AIService()
 
     # Mock the AI completion call
