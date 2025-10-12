@@ -91,7 +91,7 @@ describe('useChatStream (SSE via BFF)', () => {
     );
   });
 
-  it('should handle flows_extracted event and invalidate cache', async () => {
+  it('should handle flows_extracted event and show notification', async () => {
     const mockFlows: Flow[] = [
       {
         id: 'flow-1',
@@ -127,12 +127,31 @@ describe('useChatStream (SSE via BFF)', () => {
       await result.current.sendMessage('Extract flows from this');
     });
 
+    // Story 3.7: flows_extracted event now stores flows in pendingFlows state
+    // and shows notification. Invalidation happens when user accepts via acceptFlows()
     await waitFor(
       () => {
         expect(onFlowsExtractedMock).toHaveBeenCalledWith(mockFlows);
-        expect(invalidateQueriesSpy).toHaveBeenCalled();
+        expect(result.current.pendingFlows).toEqual(mockFlows);
+        expect(result.current.showNotification).toBe(true);
+        // Invalidation should NOT happen automatically anymore
+        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
       },
       { timeout: 3000 }
+    );
+
+    // When user accepts flows, THEN invalidation should happen
+    await act(async () => {
+      result.current.acceptFlows();
+    });
+
+    await waitFor(
+      () => {
+        expect(invalidateQueriesSpy).toHaveBeenCalled();
+        expect(result.current.pendingFlows).toEqual([]);
+        expect(result.current.showNotification).toBe(false);
+      },
+      { timeout: 1000 }
     );
   });
 
