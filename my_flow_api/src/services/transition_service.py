@@ -7,7 +7,7 @@ Analyzes incomplete flows and priorities to provide warnings and suggestions.
 from datetime import UTC, datetime, timedelta
 
 from src.models.flow import FlowResponse
-from src.models.transition import TransitionSuggestions
+from src.models.transition import IncompleteFlowWarning, TransitionSuggestions
 from src.repositories.context_repository import ContextRepository
 from src.repositories.flow_repository import FlowRepository
 
@@ -81,6 +81,43 @@ class TransitionService:
             warnings=warnings,
             suggestions=suggestions,
             urgent_flows=urgent_flows,
+        )
+
+    async def check_incomplete_flows(
+        self,
+        context_id: str,
+        user_id: str,
+    ) -> IncompleteFlowWarning:
+        """
+        Check for incomplete flows in a context and generate warnings.
+
+        Args:
+            context_id: Context to check for incomplete flows
+            user_id: User making the request
+
+        Returns:
+            IncompleteFlowWarning with counts and overdue flow details
+        """
+        # 1. Fetch all flows for the context
+        flows_db = await self.flow_repository.get_all_by_context(
+            context_id=context_id,
+            user_id=user_id,
+            include_completed=True,
+        )
+        flows = [FlowResponse(**flow.model_dump()) for flow in flows_db]
+
+        # 2. Filter for incomplete flows
+        incomplete_flows = [f for f in flows if not f.is_completed]
+
+        # 3. Identify overdue flows
+        overdue_flows = self._identify_overdue_flows(incomplete_flows)
+
+        # 4. Build warning response
+        return IncompleteFlowWarning(
+            context_id=context_id,
+            incomplete_count=len(incomplete_flows),
+            overdue_count=len(overdue_flows),
+            overdue_flows=overdue_flows,
         )
 
     def _generate_warnings(
@@ -162,6 +199,41 @@ class TransitionService:
         )
 
         return urgent
+
+    def _identify_overdue_flows(
+        self,
+        flows: list[FlowResponse],
+    ) -> list[FlowResponse]:
+        """
+        Identify flows that are past their due date.
+
+        Args:
+            flows: List of flows to check
+
+        Returns:
+            List of overdue flows sorted by due date (oldest first)
+        """
+        now = datetime.now(UTC)
+        overdue: list[FlowResponse] = []
+
+        for flow in flows:
+            # Skip flows without due dates
+            if not flow.due_date:
+                continue
+
+            # due_date is already a datetime object from Pydantic
+            due_dt = flow.due_date
+
+            # Check if overdue
+            if due_dt < now:
+                overdue.append(flow)
+
+        # Sort by due date (oldest overdue first)
+        overdue.sort(
+            key=lambda f: (f.due_date.isoformat() if f.due_date else "9999-12-31T23:59:59Z")
+        )
+
+        return overdue
 
     def _generate_suggestions(
         self,

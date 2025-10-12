@@ -55,3 +55,45 @@ class TransitionSuggestions(BaseModel):
             }
         }
     }
+
+
+class IncompleteFlowWarning(BaseModel):
+    """
+    Warning about incomplete flows in a context.
+
+    Provides counts and details of incomplete flows,
+    including overdue flows that require immediate attention.
+    """
+
+    context_id: str = Field(description="Context ID being checked")
+    incomplete_count: int = Field(
+        description="Total number of incomplete flows in context",
+        ge=0,
+    )
+    overdue_count: int = Field(
+        description="Number of flows past their due date",
+        ge=0,
+    )
+    overdue_flows: list[FlowResponse] = Field(
+        default_factory=list,
+        description="List of overdue flows for display",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "context_id": "ctx-work-123",
+                "incomplete_count": 5,
+                "overdue_count": 2,
+                "overdue_flows": [
+                    {
+                        "id": "flow-overdue-1",
+                        "title": "Submit expense report",
+                        "priority": "high",
+                        "due_date": "2025-01-10T17:00:00Z",
+                        "is_completed": False,
+                    }
+                ],
+            }
+        }
+    }
