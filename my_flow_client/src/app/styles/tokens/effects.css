@@ -12,6 +12,12 @@
   --token-radius-modal: var(--token-radius-lg);
   --token-radius-input: var(--token-radius-md);
 
+  /* Border Widths - Token prefix to avoid Tailwind @theme conflicts */
+  --token-border-width-default: 1px;
+  --token-border-width-thick: 2px;
+  --token-border-width-flow: 3px; /* For flow cards with context-colored left border */
+  --token-border-width-urgent: 3px; /* For urgent indicators with error-colored left border */
+
   /* Elevation shadows - Token prefix to avoid Tailwind @theme conflicts */
   --token-shadow-none: none;
   --token-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);

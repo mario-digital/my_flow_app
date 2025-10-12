@@ -147,6 +147,15 @@
   --radius-full: var(--token-radius-full);
 
   /* ========================================
+     BORDER WIDTHS - Reference effects.css tokens
+     Maps to Tailwind's border-* utilities (e.g., border-l-flow)
+     ======================================== */
+  --border-width-default: var(--token-border-width-default);
+  --border-width-thick: var(--token-border-width-thick);
+  --border-width-flow: var(--token-border-width-flow);
+  --border-width-urgent: var(--token-border-width-urgent);
+
+  /* ========================================
      SHADOWS - Reference effects.css tokens
      Maps to Tailwind's shadow-* utilities
      ======================================== */
