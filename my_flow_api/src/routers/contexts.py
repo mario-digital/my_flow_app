@@ -9,7 +9,9 @@ from src.middleware.auth import get_current_user, verify_context_ownership
 from src.models.context import ContextCreate, ContextInDB, ContextUpdate
 from src.models.errors import RateLimitError
 from src.models.pagination import PaginatedResponse
+from src.models.summary import ContextSummary
 from src.rate_limit import limiter
+from src.services.ai_service import AIService
 
 if TYPE_CHECKING:
     from src.repositories.context_repository import ContextRepository
@@ -162,3 +164,48 @@ async def delete_context(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Context not found",
         )
+
+
+@router.get(
+    "/{context_id}/summary",
+    response_model=ContextSummary,
+    summary="Get AI-powered context summary",
+    description=(
+        "Generate AI-powered summary for a context with flow statistics "
+        "and top priorities. Cached for 5 minutes."
+    ),
+    responses=RATE_LIMIT_RESPONSE,
+)
+@limiter.limit("20/minute")
+async def get_context_summary(
+    context_id: str,
+    request: Request,  # noqa: ARG001 - slowapi requires the request parameter
+    user_id: str = Depends(get_current_user),
+    context_repo: "ContextRepository" = Depends(get_context_repository),
+    flow_repo: "FlowRepository" = Depends(get_flow_repository),
+) -> ContextSummary:
+    """
+    Generate AI-powered summary for a context.
+
+    Returns:
+    - incomplete_flows_count: Number of incomplete flows
+    - completed_flows_count: Number of completed flows
+    - summary_text: Natural language summary
+    - last_activity: Most recent flow update timestamp
+    - top_priorities: Top 3 high-priority incomplete flows
+
+    Cached for 5 minutes to reduce AI API calls.
+    """
+    # Verify context exists and user owns it
+    context = await context_repo.get_by_id(context_id, user_id)
+    if not context:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Context not found",
+        )
+
+    # Generate and return summary using AI service
+    ai_service = AIService()
+    return await ai_service.generate_context_summary(
+        context_id=context_id, user_id=user_id, flow_repo=flow_repo
+    )

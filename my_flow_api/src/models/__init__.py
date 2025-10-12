@@ -17,12 +17,14 @@ from .flow import (
     FlowUpdate,
     FlowWithStatus,
 )
+from .summary import ContextSummary
 
 __all__ = [
     "ContextBase",
     "ContextCreate",
     "ContextInDB",
     "ContextResponse",
+    "ContextSummary",
     "ContextUpdate",
     "FlowBase",
     "FlowCreate",

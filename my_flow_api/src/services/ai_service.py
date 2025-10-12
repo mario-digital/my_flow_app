@@ -3,6 +3,7 @@
 import json
 import logging
 from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from anthropic import APIError as AnthropicAPIError
 from anthropic import APITimeoutError as AnthropicAPITimeoutError
@@ -16,13 +17,18 @@ from pydantic import ValidationError
 
 from src.config import settings
 from src.models.conversation import Message
-from src.models.flow import FlowCreate, FlowPriority
+from src.models.flow import FlowCreate, FlowPriority, FlowResponse
+from src.models.summary import ContextSummary
+from src.services.cache_service import summary_cache
 from src.utils.exceptions import (
     AIProviderNotSupported,
     AIRateLimitError,
     AIServiceError,
     AIStreamingError,
 )
+
+if TYPE_CHECKING:
+    from src.repositories.flow_repository import FlowRepository
 
 logger = logging.getLogger(__name__)
 
@@ -514,3 +520,218 @@ Output: {
             logger.error("Flow extraction failed: %s", str(e))
             msg = f"Failed to extract flows: {e}"
             raise AIServiceError(msg) from e
+
+    async def _call_ai_completion(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int = 150,
+    ) -> str:
+        """Call AI provider for chat completion (non-streaming).
+
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            temperature: Sampling temperature (0.0-1.0)
+            max_tokens: Maximum tokens in response
+
+        Returns:
+            Response text from AI provider
+
+        Raises:
+            AIServiceError: If AI call fails
+        """
+        try:
+            if self.provider == "openai":
+                if not self.openai_client:
+                    msg = "OpenAI client not initialized"
+                    raise AIServiceError(msg)
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,  # type: ignore[arg-type]
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response.choices[0].message.content or ""
+
+            if self.provider == "anthropic":
+                if not self.anthropic_client:
+                    msg = "Anthropic client not initialized"
+                    raise AIServiceError(msg)
+
+                # Extract system message if present
+                system_content: str | None = None
+                user_messages: list[dict[str, str]] = []
+                message: dict[str, str]
+                for message in messages:
+                    if message["role"] == "system":
+                        system_content = message["content"]
+                    else:
+                        user_messages.append(message)
+
+                anthropic_response = await self.anthropic_client.messages.create(
+                    model=self.model,
+                    messages=user_messages,  # type: ignore[arg-type]
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    system=system_content or "",
+                )
+
+                # Extract text from first content block
+                if anthropic_response.content and hasattr(anthropic_response.content[0], "text"):
+                    return anthropic_response.content[0].text
+                return ""
+
+            raise AIProviderNotSupported(self.provider)
+
+        except (OpenAIRateLimitError, AnthropicRateLimitError) as e:
+            logger.error("AI rate limit exceeded: %s", str(e))
+            msg = f"AI rate limit exceeded: {e}"
+            raise AIRateLimitError(msg) from e
+        except (OpenAITimeout, AnthropicAPITimeoutError) as e:
+            logger.error("AI request timeout: %s", str(e))
+            msg = f"AI request timed out: {e}"
+            raise AIServiceError(msg) from e
+        except (OpenAIAPIError, AnthropicAPIError) as e:
+            logger.error("AI API error: %s", str(e))
+            msg = f"AI completion failed: {e}"
+            raise AIServiceError(msg) from e
+
+    async def generate_context_summary(
+        self,
+        context_id: str,
+        user_id: str,
+        flow_repo: "FlowRepository",
+    ) -> ContextSummary:
+        """Generate AI-powered summary for a context.
+
+        This method:
+        1. Checks cache for existing summary (5 minute TTL)
+        2. Fetches flows for the context
+        3. Uses AI to generate natural language summary
+        4. Returns ContextSummary with flow counts, summary text, and top priorities
+
+        Args:
+            context_id: Context identifier
+            user_id: User identifier
+            flow_repo: Flow repository for fetching flows
+
+        Returns:
+            ContextSummary with AI-generated summary and flow statistics
+
+        Raises:
+            ValueError: If context_id or user_id is missing
+        """
+        # Validate inputs
+        if not context_id:
+            msg = "context_id is required"
+            raise ValueError(msg)
+        if not user_id:
+            msg = "user_id is required"
+            raise ValueError(msg)
+
+        # Check cache first
+        cache_key = f"summary:{context_id}"
+        cached = await summary_cache.get(cache_key)
+        if cached is not None:
+            logger.info("Returning cached summary for context: %s", context_id)
+            return cached  # type: ignore[return-value]
+
+        logger.info(
+            "Generating context summary",
+            extra={"user_id": user_id, "context_id": context_id},
+        )
+
+        # Fetch flows for context
+        flows = await flow_repo.get_all_by_context(context_id, user_id)
+        incomplete_flows = [f for f in flows if not f.is_completed]
+        completed_flows = [f for f in flows if f.is_completed]
+
+        # Identify top priorities (high priority incomplete flows)
+        high_priority_incomplete = sorted(
+            [f for f in incomplete_flows if f.priority == FlowPriority.HIGH],
+            key=lambda f: f.created_at,
+            reverse=True,
+        )[:3]
+
+        # Get last activity timestamp
+        last_activity = None
+        if flows:
+            flows_sorted = sorted(flows, key=lambda f: f.updated_at, reverse=True)
+            if flows_sorted:
+                last_activity = flows_sorted[0].updated_at
+
+        # Generate AI summary
+        try:
+            if not flows:
+                summary_text = "This context has no flows yet. Start by adding your first flow!"
+            else:
+                # Build prompt for AI
+                incomplete_titles = "\n".join([f"- {f.title}" for f in incomplete_flows])
+                prompt_context = f"""Context: {context_id}
+Total flows: {len(flows)}
+Incomplete flows: {len(incomplete_flows)}
+Completed flows: {len(completed_flows)}
+
+Incomplete flow titles:
+{incomplete_titles if incomplete_titles else "(none)"}
+
+Generate a brief, natural language summary (1-2 sentences) of this context's status.
+Focus on incomplete flows and overall progress. Be encouraging and actionable."""
+
+                messages = [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a helpful assistant that summarizes "
+                            "task contexts. Be concise and focus on "
+                            "actionable information."
+                        ),
+                    },
+                    {"role": "user", "content": prompt_context},
+                ]
+
+                summary_text = await self._call_ai_completion(messages, temperature=0.5)
+
+                logger.info(
+                    "AI summary generated",
+                    extra={"context_id": context_id, "text_length": len(summary_text)},
+                )
+
+        except Exception as e:
+            # Fallback summary if AI fails
+            logger.warning(
+                "AI summary generation failed, using fallback",
+                extra={"context_id": context_id, "error": str(e)},
+            )
+            summary_text = (
+                f"You have {len(incomplete_flows)} incomplete flows and "
+                f"{len(completed_flows)} completed flows in this context."
+            )
+
+        # Convert high-priority flows to FlowResponse
+        top_priorities = [FlowResponse.model_validate(f) for f in high_priority_incomplete]
+
+        # Create summary
+        summary = ContextSummary(
+            context_id=context_id,
+            incomplete_flows_count=len(incomplete_flows),
+            completed_flows_count=len(completed_flows),
+            summary_text=summary_text,
+            last_activity=last_activity,
+            top_priorities=top_priorities,
+        )
+
+        # Cache for 5 minutes
+        await summary_cache.set(cache_key, summary, ttl_seconds=300)
+
+        logger.info(
+            "Context summary generated",
+            extra={
+                "context_id": context_id,
+                "incomplete_count": summary.incomplete_flows_count,
+                "cached": False,
+            },
+        )
+
+        return summary
