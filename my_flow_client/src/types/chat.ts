@@ -60,3 +60,39 @@ export interface TypingIndicatorProps {
   /** Optional className for styling */
   className?: string;
 }
+
+/**
+ * Flow extraction event data from SSE stream.
+ * Emitted when AI extracts flows from conversation.
+ */
+export interface FlowExtractionEvent {
+  /** Extracted flows from conversation */
+  flows: Flow[];
+
+  /** Timestamp when flows were extracted */
+  timestamp: string;
+
+  /** Conversation ID where extraction occurred */
+  conversationId: string;
+}
+
+/**
+ * Props for the FlowExtractionNotification component.
+ * Inline notification banner for flow extraction feedback.
+ */
+export interface FlowExtractionNotificationProps {
+  /** Flows extracted from conversation */
+  flows: Flow[];
+
+  /** Callback invoked when user accepts flows */
+  onAccept: () => void;
+
+  /** Callback invoked when user dismisses flows */
+  onDismiss: () => void;
+
+  /** Context ID for the current conversation */
+  contextId: string;
+
+  /** Optional className for styling */
+  className?: string;
+}

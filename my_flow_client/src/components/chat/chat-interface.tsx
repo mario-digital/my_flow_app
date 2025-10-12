@@ -7,17 +7,15 @@ import {
   type ReactElement,
   type FormEvent,
 } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Send, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './message-bubble';
-import type { ChatInterfaceProps, Message } from '@/types/chat';
-import type { Flow } from '@/types/flow';
+import { FlowExtractionNotification } from './flow-extraction-notification';
+import type { ChatInterfaceProps } from '@/types/chat';
 import { cn } from '@/lib/utils';
-import { flowKeys } from '@/hooks/use-flows';
+import { useChatStream } from '@/hooks/use-chat-stream';
 
 const CHAT_EMPTY_STATE_MIN_HEIGHT = 'var(--chat-empty-state-min-height, 25rem)';
 const CHAT_TEXTAREA_MIN_HEIGHT = 'var(--chat-textarea-min-height, 3.75rem)';
@@ -32,11 +30,22 @@ export function ChatInterface({
   onFlowsExtracted,
   className,
 }: ChatInterfaceProps): ReactElement {
-  // State management
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Use chat stream hook for SSE-based messaging
+  const {
+    messages,
+    sendMessage,
+    isStreaming,
+    error,
+    pendingFlows,
+    showNotification,
+    acceptFlows,
+    dismissFlows,
+  } = useChatStream(contextId, undefined, {
+    onFlowsExtracted,
+  });
+
+  // Local state for input
   const [inputValue, setInputValue] = useState('');
-  const [isAssistantTyping, setIsAssistantTyping] = useState(false);
-  const queryClient = useQueryClient();
 
   // Ref for auto-scroll functionality
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -48,100 +57,26 @@ export function ChatInterface({
       scrollViewportRef.current.scrollTop =
         scrollViewportRef.current.scrollHeight;
     }
-  }, [messages, isAssistantTyping]);
+  }, [messages, isStreaming]);
 
   // Handle sending a message
   const handleSendMessage = async (e?: FormEvent): Promise<void> => {
     e?.preventDefault();
 
     const trimmedInput = inputValue.trim();
-    if (!trimmedInput || !contextId) return;
+    if (!trimmedInput) return;
 
-    // Create new user message
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: trimmedInput,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Add message to list
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
-
-    // Clear input
+    // Clear input immediately for better UX
     setInputValue('');
 
-    // Start streaming assistant response
-    setIsAssistantTyping(true);
+    // Send message via hook
+    await sendMessage(trimmedInput);
+  };
 
-    // Import streaming function
-    const { streamChat } = await import('@/lib/api/chat');
-
-    // Create assistant message placeholder
-    const assistantMessageId = crypto.randomUUID();
-    let assistantContent = '';
-
-    try {
-      // Stream the response
-      for await (const event of streamChat(contextId, updatedMessages)) {
-        if (event.type === 'token' && event.data) {
-          // Append token to assistant message
-          assistantContent += event.data;
-
-          // Update assistant message in real-time
-          setMessages((prev) => {
-            const existing = prev.find((m) => m.id === assistantMessageId);
-            if (existing) {
-              // Update existing message
-              return prev.map((m) =>
-                m.id === assistantMessageId
-                  ? { ...m, content: assistantContent }
-                  : m
-              );
-            } else {
-              // Add new assistant message
-              return [
-                ...prev,
-                {
-                  id: assistantMessageId,
-                  role: 'assistant' as const,
-                  content: assistantContent,
-                  timestamp: new Date().toISOString(),
-                },
-              ];
-            }
-          });
-        } else if (event.type === 'metadata' && event.metadata) {
-          const { extracted_flows: extractedFlowIds } = event.metadata;
-          if (extractedFlowIds.length > 0) {
-            const uniqueFlowIds = Array.from(new Set(extractedFlowIds));
-
-            await queryClient.refetchQueries({
-              queryKey: flowKeys.list(contextId),
-            });
-
-            const refreshedFlows = queryClient.getQueryData<Flow[]>(
-              flowKeys.list(contextId)
-            );
-
-            const matchedFlows = uniqueFlowIds
-              .map((flowId) =>
-                refreshedFlows?.find((flow) => flow.id === flowId)
-              )
-              .filter((flow): flow is Flow => Boolean(flow));
-
-            onFlowsExtracted(matchedFlows);
-          }
-        } else if (event.type === 'error') {
-          toast.error(event.error ?? 'Chat stream failed. Please try again.');
-        }
-      }
-    } catch (_error) {
-      toast.error('Unable to send message. Please try again.');
-    } finally {
-      setIsAssistantTyping(false);
-    }
+  // Handle form submit (non-async wrapper for form onSubmit)
+  const handleFormSubmit = (e: FormEvent): void => {
+    e.preventDefault();
+    void handleSendMessage(e);
   };
 
   // Handle keyboard shortcuts
@@ -166,6 +101,17 @@ export function ChatInterface({
       {/* Message History */}
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div ref={scrollViewportRef} className="space-y-2">
+          {/* Error Display */}
+          {error && (
+            <div
+              className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg mb-4"
+              role="alert"
+            >
+              <p className="font-medium">Connection Error</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          )}
+
           {isEmpty ? (
             // Empty state
             <div
@@ -192,7 +138,7 @@ export function ChatInterface({
                 />
               ))}
               {/* Typing indicator */}
-              {isAssistantTyping && (
+              {isStreaming && (
                 <MessageBubble
                   message={{
                     id: 'typing',
@@ -208,11 +154,21 @@ export function ChatInterface({
         </div>
       </ScrollArea>
 
+      {/* Flow Extraction Notification */}
+      {showNotification && (
+        <div className="p-4 border-t border-border bg-bg-primary">
+          <FlowExtractionNotification
+            flows={pendingFlows}
+            onAccept={acceptFlows}
+            onDismiss={() => void dismissFlows()}
+            contextId={contextId}
+          />
+        </div>
+      )}
+
       {/* Input Area */}
       <form
-        onSubmit={(e): void => {
-          void handleSendMessage(e);
-        }}
+        onSubmit={handleFormSubmit}
         className="p-4 border-t border-border bg-bg-secondary"
       >
         <div className="flex gap-2">

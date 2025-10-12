@@ -34,6 +34,10 @@ export interface ChatStreamState {
   isStreaming: boolean;
   error: string | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
+  pendingFlows: Flow[];
+  showNotification: boolean;
+  acceptFlows: () => void;
+  dismissFlows: () => Promise<void>;
 }
 
 /**
