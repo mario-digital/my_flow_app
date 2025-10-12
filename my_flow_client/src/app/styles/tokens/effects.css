@@ -52,4 +52,16 @@
   --token-icon-md: 1.5rem; /* 24px - navigation, primary actions */
   --token-icon-lg: 2rem; /* 32px - context icons in dashboard */
   --token-icon-xl: 2.5rem; /* 40px - large decorative icons */
+
+  /* ========================================
+     SKELETON LOADING TOKENS
+     Component-specific tokens for loading states
+     ======================================== */
+
+  /* Skeleton Heights - Reference existing spacing/icon tokens */
+  --token-skeleton-text: var(--space-4); /* 16px - body text lines */
+  --token-skeleton-title: var(--space-6); /* 24px - heading/title lines */
+  --token-skeleton-avatar: var(--token-icon-lg); /* 32px - avatar circles */
+  --token-skeleton-input: 2.75rem; /* 44px - form input height */
+  --token-skeleton-button: 2.5rem; /* 40px - button height */
 }

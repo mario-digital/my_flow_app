@@ -62,6 +62,42 @@ export interface TypingIndicatorProps {
 }
 
 /**
+ * Conversation data model.
+ * Represents a complete conversation with message history.
+ */
+export interface Conversation {
+  /** Unique conversation identifier */
+  id: string;
+
+  /** Context ID this conversation belongs to */
+  context_id: string;
+
+  /** User ID who owns this conversation */
+  user_id: string;
+
+  /** Message history (max 50 messages) */
+  messages: Message[];
+
+  /** Conversation created timestamp in ISO 8601 format */
+  created_at: string;
+
+  /** Last updated timestamp in ISO 8601 format */
+  updated_at: string;
+}
+
+/**
+ * Response format for conversation history queries.
+ * Includes extracted message array and conversation ID.
+ */
+export interface ConversationHistoryResponse {
+  /** Conversation ID (null if no history) */
+  conversationId: string | null;
+
+  /** Message array (last 50 messages) */
+  messages: Message[];
+}
+
+/**
  * Flow extraction event data from SSE stream.
  * Emitted when AI extracts flows from conversation.
  */

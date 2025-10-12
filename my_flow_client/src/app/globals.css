@@ -203,6 +203,30 @@
   --size-icon-md: var(--token-icon-md);
   --size-icon-lg: var(--token-icon-lg);
   --size-icon-xl: var(--token-icon-xl);
+
+  /* ========================================
+     SKELETON LOADING - Reference effects.css tokens
+     Maps to h-skeleton-* and w-skeleton-* utilities
+     ======================================== */
+
+  /* Skeleton Height utilities: h-skeleton-* */
+  --height-skeleton-text: var(--token-skeleton-text); /* h-skeleton-text */
+  --height-skeleton-title: var(--token-skeleton-title); /* h-skeleton-title */
+  --height-skeleton-avatar: var(
+    --token-skeleton-avatar
+  ); /* h-skeleton-avatar */
+  --height-skeleton-input: var(--token-skeleton-input); /* h-skeleton-input */
+  --height-skeleton-button: var(
+    --token-skeleton-button
+  ); /* h-skeleton-button */
+
+  /* Skeleton Width utilities: w-skeleton-* (percentage-based) */
+  --width-skeleton-full: 100%; /* w-skeleton-full */
+  --width-skeleton-xl: 85%; /* w-skeleton-xl */
+  --width-skeleton-lg: 75%; /* w-skeleton-lg */
+  --width-skeleton-md: 60%; /* w-skeleton-md */
+  --width-skeleton-sm: 45%; /* w-skeleton-sm */
+  --width-skeleton-xs: 33%; /* w-skeleton-xs */
 }
 
 body {
