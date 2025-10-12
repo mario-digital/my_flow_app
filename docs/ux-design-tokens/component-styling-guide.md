@@ -36,7 +36,7 @@ My Flow is a **modern, intentional, calm productivity companion**—not another 
 | **Button Secondary** | `transparent` | `--color-text-primary` | `--color-border` | `--space-3` `--space-5` | `--radius-button` | Hover: border → `--color-context-current` |
 | **Button Ghost** | `transparent` | `--color-text-secondary` | `none` | `--space-2` `--space-4` | `--radius-button` | Hover: bg → `--color-bg-tertiary` |
 | **Card Standard** | `--card-bg` | `--color-text-primary` | `--card-border` | `--space-4` | `--radius-card` | Hover: bg → `--card-bg-hover` |
-| **Flow Card** | `--flow-bg` | `--color-text-primary` | Left: `3px` `--flow-border-left` | `--space-4` | `--radius-card` | Hover: shadow → `--shadow-card-hover` |
+| **Flow Card** | `--flow-bg` | `--color-text-primary` | Left: `border-l-flow` `border-l-context` | `--space-4` | `--radius-card` | Hover: shadow → `--shadow-card-hover` |
 | **Input** | `--input-bg` | `--input-text` | `--input-border` | `--space-3` | `--radius-input` | Focus: border → `--input-border-focus`, ring → `--shadow-focus` |
 | **Modal** | `--color-bg-secondary` | `--color-text-primary` | `--color-border` | `--space-6` | `--radius-modal` | Backdrop: `--color-bg-overlay` |
 | **Dropdown** | `--color-bg-secondary` | `--color-text-primary` | `--color-border` | `--space-2` | `--radius-md` | Shadow: `--shadow-dropdown` |
@@ -167,6 +167,9 @@ Add these to `colors.css` component layer:
   --flow-card-border-left-width: 3px;
   --flow-card-text: var(--color-text-primary);
   --flow-card-text-completed: var(--color-text-muted);
+  
+  /* Urgent Flow Card - For urgent/high-priority flows */
+  --urgent-flow-border-left-width: 3px;  /* Same as flow card for consistency */
 
   /* Context Card - For context switcher */
   --context-card-bg: var(--color-bg-secondary);
@@ -608,15 +611,15 @@ States:
 **Tailwind Implementation:**
 ```tsx
 <div className="
-  bg-[var(--flow-card-bg)]
-  text-[var(--flow-card-text)]
-  border border-[var(--flow-card-border)]
-  border-l-[3px] border-l-[var(--flow-card-border-left)]
+  bg-card
+  text-card-text
+  border border-card-border
+  border-l-flow border-l-context
   p-4
   rounded-card
   shadow-card
   transition-all duration-fast ease-out
-  hover:bg-[var(--flow-card-bg-hover)] hover:shadow-card-hover
+  hover:bg-card-bg-hover hover:shadow-card-hover
   hover:cursor-pointer
   focus-within:border-context focus-within:shadow-focus
   [&.completed]:text-text-muted [&.completed]:line-through
