@@ -135,10 +135,10 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service to stream tokens
-            async def mock_stream(messages, context_id):
+            async def mock_stream(messages, context_id, tools=None, available_flows=None):
                 """Mock async generator for streaming."""
                 for token in ["I'll", " help", " you", " with", " that"]:
-                    yield token
+                    yield {"type": "text", "content": token}
 
             mock_ai_service.stream_chat_response = mock_stream
             mock_ai_service.extract_flows_from_text = AsyncMock(return_value=[])
@@ -198,10 +198,10 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service to stream tokens and extract flows
-            async def mock_stream(messages, context_id):
+            async def mock_stream(messages, context_id, tools=None, available_flows=None):
                 """Mock async generator for streaming."""
                 for token in ["Sure", ", I'll", " help"]:
-                    yield token
+                    yield {"type": "text", "content": token}
 
             mock_extracted_flow = FlowCreate(
                 context_id=str(mock_context_data["_id"]),
@@ -259,9 +259,9 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service
-            async def mock_stream(messages, context_id):
+            async def mock_stream(messages, context_id, tools=None, available_flows=None):
                 for token in ["Sure"]:
-                    yield token
+                    yield {"type": "text", "content": token}
 
             mock_extracted_flows = [
                 FlowCreate(
@@ -323,7 +323,7 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service to raise error
-            async def mock_stream_error(messages, context_id):
+            async def mock_stream_error(messages, context_id, tools=None, available_flows=None):
                 error_msg = "AI service unavailable"
                 raise AIServiceError(error_msg)
 
@@ -368,9 +368,9 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service - streaming works, extraction fails
-            async def mock_stream(messages, context_id):
+            async def mock_stream(messages, context_id, tools=None, available_flows=None):
                 for token in ["Hello", " there"]:
-                    yield token
+                    yield {"type": "text", "content": token}
 
             mock_ai_service.stream_chat_response = mock_stream
             extraction_error = AIServiceError("Extraction failed")
@@ -432,9 +432,9 @@ class TestStreamChat:
             mock_flow_repo.context_repo = mock_context_repo
 
             # Mock AI service
-            async def mock_stream(messages, context_id):
+            async def mock_stream(messages, context_id, tools=None, available_flows=None):
                 for token in ["Sure"]:
-                    yield token
+                    yield {"type": "text", "content": token}
 
             mock_extracted_flows = [
                 FlowCreate(
