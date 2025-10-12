@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { FlowList } from '@/components/flows/flow-list';
+import { ContextSummaryWidget } from '@/components/dashboard/context-summary-widget';
 import { useCurrentContext } from '@/components/providers/app-providers';
 import { useContexts } from '@/hooks/use-contexts';
 import { useFlows, flowKeys } from '@/hooks/use-flows';
@@ -101,6 +102,14 @@ export default function DashboardPage(): JSX.Element {
     [currentContextId, queryClient]
   );
 
+  const handleContextClick = useCallback(
+    (contextId: string): void => {
+      setCurrentContextId(contextId);
+      toast.success('Context switched!');
+    },
+    [setCurrentContextId]
+  );
+
   // Auto-select first context if none selected
   useEffect(() => {
     if (!currentContextId && contexts && contexts.length > 0 && contexts[0]) {
@@ -125,6 +134,14 @@ export default function DashboardPage(): JSX.Element {
     <div className="container mx-auto px-6 py-8 max-w-screen-xl lg:px-8">
       {/* Page header */}
       <h1 className="text-h1 font-bold text-text-primary mb-8">Dashboard</h1>
+
+      {/* Context Summary Widget */}
+      <div className="mb-8">
+        <h2 className="text-h2 font-semibold text-text-primary mb-4">
+          My Contexts
+        </h2>
+        <ContextSummaryWidget onContextClick={handleContextClick} />
+      </div>
 
       {/* Main content grid - responsive two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
