@@ -716,6 +716,204 @@ Server Actions are used for mutations (sign-out) without needing dedicated API r
 </form>
 ```
 
+## API Authentication & BFF Proxy Pattern
+
+**Critical Architecture Rule:** Browser code NEVER calls FastAPI directly. All API requests go through **Next.js API routes** which act as a **Backend-for-Frontend (BFF) proxy**.
+
+### Why BFF Pattern?
+
+1. **Security:** JWT tokens never exposed to browser (only HttpOnly session cookies)
+2. **Simplicity:** No token refresh logic in browser code
+3. **Flexibility:** Backend URL changes don't affect frontend
+4. **CORS:** Single-origin requests eliminate CORS complexity
+
+### Authentication Flow (BFF Pattern)
+
+```
+┌─────────────┐         ┌──────────────────┐         ┌─────────────┐
+│   Browser   │         │  Next.js Server  │         │   FastAPI   │
+│             │         │      (BFF)       │         │  (Backend)  │
+└─────────────┘         └──────────────────┘         └─────────────┘
+       │                         │                          │
+       │ 1. fetch('/api/flows') │                          │
+       │    (session cookie)     │                          │
+       │────────────────────────>│                          │
+       │                         │                          │
+       │                         │ 2. getApiAccessToken()   │
+       │                         │    (calls Logto SDK)     │
+       │                         │<─ JWT token              │
+       │                         │                          │
+       │                         │ 3. fetch(FastAPI + JWT)  │
+       │                         │─────────────────────────>│
+       │                         │                          │
+       │                         │ 4. JSON response         │
+       │                         │<─────────────────────────│
+       │                         │                          │
+       │ 5. JSON response        │                          │
+       │<────────────────────────│                          │
+       │   (no token!)           │                          │
+```
+
+### Browser-Side API Calls
+
+**Rule:** Browser code calls Next.js API routes (starting with `/api/`), NEVER FastAPI directly.
+
+```typescript
+// ❌ WRONG: Direct call to FastAPI with JWT
+const response = await fetch('https://api.myflow.com/api/v1/flows', {
+  headers: { Authorization: `Bearer ${token}` } // Token exposed!
+});
+
+// ❌ WRONG: Trying to get token in browser
+const token = await getAccessToken(); // Token exposed!
+
+// ✅ CORRECT: Call Next.js API route (BFF proxy)
+const response = await fetch('/api/flows'); // Next.js route
+const flows = await response.json();
+```
+
+### Next.js API Route (BFF Proxy Implementation)
+
+```typescript
+// app/api/flows/route.ts
+import { getApiAccessToken } from '@logto/next/server-actions';
+import { NextResponse } from 'next/server';
+
+const API_BASE_URL = process.env.API_BASE_URL; // FastAPI URL
+
+export async function GET() {
+  try {
+    // 1. Get JWT token server-side (never exposed to browser)
+    const token = await getApiAccessToken();
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // 2. Call FastAPI with JWT token
+    const response = await fetch(`${API_BASE_URL}/api/v1/flows`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`FastAPI error: ${response.status}`);
+    }
+    
+    // 3. Proxy response back to browser (without token)
+    const data = await response.json();
+    return NextResponse.json(data);
+    
+  } catch (error) {
+    console.error('API proxy error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### SSE Streaming Through BFF Proxy
+
+**For AI chat streaming, the BFF pattern is critical** to prevent token exposure during long-lived connections:
+
+```typescript
+// app/api/chat/stream/route.ts
+import { getApiAccessToken } from '@logto/next/server-actions';
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  
+  // 1. Get JWT server-side
+  const token = await getApiAccessToken();
+  
+  // 2. Stream from FastAPI with JWT
+  const upstreamResponse = await fetch(
+    `${process.env.API_BASE_URL}/api/v1/conversations/stream`,
+    {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  
+  // 3. Pipe SSE stream back to browser (token never exposed)
+  const { readable, writable } = new TransformStream<Uint8Array>();
+  upstreamResponse.body!.pipeTo(writable);
+  
+  return new Response(readable, {
+    status: upstreamResponse.status,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
+```
+
+**Browser-side SSE consumption:**
+
+```typescript
+// Browser code - connects to Next.js proxy, not FastAPI
+const response = await fetch('/api/chat/stream', {
+  method: 'POST',
+  body: JSON.stringify({ context_id, messages }),
+});
+
+const reader = response.body?.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  // Process SSE events
+}
+```
+
+### API Route File Organization
+
+```
+app/api/
+├── flows/
+│   ├── route.ts                 # GET/POST /api/flows
+│   └── [id]/
+│       ├── route.ts             # GET/PUT/DELETE /api/flows/:id
+│       └── complete/
+│           └── route.ts         # PATCH /api/flows/:id/complete
+├── contexts/
+│   ├── route.ts                 # GET/POST /api/contexts
+│   └── [id]/
+│       ├── route.ts             # GET/PUT/DELETE /api/contexts/:id
+│       └── flows/
+│           └── route.ts         # GET /api/contexts/:id/flows
+├── chat/
+│   └── stream/
+│       └── route.ts             # POST /api/chat/stream (SSE)
+└── logto/
+    └── [...logto]/
+        └── route.ts             # Logto OAuth routes
+```
+
+### Key Security Benefits
+
+1. **Token Isolation:** JWT tokens exist ONLY on Next.js server, never in browser
+2. **Session Cookie:** Browser uses HttpOnly, Secure, SameSite=Lax session cookie
+3. **Token Refresh:** Logto SDK handles token lifecycle server-side
+4. **CSRF Protection:** SameSite cookie attribute prevents CSRF attacks
+5. **No CORS:** All browser requests to same origin (Next.js)
+
 **Future Server Actions (Story 1.6+):**
 
 ```typescript

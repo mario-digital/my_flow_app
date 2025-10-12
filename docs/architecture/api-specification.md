@@ -1,28 +1,99 @@
 # API Specification
 
-This section defines the complete REST API for My Flow, following OpenAPI 3.1 specification. The API is implemented by FastAPI backend and consumed by Next.js frontend via TanStack Query or Server Components.
+This section defines the complete REST API for My Flow, following OpenAPI 3.1 specification. 
+
+**Architecture Pattern:** The API is implemented by **FastAPI backend** and consumed by **Next.js BFF (Backend-for-Frontend) proxy**, NOT directly by the browser.
 
 ## Base URL
 
+### FastAPI Backend (Internal)
 **Production:** `https://api.myflow.app` (Railway deployment)
 **Development:** `http://localhost:8000`
 
-## Authentication
+**Note:** These URLs are ONLY accessed by Next.js server, NEVER by browser code.
 
-All API endpoints (except health checks) require authentication via **Logto JWT tokens**.
+### Next.js BFF Proxy (Browser-Facing)
+**Browser calls:** `/api/*` routes (Next.js API routes)
+**Example:** Browser calls `/api/flows`, Next.js proxies to `${API_BASE_URL}/api/v1/flows`
 
-**Header Required:**
+## Authentication & BFF Pattern
+
+### Critical Architecture Rule
+
+**Browser → Next.js BFF → FastAPI Backend**
+
+```
+┌─────────────┐         ┌──────────────────┐         ┌─────────────┐
+│   Browser   │         │  Next.js Server  │         │   FastAPI   │
+│             │         │      (BFF)       │         │  (Backend)  │
+└─────────────┘         └──────────────────┘         └─────────────┘
+       │                         │                          │
+       │ fetch('/api/flows')     │                          │
+       │ (session cookie only)   │                          │
+       │────────────────────────>│                          │
+       │                         │                          │
+       │                         │ getApiAccessToken()      │
+       │                         │ → Logto SDK              │
+       │                         │ ← JWT token              │
+       │                         │                          │
+       │                         │ GET /api/v1/flows        │
+       │                         │ Authorization: Bearer JWT│
+       │                         │─────────────────────────>│
+       │                         │                          │
+       │                         │ JSON response            │
+       │                         │<─────────────────────────│
+       │ JSON response           │                          │
+       │<────────────────────────│                          │
+       │ (no JWT exposed)        │                          │
+```
+
+### FastAPI Authentication (Internal)
+
+All FastAPI endpoints (except health checks) require authentication via **Logto JWT tokens**.
+
+**Header Required (from Next.js BFF only):**
 ```
 Authorization: Bearer <logto_jwt_token>
 ```
 
 The JWT token contains the `sub` claim with the user's Logto ID, which maps to `user_id` in our data models. FastAPI middleware validates the token and extracts `user_id` for authorization.
 
-**Token Validation:**
+**Token Validation (FastAPI Middleware):**
 - Verify signature using Logto's public key (JWKS endpoint)
 - Check expiration (`exp` claim)
 - Validate issuer (`iss` claim matches Logto domain)
 - Extract `sub` claim as `user_id`
+
+### Next.js BFF Implementation
+
+**Browser code calls Next.js routes:**
+
+```typescript
+// ❌ WRONG: Browser calling FastAPI directly
+const flows = await fetch('https://api.myflow.app/api/v1/flows', {
+  headers: { Authorization: `Bearer ${token}` } // Token exposed!
+});
+
+// ✅ CORRECT: Browser calls Next.js proxy
+const flows = await fetch('/api/flows'); // Next.js route
+```
+
+**Next.js API route proxies to FastAPI:**
+
+```typescript
+// app/api/flows/route.ts
+import { getApiAccessToken } from '@logto/next/server-actions';
+
+export async function GET() {
+  const token = await getApiAccessToken(); // Server-side only
+  
+  const response = await fetch(`${process.env.API_BASE_URL}/api/v1/flows`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  
+  return Response.json(await response.json());
+}
+```
 
 ## API Endpoints Overview
 

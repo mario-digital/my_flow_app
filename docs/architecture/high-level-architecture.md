@@ -141,7 +141,7 @@ graph TB
 
 - **Server-First Rendering (Next.js RSC):** Default to React Server Components for all pages and layouts; render on server, stream HTML to client. Client Components only when state, effects, or browser APIs required. _Rationale:_ Minimizes JavaScript bundle size, improves SEO, keeps API keys server-side, reduces Time to Interactive (TTI).
 
-- **Backend for Frontend (BFF) Pattern:** Next.js API routes act as a thin proxy layer between frontend and FastAPI backend when needed for server-side data fetching or auth token forwarding. _Rationale:_ Enables Server Components to fetch data securely, consolidates authentication headers, abstracts backend URL changes.
+- **Backend for Frontend (BFF) Pattern:** Next.js API routes act as a security proxy layer between browser and FastAPI backend. **Critical Rule:** Browser NEVER calls FastAPI directly - all requests go through Next.js API routes which retrieve JWT tokens server-side and forward requests with authentication. _Rationale:_ JWT tokens never exposed to browser (only session cookies), eliminates token refresh logic in browser, abstracts backend URL changes, prevents CORS complexity, enables secure Server Component data fetching.
 
 - **Repository Pattern (Backend):** Abstract database operations into repository classes (`ContextRepository`, `FlowRepository`) with async MongoDB operations. _Rationale:_ Enables unit testing with mock repositories, isolates database logic, simplifies migration to different databases if needed.
 
