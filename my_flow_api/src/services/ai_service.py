@@ -87,7 +87,16 @@ class AIService:
                 raise AIStreamingError(msg)
 
             # Build context-aware system prompt with STRONG tool usage instruction
-            system_prompt = f"You are a helpful assistant for the user's '{context_id}' context. "
+            system_prompt = (
+                f"You are a helpful assistant for the user's '{context_id}' context. "
+                "You help manage tasks and todos. "
+                "\n\n**TASK CREATION: When the user says things like 'remind me to X', "
+                "'I need to do X by Y', or 'schedule X', the system will automatically "
+                "extract and create tasks from your conversation. You should acknowledge "
+                "this naturally (e.g., 'I'll help you remember that' or 'Got it, I'll "
+                "track that for you'). DO NOT say you can't set reminders or create tasks - "
+                "the system does this automatically based on your conversation.**"
+            )
             if available_flows:
                 system_prompt += "\n\nAvailable flows (tasks):\n"
                 for flow in available_flows:
