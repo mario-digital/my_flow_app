@@ -4,6 +4,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useMemo,
   type ReactElement,
   type FormEvent,
 } from 'react';
@@ -13,9 +14,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MessageBubble } from './message-bubble';
 import { FlowExtractionNotification } from './flow-extraction-notification';
-import type { ChatInterfaceProps } from '@/types/chat';
+import { ChatLoadingSkeleton } from './chat-loading-skeleton';
+import type { ChatInterfaceProps, Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
 import { useChatStream } from '@/hooks/use-chat-stream';
+import { useConversationHistory } from '@/hooks/use-conversation-history';
 
 const CHAT_EMPTY_STATE_MIN_HEIGHT = 'var(--chat-empty-state-min-height, 25rem)';
 const CHAT_TEXTAREA_MIN_HEIGHT = 'var(--chat-textarea-min-height, 3.75rem)';
@@ -24,15 +27,32 @@ const CHAT_TEXTAREA_MAX_HEIGHT = 'var(--chat-textarea-max-height, 12.5rem)';
 /**
  * ChatInterface component manages the chat conversation UI.
  * Handles message display, input, auto-scroll, and user interactions.
+ *
+ * Chat messages are automatically saved to backend after each send/receive.
+ * Conversation history is loaded on mount and persists across page refreshes.
+ * Backend enforces a 50-message limit per conversation for performance.
  */
 export function ChatInterface({
   contextId,
   onFlowsExtracted,
   className,
 }: ChatInterfaceProps): ReactElement {
+  // Load conversation history for current context
+  const {
+    messages: historyMessages,
+    conversationId,
+    isLoading: isLoadingHistory,
+  } = useConversationHistory(contextId);
+
+  // State for current streaming session messages (not yet saved)
+  const [streamingMessages, setStreamingMessages] = useState<Message[]>([]);
+
+  // Track previous contextId to detect changes
+  const prevContextIdRef = useRef<string>(contextId);
+
   // Use chat stream hook for SSE-based messaging
   const {
-    messages,
+    messages: liveMessages,
     sendMessage,
     isStreaming,
     error,
@@ -40,9 +60,29 @@ export function ChatInterface({
     showNotification,
     acceptFlows,
     dismissFlows,
-  } = useChatStream(contextId, undefined, {
+  } = useChatStream(contextId, conversationId ?? undefined, {
     onFlowsExtracted,
   });
+
+  // Update streaming messages when live messages change
+  useEffect(() => {
+    setStreamingMessages(liveMessages);
+  }, [liveMessages]);
+
+  // Clear streaming messages when context changes
+  useEffect(() => {
+    if (prevContextIdRef.current !== contextId) {
+      setStreamingMessages([]);
+
+      // Update ref for next comparison
+      prevContextIdRef.current = contextId;
+    }
+  }, [contextId]);
+
+  // Merge history with current streaming messages
+  const allMessages = useMemo(() => {
+    return [...historyMessages, ...streamingMessages];
+  }, [historyMessages, streamingMessages]);
 
   // Local state for input
   const [inputValue, setInputValue] = useState('');
@@ -57,7 +97,7 @@ export function ChatInterface({
       scrollViewportRef.current.scrollTop =
         scrollViewportRef.current.scrollHeight;
     }
-  }, [messages, isStreaming]);
+  }, [allMessages, isStreaming]);
 
   // Handle sending a message
   const handleSendMessage = async (e?: FormEvent): Promise<void> => {
@@ -88,8 +128,13 @@ export function ChatInterface({
     }
   };
 
+  // Show loading skeleton while fetching history
+  if (isLoadingHistory) {
+    return <ChatLoadingSkeleton className={className} />;
+  }
+
   // Empty state
-  const isEmpty = messages.length === 0;
+  const isEmpty = allMessages.length === 0;
 
   return (
     <div
@@ -130,7 +175,7 @@ export function ChatInterface({
           ) : (
             // Message list
             <>
-              {messages.map((message) => (
+              {allMessages.map((message) => (
                 <MessageBubble
                   key={message.id}
                   message={message}
