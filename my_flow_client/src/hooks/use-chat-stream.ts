@@ -247,7 +247,7 @@ export function useChatStream(
         );
         // Invalidate flows query to refresh the list with refetch
         await queryClient.invalidateQueries({
-          queryKey: ['flows', contextId],
+          queryKey: flowKeys.list(contextId), // FIX: Use correct query key structure
         });
         console.log('[useChatStream] Flows query invalidated and refetched');
       } else {
