@@ -1,5 +1,6 @@
 """Integration tests for Conversation API routes."""
 
+import contextlib
 import json
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -164,16 +165,19 @@ class TestStreamChat:
                 if line:
                     events.append(line)
 
-            # Verify we got data events (tokens)
-            data_events = [e for e in events if e.startswith("data: ")]
-            assert len(data_events) > 0  # Should have received tokens
+            # Parse JSON events
+            json_events = []
+            for line in events:
+                if line.startswith("data: "):
+                    with contextlib.suppress(json.JSONDecodeError):
+                        json_events.append(json.loads(line[6:]))
 
-            # Verify metadata event
-            metadata_events = [e for e in events if e.startswith("event: metadata")]
-            assert len(metadata_events) == 1
+            # Verify we got assistant_token events
+            token_events = [e for e in json_events if e.get("type") == "assistant_token"]
+            assert len(token_events) > 0  # Should have received tokens
 
             # Verify done event
-            done_events = [e for e in events if e.startswith("event: done")]
+            done_events = [e for e in json_events if e.get("type") == "done"]
             assert len(done_events) == 1
 
     def test_stream_chat_extracts_and_creates_flows(
@@ -287,23 +291,24 @@ class TestStreamChat:
                 headers={"Authorization": "Bearer valid-token"},
             )
 
-            # Read events and find metadata
+            # Read events and find flows_extracted event
             events = list(response.iter_lines())
-            metadata_data = None
-            for i, line in enumerate(events):
-                if line.startswith("event: metadata") and i + 1 < len(events):
-                    # Next line should be the data
-                    data_line = events[i + 1]
-                    if data_line.startswith("data: "):
-                        metadata_data = json.loads(data_line[6:])
-                        break
+            flows_data = None
+            for line in events:
+                if line.startswith("data: "):
+                    with contextlib.suppress(json.JSONDecodeError):
+                        event = json.loads(line[6:])
+                        if event.get("type") == "flows_extracted":
+                            flows_data = event.get("payload", {})
+                            break
 
-            # Verify metadata contains flow IDs
-            assert metadata_data is not None
-            assert "extracted_flows" in metadata_data
-            assert len(metadata_data["extracted_flows"]) == 2
-            assert str(flow1.id) in metadata_data["extracted_flows"]
-            assert str(flow2.id) in metadata_data["extracted_flows"]
+            # Verify flows_extracted event contains flow IDs
+            assert flows_data is not None
+            assert "flows" in flows_data
+            assert len(flows_data["flows"]) == 2
+            extracted_ids = [f["id"] for f in flows_data["flows"]]
+            assert str(flow1.id) in extracted_ids
+            assert str(flow2.id) in extracted_ids
 
     def test_stream_chat_handles_ai_service_error(
         self, client, mock_context_data, chat_messages, mock_ai_service
@@ -339,9 +344,15 @@ class TestStreamChat:
             # Should still return 200 (streaming started)
             assert response.status_code == status.HTTP_200_OK
 
-            # But should contain error event
+            # But should contain error event in JSON format
             events = list(response.iter_lines())
-            error_events = [e for e in events if e.startswith("event: error")]
+            error_events = []
+            for line in events:
+                if line.startswith("data: "):
+                    with contextlib.suppress(json.JSONDecodeError):
+                        event = json.loads(line[6:])
+                        if event.get("type") == "error":
+                            error_events.append(event)
             assert len(error_events) == 1
 
     def test_stream_chat_flow_extraction_failure_non_fatal(
@@ -382,16 +393,23 @@ class TestStreamChat:
 
             events = list(response.iter_lines())
 
-            # Should have data events (streaming worked)
-            data_events = [e for e in events if e.startswith("data: ")]
-            assert len(data_events) > 0
+            # Parse JSON events
+            json_events = []
+            for line in events:
+                if line.startswith("data: "):
+                    with contextlib.suppress(json.JSONDecodeError):
+                        json_events.append(json.loads(line[6:]))
+
+            # Should have assistant_token events (streaming worked)
+            token_events = [e for e in json_events if e.get("type") == "assistant_token"]
+            assert len(token_events) > 0
 
             # Should have done event (stream completed)
-            done_events = [e for e in events if e.startswith("event: done")]
+            done_events = [e for e in json_events if e.get("type") == "done"]
             assert len(done_events) == 1
 
             # Should NOT have error event (extraction failure is non-fatal)
-            error_events = [e for e in events if e.startswith("event: error")]
+            error_events = [e for e in json_events if e.get("type") == "error"]
             assert len(error_events) == 0
 
     def test_stream_chat_individual_flow_creation_failure(
@@ -446,21 +464,23 @@ class TestStreamChat:
                 headers={"Authorization": "Bearer valid-token"},
             )
 
-            # Read events and find metadata
+            # Read events and find flows_extracted event
             events = list(response.iter_lines())
-            metadata_data = None
-            for i, line in enumerate(events):
-                if line.startswith("event: metadata") and i + 1 < len(events):
-                    data_line = events[i + 1]
-                    if data_line.startswith("data: "):
-                        metadata_data = json.loads(data_line[6:])
-                        break
+            flows_data = None
+            for line in events:
+                if line.startswith("data: "):
+                    with contextlib.suppress(json.JSONDecodeError):
+                        event = json.loads(line[6:])
+                        if event.get("type") == "flows_extracted":
+                            flows_data = event.get("payload", {})
+                            break
 
-            # Verify metadata contains only the successful flow
-            assert metadata_data is not None
-            assert "extracted_flows" in metadata_data
-            assert len(metadata_data["extracted_flows"]) == 1  # Only flow2 succeeded
-            assert str(flow2.id) in metadata_data["extracted_flows"]
+            # Verify flows_extracted contains only the successful flow
+            assert flows_data is not None
+            assert "flows" in flows_data
+            assert len(flows_data["flows"]) == 1  # Only flow2 succeeded
+            extracted_ids = [f["id"] for f in flows_data["flows"]]
+            assert str(flow2.id) in extracted_ids
 
     def test_stream_chat_validates_request_model(self, client, mock_context_data):
         """Test that request validation works correctly."""
