@@ -133,6 +133,9 @@ def create_mock_flow_repository(**method_mocks):
         )
     """
     mock = MagicMock()
+    # Set default for get_all_by_context (required for AI function calling)
+    mock.get_all_by_context = AsyncMock(return_value=[])
+    # Override with any provided method mocks
     for method_name, mock_impl in method_mocks.items():
         setattr(mock, method_name, mock_impl)
     return mock
