@@ -228,7 +228,7 @@ export function useChatStream(
    * Shows a toast notification and invalidates flows query to update UI.
    */
   const handleToolExecuted = useCallback(
-    (payload: {
+    async (payload: {
       tool_name: string;
       result: { success: boolean; message?: string; error?: string };
     }) => {
@@ -236,12 +236,20 @@ export function useChatStream(
 
       // Show toast notification
       if (payload.result.success) {
+        console.log(
+          '[useChatStream] Tool execution successful, calling onToolExecuted callback'
+        );
         options?.onToolExecuted?.(payload.tool_name, payload.result);
 
-        // Invalidate flows query to refresh the list
-        void queryClient.invalidateQueries({
+        console.log(
+          '[useChatStream] Invalidating flows query for context:',
+          contextId
+        );
+        // Invalidate flows query to refresh the list with refetch
+        await queryClient.invalidateQueries({
           queryKey: ['flows', contextId],
         });
+        console.log('[useChatStream] Flows query invalidated and refetched');
       } else {
         console.error('Tool execution failed:', payload.result.error);
         options?.onError?.(
@@ -380,7 +388,7 @@ export function useChatStream(
                     handleFlowsExtracted(parsed.payload as { flows: Flow[] });
                     break;
                   case 'tool_executed':
-                    handleToolExecuted(
+                    void handleToolExecuted(
                       parsed.payload as {
                         tool_name: string;
                         result: {
