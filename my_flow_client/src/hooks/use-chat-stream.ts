@@ -173,8 +173,12 @@ export function useChatStream(
         timestamp: new Date().toISOString(),
       };
 
-      // Add to messages immediately (optimistic UI)
-      setMessages((prev) => [...prev, userMessage]);
+      // Capture current messages before state update for API call
+      let messagesToSend: Message[] = [];
+      setMessages((prev) => {
+        messagesToSend = [...prev, userMessage];
+        return messagesToSend;
+      });
 
       // Set streaming state
       setIsStreaming(true);
@@ -191,7 +195,7 @@ export function useChatStream(
           body: JSON.stringify({
             contextId,
             conversationId,
-            messages: [...messages, userMessage],
+            messages: messagesToSend,
           }),
         });
 
@@ -288,7 +292,6 @@ export function useChatStream(
     [
       contextId,
       conversationId,
-      messages,
       connectionStatus,
       handleAssistantToken,
       handleFlowsExtracted,
