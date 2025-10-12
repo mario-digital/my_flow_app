@@ -2,12 +2,14 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChatInterface } from '@/components/chat/chat-interface';
 import { FlowList } from '@/components/flows/flow-list';
 import { useCurrentContext } from '@/components/providers/app-providers';
 import { useContexts } from '@/hooks/use-contexts';
-import { useFlows } from '@/hooks/use-flows';
+import { useFlows, flowKeys } from '@/hooks/use-flows';
+import { completeFlow, deleteFlow } from '@/lib/api/flows';
 import type { Flow } from '@/types/flow';
 
 const CHAT_PANEL_HEIGHT = 'var(--dashboard-chat-panel-height, 37.5rem)';
@@ -18,18 +20,86 @@ export default function DashboardPage(): JSX.Element {
   const { data: flows, isLoading: flowsLoading } = useFlows(
     currentContextId ?? ''
   );
+  const queryClient = useQueryClient();
 
   const handleFlowClick = useCallback((id: string): void => {
     toast.info(`Flow ${id} navigation is coming soon.`);
   }, []);
 
-  const handleFlowComplete = useCallback((id: string): void => {
-    toast.info(`Toggle completion for flow ${id} is not available yet.`);
-  }, []);
+  const handleFlowComplete = useCallback(
+    (id: string): void => {
+      if (!currentContextId) return;
 
-  const handleFlowDelete = useCallback((id: string): void => {
-    toast.info(`Deleting flow ${id} is not supported yet.`);
-  }, []);
+      // Optimistically update the UI
+      queryClient.setQueryData<Flow[]>(
+        flowKeys.list(currentContextId),
+        (old) =>
+          old?.map((flow) =>
+            flow.id === id
+              ? {
+                  ...flow,
+                  is_completed: !flow.is_completed,
+                  completed_at: !flow.is_completed
+                    ? new Date().toISOString()
+                    : undefined,
+                }
+              : flow
+          ) ?? []
+      );
+
+      // Call the API (fire-and-forget)
+      void completeFlow(id)
+        .then(() => {
+          // Invalidate to refetch fresh data from server
+          void queryClient.invalidateQueries({
+            queryKey: flowKeys.list(currentContextId),
+          });
+          toast.success('Flow marked as complete!');
+        })
+        .catch((error: unknown) => {
+          // Revert on error
+          void queryClient.invalidateQueries({
+            queryKey: flowKeys.list(currentContextId),
+          });
+          toast.error(
+            `Failed to mark flow complete: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        });
+    },
+    [currentContextId, queryClient]
+  );
+
+  const handleFlowDelete = useCallback(
+    (id: string): void => {
+      if (!currentContextId) return;
+
+      // Optimistically remove from UI
+      queryClient.setQueryData<Flow[]>(
+        flowKeys.list(currentContextId),
+        (old) => old?.filter((flow) => flow.id !== id) ?? []
+      );
+
+      // Call the API (fire-and-forget)
+      void deleteFlow(id)
+        .then(() => {
+          // Invalidate to refetch fresh data
+          void queryClient.invalidateQueries({
+            queryKey: flowKeys.list(currentContextId),
+          });
+          toast.success('Flow deleted successfully!');
+        })
+        .catch((error: unknown) => {
+          // Revert on error
+          void queryClient.invalidateQueries({
+            queryKey: flowKeys.list(currentContextId),
+          });
+          toast.error(
+            `Failed to delete flow: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        });
+    },
+    [currentContextId, queryClient]
+  );
 
   // Auto-select first context if none selected
   useEffect(() => {

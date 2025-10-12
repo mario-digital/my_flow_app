@@ -24,9 +24,23 @@ export async function POST(req: NextRequest): Promise<Response> {
   const body = (await req.json()) as StreamRequestBody;
   const { contextId, messages = [] } = body;
 
+  console.log('[BFF Stream] Request body:', {
+    contextId,
+    messageCount: messages.length,
+  });
+  console.log('[BFF Stream] Messages:', JSON.stringify(messages, null, 2));
+
   if (!contextId) {
     return NextResponse.json(
       { error: 'contextId is required' },
+      { status: 400 }
+    );
+  }
+
+  if (messages.length === 0) {
+    console.error('[BFF Stream] ERROR: Received empty messages array');
+    return NextResponse.json(
+      { error: 'messages array is required and cannot be empty' },
       { status: 400 }
     );
   }
@@ -44,7 +58,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         messages: messages.map((msg) => ({
           role: msg.role,
           content: msg.content,
-          timestamp: msg.timestamp,
+          // Backend expects datetime or null, not string
+          // Send null to let backend use server timestamp
+          timestamp: null,
         })),
       }),
     }

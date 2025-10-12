@@ -345,16 +345,35 @@ Output: {
                 msg = "OpenAI client not initialized"
                 raise AIServiceError(msg)
 
-            response = await self.openai_client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},  # Enforces JSON object structure
-                temperature=0.3,  # Lower temp for more consistent extraction
-                max_tokens=1024,
-            )
+            # Try with response_format first (newer models support this)
+            try:
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    response_format={"type": "json_object"},  # Enforces JSON object structure
+                    temperature=0.3,  # Lower temp for more consistent extraction
+                    max_tokens=1024,
+                )
+            except OpenAIAPIError as format_error:
+                # If model doesn't support response_format, try without it
+                if "response_format" in str(format_error):
+                    logger.warning(
+                        "Model %s doesn't support response_format, retrying without", self.model
+                    )
+                    response = await self.openai_client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=0.3,
+                        max_tokens=1024,
+                    )
+                else:
+                    raise
 
             json_str = response.choices[0].message.content or ""
             return self._parse_flow_json(json_str, context_id)
