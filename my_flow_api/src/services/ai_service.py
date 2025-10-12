@@ -59,7 +59,7 @@ class AIService:
             "AI service initialized with provider: %s, model: %s", self.provider, self.model
         )
 
-    async def _stream_openai(  # noqa: PLR0912, PLR0915
+    async def _stream_openai(  # noqa: PLR0912
         self,
         messages: list[Message],
         context_id: str,
@@ -86,16 +86,12 @@ class AIService:
                 msg = "OpenAI client not initialized"
                 raise AIStreamingError(msg)
 
-            # Build context-aware system prompt with STRONG tool usage instruction
+            # Build context-aware system prompt
             system_prompt = (
                 f"You are a helpful assistant for the user's '{context_id}' context. "
-                "You help manage tasks and todos. "
-                "\n\n**TASK CREATION: When the user says things like 'remind me to X', "
-                "'I need to do X by Y', or 'schedule X', the system will automatically "
-                "extract and create tasks from your conversation. You should acknowledge "
-                "this naturally (e.g., 'I'll help you remember that' or 'Got it, I'll "
-                "track that for you'). DO NOT say you can't set reminders or create tasks - "
-                "the system does this automatically based on your conversation.**"
+                "You help manage tasks and todos. When the user mentions tasks or reminders, "
+                "acknowledge them naturally - the system will automatically extract and "
+                "create them."
             )
             if available_flows:
                 system_prompt += "\n\nAvailable flows (tasks):\n"
@@ -106,26 +102,16 @@ class AIService:
                         f"- [{status}] {flow['title']} (ID: {flow['id']}, Priority: {priority})\n"
                     )
                 system_prompt += (
-                    "\n**IMPORTANT: When the user asks you to complete, delete, or modify a task, "
-                    "you MUST use the appropriate function tool "
-                    "(mark_flow_complete, delete_flow, or update_flow_priority). "
-                    "Match the task name from the user's request to the flow title above "
-                    "(case-insensitive, partial match is OK). "
-                    "DO NOT just respond with text - actually call the function with the "
-                    "correct flow_id. The user expects you to take ACTION, not just "
-                    "acknowledge the request.**"
+                    "\n\nWhen the user asks to complete, delete, or change a task's priority, "
+                    "use the appropriate function (mark_flow_complete, delete_flow, or "
+                    "update_flow_priority) with the correct flow_id from the list above."
                 )
             else:
-                system_prompt += (
-                    "\n\n**Note: There are currently no incomplete tasks in this context. "
-                    "If the user asks to complete or delete a task, "
-                    "let them know no tasks are currently available.**"
-                )
+                system_prompt += "\n\nThere are currently no incomplete tasks in this context."
 
             openai_messages = [{"role": "system", "content": system_prompt}]
             openai_messages.extend([{"role": msg.role, "content": msg.content} for msg in messages])
 
-            print(f"🔧 SYSTEM PROMPT:\n{system_prompt}\n", flush=True)
             logger.debug("Starting OpenAI stream with tools: %s", bool(tools))
 
             # Create streaming completion with optional tools
@@ -137,13 +123,6 @@ class AIService:
             if tools:
                 create_params["tools"] = tools
                 create_params["tool_choice"] = "auto"
-                print(
-                    f"🔧 SENDING TO OPENAI: model={self.model}, "
-                    f"tools={len(tools)}, tool_choice=auto",
-                    flush=True,
-                )
-            else:
-                print(f"🔧 SENDING TO OPENAI: model={self.model}, NO TOOLS", flush=True)
 
             stream = await self.openai_client.chat.completions.create(**create_params)
 
