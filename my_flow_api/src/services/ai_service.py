@@ -59,7 +59,7 @@ class AIService:
             "AI service initialized with provider: %s, model: %s", self.provider, self.model
         )
 
-    async def _stream_openai(  # noqa: PLR0912
+    async def _stream_openai(  # noqa: PLR0912, PLR0915
         self,
         messages: list[Message],
         context_id: str,
@@ -128,6 +128,12 @@ class AIService:
             if tools:
                 create_params["tools"] = tools
                 create_params["tool_choice"] = "auto"
+                print(
+                    f"🔧 SENDING TO OPENAI: model={self.model}, "
+                    f"tools={len(tools)}, tool_choice=auto"
+                )
+            else:
+                print(f"🔧 SENDING TO OPENAI: model={self.model}, NO TOOLS")
 
             stream = await self.openai_client.chat.completions.create(**create_params)
 
