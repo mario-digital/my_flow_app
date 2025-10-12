@@ -116,7 +116,7 @@ class AIService:
             openai_messages = [{"role": "system", "content": system_prompt}]
             openai_messages.extend([{"role": msg.role, "content": msg.content} for msg in messages])
 
-            print(f"🔧 SYSTEM PROMPT:\n{system_prompt}\n")
+            print(f"🔧 SYSTEM PROMPT:\n{system_prompt}\n", flush=True)
             logger.debug("Starting OpenAI stream with tools: %s", bool(tools))
 
             # Create streaming completion with optional tools
@@ -130,10 +130,11 @@ class AIService:
                 create_params["tool_choice"] = "auto"
                 print(
                     f"🔧 SENDING TO OPENAI: model={self.model}, "
-                    f"tools={len(tools)}, tool_choice=auto"
+                    f"tools={len(tools)}, tool_choice=auto",
+                    flush=True,
                 )
             else:
-                print(f"🔧 SENDING TO OPENAI: model={self.model}, NO TOOLS")
+                print(f"🔧 SENDING TO OPENAI: model={self.model}, NO TOOLS", flush=True)
 
             stream = await self.openai_client.chat.completions.create(**create_params)
 
