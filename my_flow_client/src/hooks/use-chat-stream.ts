@@ -60,9 +60,36 @@ export function useChatStream(
     (payload: { token: string; messageId: string; isComplete?: boolean }) => {
       const { token, messageId, isComplete } = payload;
 
+      console.log('[handleAssistantToken]', {
+        token: token.substring(0, 20),
+        messageId,
+        isComplete,
+      });
+
       setMessages((prev) => {
-        // If no current assistant message, create a new one
-        if (!currentAssistantMessageRef.current) {
+        console.log('[handleAssistantToken] prev messages:', prev.length);
+        console.log(
+          '[handleAssistantToken] currentAssistantMessageRef:',
+          currentAssistantMessageRef.current?.id
+        );
+
+        // Check if assistant message already exists in the array
+        const existingAssistantMsg = prev.find((msg) => msg.id === messageId);
+
+        if (existingAssistantMsg) {
+          // Append token to existing assistant message
+          const result = prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, content: msg.content + token }
+              : msg
+          );
+          console.log(
+            '[handleAssistantToken] Appending to existing message, result length:',
+            result.length
+          );
+          return result;
+        } else {
+          // Create new assistant message (first token)
           const newMessage: Message = {
             id: messageId,
             role: 'assistant',
@@ -70,15 +97,13 @@ export function useChatStream(
             timestamp: new Date().toISOString(),
           };
           currentAssistantMessageRef.current = newMessage;
-          return [...prev, newMessage];
+          const result = [...prev, newMessage];
+          console.log(
+            '[handleAssistantToken] Creating new assistant message, result length:',
+            result.length
+          );
+          return result;
         }
-
-        // Append token to existing assistant message
-        return prev.map((msg) =>
-          msg.id === currentAssistantMessageRef.current!.id
-            ? { ...msg, content: msg.content + token }
-            : msg
-        );
       });
 
       // If streaming is complete, clear the current message ref
@@ -219,17 +244,26 @@ export function useChatStream(
         timestamp: new Date().toISOString(),
       };
 
-      // Capture current messages before state update for API call
-      let messagesToSend: Message[] = [];
-      setMessages((prev) => {
-        messagesToSend = [...prev, userMessage];
-        return messagesToSend;
-      });
+      // Build messages array synchronously BEFORE setState
+      // We can't rely on setState callback to capture the value
+      const messagesToSend = [...messages, userMessage];
+
+      console.log('[useChatStream] Current messages:', messages.length);
+      console.log('[useChatStream] Messages to send:', messagesToSend.length);
+
+      // Update UI state optimistically
+      setMessages(messagesToSend);
 
       // Set streaming state
       setIsStreaming(true);
       setError(null); // Clear any previous errors
       setConnectionStatus('connecting');
+
+      console.log('[useChatStream] About to send:', {
+        contextId,
+        conversationId,
+        messageCount: messagesToSend.length,
+      });
 
       try {
         // Send to Next.js BFF endpoint (no token needed - uses session cookie)
@@ -277,8 +311,18 @@ export function useChatStream(
           for (const line of lines) {
             if (!line.trim() || line.startsWith(':')) continue;
 
+            console.log(
+              '[useChatStream] Received line:',
+              line.substring(0, 100)
+            );
+
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
+              console.log(
+                '[useChatStream] Data content:',
+                data.substring(0, 200)
+              );
+
               if (data === '[DONE]') {
                 setIsStreaming(false);
                 currentAssistantMessageRef.current = null;
@@ -290,6 +334,8 @@ export function useChatStream(
                   type: string;
                   payload: unknown;
                 };
+
+                console.log('[useChatStream] Parsed event type:', parsed.type);
 
                 switch (parsed.type) {
                   case 'assistant_token':
@@ -339,6 +385,7 @@ export function useChatStream(
       contextId,
       conversationId,
       connectionStatus,
+      messages,
       handleAssistantToken,
       handleFlowsExtracted,
       handleError,
