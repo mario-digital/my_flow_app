@@ -157,6 +157,8 @@ async def stream_chat(  # noqa: PLR0915
 
     # Get tool schemas for function calling
     tool_schemas = ai_tools.get_tool_schemas()
+    logger.info("Tool schemas available: %d tools", len(tool_schemas))
+    logger.info("Available flows for context: %d flows", len(available_flows))
 
     async def generate_sse_stream() -> AsyncGenerator[str, None]:  # noqa: PLR0915, PLR0912
         """Generate Server-Sent Events stream with function calling support."""
@@ -172,6 +174,8 @@ async def stream_chat(  # noqa: PLR0915
                 tools=tool_schemas,
                 available_flows=available_flows,
             ):
+                logger.debug("Received chunk type: %s", chunk["type"])
+
                 if chunk["type"] == "text":
                     # Send text token
                     token = chunk["content"]
