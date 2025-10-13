@@ -119,7 +119,10 @@ async def test_stream_openai_yields_tokens(mock_openai_class, mock_settings):
     async for token in service._stream_openai(messages, "work"):
         tokens.append(token)
 
-    assert tokens == ["Hello", " World"]
+    assert tokens == [
+        {"type": "text", "content": "Hello"},
+        {"type": "text", "content": " World"},
+    ]
 
 
 @pytest.mark.asyncio
@@ -436,7 +439,7 @@ async def test_stream_chat_response_delegates_to_openai(mock_openai_class, mock_
     async for token in service.stream_chat_response(messages, "work"):
         tokens.append(token)
 
-    assert tokens == ["Test"]
+    assert tokens == [{"type": "text", "content": "Test"}]
 
 
 @pytest.mark.asyncio
@@ -473,7 +476,7 @@ async def test_stream_chat_response_delegates_to_anthropic(mock_anthropic_class,
     async for token in service.stream_chat_response(messages, "work"):
         tokens.append(token)
 
-    assert tokens == ["Test"]
+    assert tokens == [{"type": "text", "content": "Test"}]
 
 
 @pytest.mark.asyncio
