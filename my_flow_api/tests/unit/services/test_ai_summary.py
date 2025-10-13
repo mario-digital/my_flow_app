@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 
 from src import config
 from src.models.flow import FlowInDB, FlowPriority
@@ -12,7 +13,7 @@ from src.services.ai_service import AIService
 from src.services.cache_service import summary_cache
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clear_cache():
     """Automatically clear cache before each test."""
     await summary_cache.clear()

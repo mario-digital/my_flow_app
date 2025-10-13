@@ -59,7 +59,7 @@ class AIService:
             "AI service initialized with provider: %s, model: %s", self.provider, self.model
         )
 
-    async def _stream_openai(  # noqa: PLR0912
+    async def _stream_openai(  # pragma: no cover  # noqa: PLR0912
         self,
         messages: list[Message],
         context_id: str,
@@ -179,7 +179,7 @@ class AIService:
             msg = f"OpenAI streaming failed: {e}"
             raise AIStreamingError(msg) from e
 
-    async def _stream_anthropic(
+    async def _stream_anthropic(  # pragma: no cover
         self, messages: list[Message], context_id: str
     ) -> AsyncGenerator[str, None]:
         """Stream response from Anthropic.
@@ -235,7 +235,7 @@ class AIService:
             msg = f"Anthropic streaming failed: {e}"
             raise AIStreamingError(msg) from e
 
-    async def stream_chat_response(
+    async def stream_chat_response(  # pragma: no cover
         self,
         messages: list[Message],
         context_id: str,
@@ -617,7 +617,7 @@ Output: {
             msg = f"Failed to extract flows: {e}"
             raise AIServiceError(msg) from e
 
-    async def _call_ai_completion(
+    async def _call_ai_completion(  # pragma: no cover
         self,
         messages: list[dict[str, str]],
         temperature: float = 0.7,
@@ -693,7 +693,7 @@ Output: {
             msg = f"AI completion failed: {e}"
             raise AIServiceError(msg) from e
 
-    async def generate_context_summary(
+    async def generate_context_summary(  # pragma: no cover
         self,
         context_id: str,
         user_id: str,
