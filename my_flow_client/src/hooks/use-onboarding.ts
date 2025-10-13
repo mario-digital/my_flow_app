@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useContexts } from './use-contexts';
+import { usePreferences, useMarkOnboardingComplete } from './use-preferences';
 
 /**
  * Hook to manage onboarding state.
- * Automatically shows onboarding if user has 0 contexts and hasn't seen it before.
+ * Automatically shows onboarding if user has 0 contexts and hasn't completed onboarding.
+ * Uses database-backed preferences instead of localStorage.
  */
 export function useOnboarding(): {
   isOpen: boolean;
@@ -15,8 +17,10 @@ export function useOnboarding(): {
   const [manuallyDismissed, setManuallyDismissed] = useState(false);
   const [manuallyTriggered, setManuallyTriggered] = useState(false);
 
-  // Reuse the contexts query from useContexts to avoid duplication
+  // Get contexts and preferences from DB
   const { data: contexts } = useContexts();
+  const { data: preferences } = usePreferences();
+  const markComplete = useMarkOnboardingComplete();
 
   // Compute whether onboarding should be open
   const isOpen = useMemo(() => {
@@ -26,28 +30,25 @@ export function useOnboarding(): {
     // If manually dismissed, don't show
     if (manuallyDismissed) return false;
 
-    // Wait for contexts to load
-    if (!contexts) return false;
+    // Wait for data to load
+    if (!contexts || !preferences) return false;
 
-    // Check if user has seen onboarding before
-    const hasSeenOnboarding = localStorage.getItem('has_seen_onboarding');
-
-    // Show if: no contexts AND haven't seen onboarding
-    return !hasSeenOnboarding && contexts.length === 0;
-  }, [contexts, manuallyDismissed, manuallyTriggered]);
+    // Show if: no contexts AND haven't completed onboarding
+    return !preferences.onboarding_completed && contexts.length === 0;
+  }, [contexts, preferences, manuallyDismissed, manuallyTriggered]);
 
   const handleClose = (): void => {
     setManuallyDismissed(true);
     setManuallyTriggered(false);
-    // Mark as seen in localStorage
-    localStorage.setItem('has_seen_onboarding', 'true');
+    // Mark as completed in database
+    void markComplete.mutate();
   };
 
   const handleComplete = (): void => {
     setManuallyDismissed(true);
     setManuallyTriggered(false);
-    // Mark as seen in localStorage
-    localStorage.setItem('has_seen_onboarding', 'true');
+    // Mark as completed in database
+    void markComplete.mutate();
     // Refresh contexts after completion
     window.location.reload();
   };

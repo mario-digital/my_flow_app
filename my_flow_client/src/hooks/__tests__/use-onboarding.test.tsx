@@ -7,7 +7,14 @@ vi.mock('../use-contexts', () => ({
   useContexts: vi.fn(),
 }));
 
+// Mock usePreferences hook
+vi.mock('../use-preferences', () => ({
+  usePreferences: vi.fn(),
+  useMarkOnboardingComplete: vi.fn(),
+}));
+
 import { useContexts } from '../use-contexts';
+import { usePreferences, useMarkOnboardingComplete } from '../use-preferences';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -34,15 +41,36 @@ delete (window as unknown as Record<string, unknown>)['location'];
 } as unknown as Location;
 
 describe('useOnboarding', () => {
+  const mockMarkCompleteMutate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
+
+    // Mock useMarkOnboardingComplete with a mutation function
+    vi.mocked(useMarkOnboardingComplete).mockReturnValue({
+      mutate: mockMarkCompleteMutate,
+    } as unknown as ReturnType<typeof useMarkOnboardingComplete>);
   });
 
-  it('shows onboarding if user has 0 contexts and has not seen it', async () => {
+  it('shows onboarding if user has 0 contexts and has not completed onboarding', async () => {
     vi.mocked(useContexts).mockReturnValue({
       data: [],
     } as unknown as ReturnType<typeof useContexts>);
+
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: false,
+        onboarding_completed_at: null,
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
 
     const { result } = renderHook(() => useOnboarding());
 
@@ -66,17 +94,43 @@ describe('useOnboarding', () => {
       ],
     } as ReturnType<typeof useContexts>);
 
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: false,
+        onboarding_completed_at: null,
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
+
     const { result } = renderHook(() => useOnboarding());
 
     expect(result.current.isOpen).toBe(false);
   });
 
-  it('does not show if user has seen it before', async () => {
-    localStorage.setItem('has_seen_onboarding', 'true');
-
+  it('does not show if user has completed onboarding', async () => {
     vi.mocked(useContexts).mockReturnValue({
       data: [],
     } as unknown as ReturnType<typeof useContexts>);
+
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
 
     const { result } = renderHook(() => useOnboarding());
 
@@ -98,6 +152,20 @@ describe('useOnboarding', () => {
       ],
     } as ReturnType<typeof useContexts>);
 
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
+
     const { result } = renderHook(() => useOnboarding());
 
     expect(result.current.isOpen).toBe(false);
@@ -112,10 +180,24 @@ describe('useOnboarding', () => {
     });
   });
 
-  it('handleClose() closes modal and marks as seen', async () => {
+  it('handleClose() closes modal and marks as completed in DB', async () => {
     vi.mocked(useContexts).mockReturnValue({
       data: [],
     } as unknown as ReturnType<typeof useContexts>);
+
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: false,
+        onboarding_completed_at: null,
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
 
     const { result } = renderHook(() => useOnboarding());
 
@@ -129,13 +211,27 @@ describe('useOnboarding', () => {
     });
 
     expect(result.current.isOpen).toBe(false);
-    expect(localStorage.getItem('has_seen_onboarding')).toBe('true');
+    expect(mockMarkCompleteMutate).toHaveBeenCalled();
   });
 
-  it('handleComplete() closes modal, marks as seen, and reloads page', async () => {
+  it('handleComplete() closes modal, marks as completed in DB, and reloads page', async () => {
     vi.mocked(useContexts).mockReturnValue({
       data: [],
     } as unknown as ReturnType<typeof useContexts>);
+
+    vi.mocked(usePreferences).mockReturnValue({
+      data: {
+        id: '1',
+        user_id: 'user1',
+        onboarding_completed: false,
+        onboarding_completed_at: null,
+        current_context_id: null,
+        theme: null,
+        notifications_enabled: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    } as unknown as ReturnType<typeof usePreferences>);
 
     const { result } = renderHook(() => useOnboarding());
 
@@ -149,7 +245,7 @@ describe('useOnboarding', () => {
     });
 
     expect(result.current.isOpen).toBe(false);
-    expect(localStorage.getItem('has_seen_onboarding')).toBe('true');
+    expect(mockMarkCompleteMutate).toHaveBeenCalled();
     expect(window.location.reload).toHaveBeenCalled();
   });
 });

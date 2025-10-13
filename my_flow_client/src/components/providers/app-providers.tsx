@@ -9,6 +9,8 @@ import {
   useState,
   startTransition,
 } from 'react';
+import { useSetCurrentContext, usePreferences } from '@/hooks/use-preferences';
+import { useCurrentUser } from '@/hooks/use-current-user';
 
 const CONTEXT_STORAGE_KEY = 'my-flow-current-context';
 
@@ -53,7 +55,10 @@ const ContextSelectionContext = createContext<
 
 /**
  * Internal provider component for context selection state.
- * Manages current context ID with localStorage persistence.
+ * Manages current context ID with DATABASE as source of truth.
+ *
+ * Security: Loads from DB first to prevent context leaking between users.
+ * localStorage is used only as a temporary cache until DB loads.
  *
  * @internal - Not exported, used only within AppProviders
  */
@@ -66,7 +71,14 @@ function ContextSelectionProvider({
     null
   );
   const [isHydrated, setIsHydrated] = useState(false);
+  const [hasLoadedFromDB, setHasLoadedFromDB] = useState(false);
 
+  // Get current user and preferences from DB
+  const { isAuthenticated, isLoading: isLoadingUser } = useCurrentUser();
+  const { data: preferences, isLoading: isLoadingPrefs } = usePreferences();
+  const setContextInDB = useSetCurrentContext();
+
+  // 1. Initial hydration from localStorage (temporary until DB loads)
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -93,9 +105,58 @@ function ContextSelectionProvider({
     };
   }, []);
 
-  // Persist context ID to localStorage when it changes
+  // 2. Load from DB once authenticated (OVERRIDES localStorage)
   useEffect(() => {
-    if (typeof window === 'undefined' || !isHydrated) {
+    if (
+      !isAuthenticated ||
+      isLoadingUser ||
+      isLoadingPrefs ||
+      hasLoadedFromDB
+    ) {
+      return;
+    }
+
+    if (preferences?.current_context_id) {
+      // DB value takes precedence - update state AND localStorage
+      startTransition(() => {
+        setCurrentContextIdState(preferences.current_context_id);
+      });
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(
+          CONTEXT_STORAGE_KEY,
+          preferences.current_context_id
+        );
+      }
+    }
+
+    startTransition(() => {
+      setHasLoadedFromDB(true);
+    });
+  }, [
+    isAuthenticated,
+    isLoadingUser,
+    preferences,
+    isLoadingPrefs,
+    hasLoadedFromDB,
+  ]);
+
+  // 3. Clear localStorage when user signs out
+  useEffect(() => {
+    if (!isAuthenticated && !isLoadingUser && isHydrated) {
+      // User signed out - clear everything
+      startTransition(() => {
+        setCurrentContextIdState(null);
+        setHasLoadedFromDB(false);
+      });
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(CONTEXT_STORAGE_KEY);
+      }
+    }
+  }, [isAuthenticated, isLoadingUser, isHydrated]);
+
+  // 4. Persist to localStorage when it changes (after DB load)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isHydrated || !hasLoadedFromDB) {
       return;
     }
     if (currentContextId) {
@@ -103,10 +164,12 @@ function ContextSelectionProvider({
     } else {
       window.localStorage.removeItem(CONTEXT_STORAGE_KEY);
     }
-  }, [currentContextId, isHydrated]);
+  }, [currentContextId, isHydrated, hasLoadedFromDB]);
 
   const setCurrentContextId = (id: string): void => {
     setCurrentContextIdState(id);
+    // Sync to database (optimistic update happens in hook)
+    void setContextInDB.mutate(id);
   };
 
   return (

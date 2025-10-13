@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from src.database import get_database
 from src.repositories.context_repository import ContextRepository
 from src.repositories.flow_repository import FlowRepository
+from src.repositories.user_preferences_repository import UserPreferencesRepository
 
 
 async def get_context_repository(
@@ -23,4 +24,15 @@ async def get_flow_repository(
     return FlowRepository(db, context_repo)
 
 
-__all__ = ["get_context_repository", "get_flow_repository"]
+async def get_user_preferences_repository(
+    db: AsyncIOMotorDatabase = Depends(get_database),  # type: ignore[type-arg]
+) -> UserPreferencesRepository:
+    """Return a UserPreferencesRepository bound to the current database."""
+    return UserPreferencesRepository(db)
+
+
+__all__ = [
+    "get_context_repository",
+    "get_flow_repository",
+    "get_user_preferences_repository",
+]
