@@ -5,6 +5,37 @@ import { describe, it, expect, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
+vi.mock('@/hooks/use-current-user', () => ({
+  useCurrentUser: () => ({
+    userId: 'test-user',
+    email: 'test@example.com',
+    name: 'Test User',
+    isAuthenticated: true,
+    isLoading: false,
+  }),
+}));
+
+vi.mock('@/hooks/use-preferences', () => ({
+  usePreferences: () => ({
+    data: {
+      id: '1',
+      user_id: 'test-user',
+      onboarding_completed: true,
+      onboarding_completed_at: new Date().toISOString(),
+      current_context_id: null,
+      theme: null,
+      notifications_enabled: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    isLoading: false,
+    isError: false,
+  }),
+  useSetCurrentContext: () => ({
+    mutate: vi.fn(),
+  }),
+}));
+
 vi.mock('@/components/providers/current-user-provider', () => ({
   CurrentUserServerProvider: ({ children }: { children: ReactNode }) => (
     <>{children}</>
