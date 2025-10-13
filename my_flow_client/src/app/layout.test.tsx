@@ -15,6 +15,10 @@ vi.mock('@/components/navigation', () => ({
   Navigation: () => <nav data-testid="navigation" />,
 }));
 
+vi.mock('@/components/onboarding/onboarding-wrapper', () => ({
+  OnboardingWrapper: () => <div data-testid="onboarding-wrapper" />,
+}));
+
 vi.mock('sonner', () => ({
   Toaster: () => <div data-testid="toaster" />,
 }));
