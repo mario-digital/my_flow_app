@@ -18,6 +18,13 @@ from .flow import (
     FlowWithStatus,
 )
 from .summary import ContextSummary
+from .user_preferences import (
+    UserPreferencesBase,
+    UserPreferencesCreate,
+    UserPreferencesInDB,
+    UserPreferencesResponse,
+    UserPreferencesUpdate,
+)
 
 __all__ = [
     "ContextBase",
@@ -34,4 +41,9 @@ __all__ = [
     "FlowStatus",
     "FlowUpdate",
     "FlowWithStatus",
+    "UserPreferencesBase",
+    "UserPreferencesCreate",
+    "UserPreferencesInDB",
+    "UserPreferencesResponse",
+    "UserPreferencesUpdate",
 ]

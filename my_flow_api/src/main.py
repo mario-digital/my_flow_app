@@ -14,7 +14,7 @@ from src.config import settings
 from src.database import close_mongo_connection, connect_to_mongo, db_instance
 from src.middleware.auth import get_current_user
 from src.rate_limit import limiter, rate_limit_exceeded_handler
-from src.routers import contexts, conversations, flows, transitions
+from src.routers import contexts, conversations, flows, preferences, transitions
 
 
 async def ensure_indexes() -> None:
@@ -44,7 +44,11 @@ async def ensure_indexes() -> None:
         [("context_id", 1), ("user_id", 1), ("is_completed", 1), ("created_at", -1)]
     )
 
-    print("✅ Database indexes verified (8 indexes created)")
+    # User preferences collection indexes
+    # Unique index ensures each user has exactly one preferences document
+    await db.user_preferences.create_index([("user_id", 1)], unique=True)
+
+    print("✅ Database indexes verified (9 indexes created)")
 
 
 @asynccontextmanager
@@ -96,6 +100,7 @@ app.add_middleware(
 app.include_router(contexts.router)
 app.include_router(conversations.router)
 app.include_router(flows.router)
+app.include_router(preferences.router)
 app.include_router(transitions.router)
 
 
