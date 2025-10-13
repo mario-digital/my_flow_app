@@ -43,7 +43,7 @@ describe('OnboardingWrapper', () => {
       expect.objectContaining({
         isOpen: true,
       }),
-      expect.anything()
+      undefined
     );
   });
 
@@ -62,7 +62,7 @@ describe('OnboardingWrapper', () => {
       expect.objectContaining({
         isOpen: false,
       }),
-      expect.anything()
+      undefined
     );
   });
 
@@ -84,7 +84,7 @@ describe('OnboardingWrapper', () => {
         onClose: mockHandleClose,
         onComplete: mockHandleComplete,
       }),
-      expect.anything()
+      undefined
     );
   });
 });

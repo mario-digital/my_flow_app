@@ -168,7 +168,7 @@ class TransitionService:
             List of urgent flows sorted by due date
         """
         now = datetime.now(UTC)
-        today_end = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        within_24_hours = now + timedelta(hours=24)
 
         urgent: list[FlowResponse] = []
 
@@ -185,7 +185,7 @@ class TransitionService:
                 # Urgent if: overdue OR due today OR high priority due soon
                 if (
                     due_dt < now
-                    or due_dt <= today_end
+                    or due_dt <= within_24_hours
                     or (flow.priority == "high" and due_dt <= now + timedelta(days=3))
                 ):
                     urgent.append(flow)
@@ -263,7 +263,7 @@ class TransitionService:
         overdue_count = 0
         due_today_count = 0
         now = datetime.now(UTC)
-        today_end = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        within_24_hours = now + timedelta(hours=24)
 
         for flow in urgent_flows:
             if flow.due_date:
@@ -271,7 +271,7 @@ class TransitionService:
                 due_dt = flow.due_date
                 if due_dt < now:
                     overdue_count += 1
-                elif due_dt <= today_end:
+                elif due_dt <= within_24_hours:
                     due_today_count += 1
 
         # Generate suggestions based on urgency
@@ -281,7 +281,7 @@ class TransitionService:
 
         if due_today_count > 0:
             plural = "s" if due_today_count > 1 else ""
-            suggestions.append(f"{due_today_count} high-priority flow{plural} due today")
+            suggestions.append(f"{due_today_count} flow{plural} due today")
 
         # If urgent but not overdue/due today, mention priorities
         if len(urgent_flows) > 0 and overdue_count == 0 and due_today_count == 0:

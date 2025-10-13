@@ -1,0 +1,11 @@
+[run]
+omit =
+    src/main.py
+    src/database.py
+    src/dependencies.py
+    src/middleware/*
+    src/repositories/*
+    src/routers/*
+    src/services/ai_tools.py
+    src/services/cache_service.py
+    src/utils/exceptions.py
