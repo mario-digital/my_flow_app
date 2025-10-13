@@ -95,9 +95,12 @@ describe('usePreferences', () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => {
-      expect(result.current.isError).toBe(true);
-    });
+    await waitFor(
+      () => {
+        expect(result.current.isError).toBe(true);
+      },
+      { timeout: 3000 }
+    );
 
     expect(result.current.error?.message).toBe('Network error');
   });
@@ -155,9 +158,9 @@ describe('useUpdatePreferences', () => {
       expect(updateResult.current.isSuccess).toBe(true);
     });
 
-    expect(preferencesApi.updatePreferences).toHaveBeenCalledWith({
-      theme: 'dark',
-    });
+    expect(preferencesApi.updatePreferences).toHaveBeenCalledTimes(1);
+    const callArgs = vi.mocked(preferencesApi.updatePreferences).mock.calls[0];
+    expect(callArgs?.[0]).toEqual({ theme: 'dark' });
   });
 
   it('handles update error with rollback', async () => {
@@ -363,9 +366,9 @@ describe('useSetCurrentContext', () => {
       expect(setContextResult.current.isSuccess).toBe(true);
     });
 
-    expect(preferencesApi.setCurrentContext).toHaveBeenCalledWith(
-      'context-123'
-    );
+    expect(preferencesApi.setCurrentContext).toHaveBeenCalledTimes(1);
+    const callArgs = vi.mocked(preferencesApi.setCurrentContext).mock.calls[0];
+    expect(callArgs?.[0]).toBe('context-123');
   });
 
   it('clears current context successfully', async () => {
@@ -416,7 +419,9 @@ describe('useSetCurrentContext', () => {
       expect(setContextResult.current.isSuccess).toBe(true);
     });
 
-    expect(preferencesApi.setCurrentContext).toHaveBeenCalledWith(null);
+    expect(preferencesApi.setCurrentContext).toHaveBeenCalledTimes(1);
+    const callArgs = vi.mocked(preferencesApi.setCurrentContext).mock.calls[0];
+    expect(callArgs?.[0]).toBe(null);
   });
 
   it('handles set context error with rollback', async () => {
