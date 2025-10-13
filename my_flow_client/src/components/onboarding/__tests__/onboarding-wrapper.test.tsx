@@ -11,6 +11,15 @@ vi.mock('@/hooks/use-onboarding', () => ({
   })),
 }));
 
+vi.mock('@/hooks/use-current-user', () => ({
+  useCurrentUser: vi.fn(() => ({
+    userId: 'test-user',
+    email: 'test@example.com',
+    isAuthenticated: true,
+    isLoading: false,
+  })),
+}));
+
 vi.mock('../onboarding-modal', () => ({
   OnboardingModal: vi.fn(() => <div data-testid="onboarding-modal" />),
 }));
