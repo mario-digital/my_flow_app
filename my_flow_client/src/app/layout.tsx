@@ -5,6 +5,7 @@ import { Navigation } from '@/components/navigation';
 import { Toaster } from 'sonner';
 import { AppProviders } from '@/components/providers/app-providers';
 import { CurrentUserServerProvider } from '@/components/providers/current-user-provider';
+import { OnboardingWrapper } from '@/components/onboarding/onboarding-wrapper';
 import { ReactNode, ReactElement } from 'react';
 
 const geistSans = Geist({
@@ -41,6 +42,7 @@ export default async function RootLayout({
             <Navigation />
             {children}
             <Toaster />
+            <OnboardingWrapper />
           </AppProviders>
         </CurrentUserServerProvider>
       </body>
