@@ -14,6 +14,7 @@ from src.models.errors import RateLimitError
 from src.models.flow import FlowCreate, FlowInDB, FlowUpdate
 from src.models.pagination import PaginatedResponse
 from src.rate_limit import limiter
+from src.services.cache_service import summary_cache
 
 if TYPE_CHECKING:
     from src.repositories.context_repository import ContextRepository
@@ -110,6 +111,11 @@ async def create_flow(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Context not found",
         )
+
+    # Invalidate context summary cache to reflect new flow
+    cache_key = f"summary:{flow.context_id}"
+    await summary_cache.delete(cache_key)
+
     return flow
 
 
@@ -176,8 +182,8 @@ async def delete_flow(
     flow_repo: "FlowRepository" = Depends(get_flow_repository),
 ) -> None:
     """Delete flow with ownership check."""
-    # Use helper to verify ownership
-    await verify_flow_ownership(flow_id, user_id, flow_repo)
+    # Get flow first to get context_id for cache invalidation
+    flow = await verify_flow_ownership(flow_id, user_id, flow_repo)
 
     # Delete flow
     deleted = await flow_repo.delete(flow_id, user_id)
@@ -186,6 +192,10 @@ async def delete_flow(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found",
         )
+
+    # Invalidate context summary cache to reflect updated counts
+    cache_key = f"summary:{flow.context_id}"
+    await summary_cache.delete(cache_key)
 
 
 @router.patch(
@@ -213,4 +223,9 @@ async def mark_flow_complete(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flow not found or already completed",
         )
+
+    # Invalidate context summary cache to reflect updated counts
+    cache_key = f"summary:{completed_flow.context_id}"
+    await summary_cache.delete(cache_key)
+
     return completed_flow
