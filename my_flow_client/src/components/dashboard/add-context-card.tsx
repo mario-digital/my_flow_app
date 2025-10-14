@@ -8,6 +8,7 @@ import { EmojiPicker } from '@/components/onboarding/emoji-picker';
 import { ColorPicker } from '@/components/onboarding/color-picker';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useCreateContext } from '@/hooks/use-contexts';
 
 export interface AddContextCardProps {
   onContextCreated: (contextId: string) => void;
@@ -24,55 +25,41 @@ export function AddContextCard({
   className,
 }: AddContextCardProps): ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   // Form state
   const [contextName, setContextName] = useState('');
   const [contextIcon, setContextIcon] = useState('📋');
   const [contextColor, setContextColor] = useState('#6366f1');
 
-  const handleCreate = async (): Promise<void> => {
+  // Use the mutation hook for proper cache management
+  const { mutate: createContext, isPending: isCreating } = useCreateContext();
+
+  const handleCreate = (): void => {
     if (!contextName.trim()) {
       toast.error('Please enter a context name');
       return;
     }
 
-    setIsCreating(true);
+    createContext(
+      {
+        name: contextName.trim(),
+        icon: contextIcon,
+        color: contextColor,
+      },
+      {
+        onSuccess: (newContext) => {
+          // Reset form
+          setContextName('');
+          setContextIcon('📋');
+          setContextColor('#6366f1');
+          setIsExpanded(false);
 
-    try {
-      const response = await fetch('/api/contexts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: contextName.trim(),
-          icon: contextIcon,
-          color: contextColor,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create context');
+          // Notify parent to switch to new context
+          onContextCreated(newContext.id);
+        },
+        // Error handling is already done in the mutation hook
       }
-
-      const newContext = (await response.json()) as { id: string };
-
-      toast.success(`Context "${contextName}" created!`);
-
-      // Reset form
-      setContextName('');
-      setContextIcon('📋');
-      setContextColor('#6366f1');
-      setIsExpanded(false);
-
-      // Notify parent to switch to new context
-      onContextCreated(newContext.id);
-    } catch (error) {
-      console.error('Error creating context:', error);
-      toast.error('Failed to create context. Please try again.');
-    } finally {
-      setIsCreating(false);
-    }
+    );
   };
 
   const handleCancel = (): void => {

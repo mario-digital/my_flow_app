@@ -79,11 +79,13 @@ export function ContextSwitcher({
       </SelectTrigger>
 
       <SelectContent
+        anchor="bottom start"
         className={cn(
-          'absolute z-10 mt-1 w-full sm:w-[240px] max-h-60 overflow-auto',
+          'z-50 w-[var(--button-width)] max-h-[300px] overflow-y-auto',
           'rounded-lg border border-border-default',
           'bg-bg-secondary shadow-lg',
-          'focus:outline-none'
+          'focus:outline-none',
+          '[--anchor-gap:4px]'
         )}
       >
         {sortedContexts.map((context) => (

@@ -124,8 +124,7 @@ export function DashboardContent(): JSX.Element {
 
   const handleContextCreated = useCallback(
     (contextId: string): void => {
-      // Invalidate contexts and context summaries to refetch with new context
-      void queryClient.invalidateQueries({ queryKey: ['contexts'] });
+      // Invalidate context summaries (contexts are already invalidated by the mutation hook)
       void queryClient.invalidateQueries({ queryKey: ['context-summaries'] });
 
       // Automatically switch to the newly created context
