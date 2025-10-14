@@ -51,9 +51,12 @@ export function DashboardContent(): JSX.Element {
       // Call the API (fire-and-forget)
       void completeFlow(id)
         .then(() => {
-          // Invalidate to refetch fresh data from server
+          // Invalidate flows list AND context summaries to update completion counts
           void queryClient.invalidateQueries({
             queryKey: flowKeys.list(currentContextId),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ['context-summaries'],
           });
           toast.success('Flow marked as complete!');
         })
@@ -61,6 +64,9 @@ export function DashboardContent(): JSX.Element {
           // Revert on error
           void queryClient.invalidateQueries({
             queryKey: flowKeys.list(currentContextId),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ['context-summaries'],
           });
           toast.error(
             `Failed to mark flow complete: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -83,9 +89,12 @@ export function DashboardContent(): JSX.Element {
       // Call the API (fire-and-forget)
       void deleteFlow(id)
         .then(() => {
-          // Invalidate to refetch fresh data
+          // Invalidate flows list AND context summaries to update counts
           void queryClient.invalidateQueries({
             queryKey: flowKeys.list(currentContextId),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ['context-summaries'],
           });
           toast.success('Flow deleted successfully!');
         })
@@ -93,6 +102,9 @@ export function DashboardContent(): JSX.Element {
           // Revert on error
           void queryClient.invalidateQueries({
             queryKey: flowKeys.list(currentContextId),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: ['context-summaries'],
           });
           toast.error(
             `Failed to delete flow: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -140,7 +152,10 @@ export function DashboardContent(): JSX.Element {
         <h2 className="text-h2 font-semibold text-text-primary mb-4">
           My Contexts
         </h2>
-        <ContextSummaryWidget onContextClick={handleContextClick} />
+        <ContextSummaryWidget
+          onContextClick={handleContextClick}
+          currentContextId={currentContextId}
+        />
       </div>
 
       {/* Main content grid - responsive two-column layout */}

@@ -9,11 +9,14 @@ import { cn } from '@/lib/utils';
 export interface ContextSummaryWidgetProps {
   /** Callback when a context card is clicked */
   onContextClick: (contextId: string) => void;
+  /** Currently active context ID to highlight */
+  currentContextId?: string | null;
   className?: string;
 }
 
 export function ContextSummaryWidget({
   onContextClick,
+  currentContextId,
   className,
 }: ContextSummaryWidgetProps): ReactElement {
   const { data: contextSummaries, isLoading, error } = useContextSummaries();
@@ -112,6 +115,7 @@ export function ContextSummaryWidget({
           key={contextWithSummary.context_id}
           contextWithSummary={contextWithSummary}
           onClick={onContextClick}
+          isActive={contextWithSummary.context_id === currentContextId}
         />
       ))}
     </div>

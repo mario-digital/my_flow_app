@@ -738,8 +738,8 @@ Output: {
             extra={"user_id": user_id, "context_id": context_id},
         )
 
-        # Fetch flows for context
-        flows = await flow_repo.get_all_by_context(context_id, user_id)
+        # Fetch flows for context (include completed to get accurate counts)
+        flows = await flow_repo.get_all_by_context(context_id, user_id, include_completed=True)
         incomplete_flows = [f for f in flows if not f.is_completed]
         completed_flows = [f for f in flows if f.is_completed]
 
