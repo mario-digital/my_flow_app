@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signOut } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { ContextSwitcher } from '@/components/contexts/context-switcher';
@@ -48,8 +49,15 @@ export function Navigation(): JSX.Element {
   return (
     <nav className="border-b border-border-default bg-bg-primary">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold text-text-primary">
-          MyFlow
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/my_flow_logo.png"
+            alt="MyFlow"
+            width={140}
+            height={40}
+            priority
+            className="h-auto w-[140px]"
+          />
         </Link>
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
