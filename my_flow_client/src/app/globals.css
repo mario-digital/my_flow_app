@@ -75,6 +75,10 @@
   --color-context-rest: var(--color-context-rest);
   --color-context-social: var(--color-context-social);
 
+  /* Brand Accent Colors - Logo-inspired */
+  --color-brand-blue: var(--color-accent-primary);
+  --color-brand-purple: var(--color-accent-secondary);
+
   /* Semantic Colors - Maps to success-*, warning-*, error-* utilities */
   --color-success: var(--color-success);
   --color-success-bg: var(--color-success-bg);
@@ -146,6 +150,12 @@
   --radius-lg: var(--token-radius-lg);
   --radius-full: var(--token-radius-full);
 
+  /* Component-specific radius for consistent usage */
+  --radius-button: var(--token-radius-button);
+  --radius-card: var(--token-radius-card);
+  --radius-input: var(--token-radius-input);
+  --radius-modal: var(--token-radius-modal);
+
   /* ========================================
      BORDER WIDTHS - Reference effects.css tokens
      Maps to Tailwind's border-* utilities (e.g., border-l-flow)
@@ -166,6 +176,9 @@
   --shadow-md: var(--token-shadow-md);
   --shadow-lg: var(--token-shadow-lg);
   --shadow-xl: var(--token-shadow-xl);
+  --shadow-focus: var(--token-shadow-focus);
+  --shadow-glow-brand: var(--token-shadow-glow-brand);
+  --shadow-glow-brand-hover: var(--token-shadow-glow-brand-hover);
 
   /* ========================================
      Z-INDEX - Reference effects.css tokens
@@ -239,9 +252,23 @@
 }
 
 body {
-  background: var(--color-bg-primary);
+  /* Modern gradient background inspired by logo */
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(74, 144, 226, 0.15),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 0% 100%,
+      rgba(139, 92, 246, 0.1),
+      transparent
+    ),
+    var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: var(--font-family-primary);
+  /* Ensure gradient stays fixed during scroll */
+  background-attachment: fixed;
 }
 
 /* ========================================

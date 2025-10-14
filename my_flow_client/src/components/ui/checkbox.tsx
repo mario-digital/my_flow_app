@@ -16,7 +16,20 @@ const Checkbox = forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      'peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+      // Modern soft checkbox styling
+      'peer h-4 w-4 shrink-0 rounded-sm',
+      'border border-border-default bg-bg-secondary',
+      'transition-all duration-200',
+      // Hover state
+      'hover:border-border-hover hover:bg-bg-tertiary',
+      // Focus state - subtle glow
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-context-current)]/30',
+      // Checked state - soft with context color
+      'data-[state=checked]:bg-[var(--color-context-current)]/15',
+      'data-[state=checked]:border-[var(--color-context-current)]',
+      'data-[state=checked]:text-[var(--color-context-current)]',
+      // Disabled state
+      'disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
     {...props}

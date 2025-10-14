@@ -47,16 +47,16 @@ export function Navigation(): JSX.Element {
   const { isAuthenticated, email } = useCurrentUser();
 
   return (
-    <nav className="border-b border-border-default bg-bg-primary">
+    <nav className="sticky top-0 z-fixed border-b border-border-default bg-bg-primary/80 backdrop-blur-xl shadow-[0_1px_0_0_rgba(74,144,226,0.1)]">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center group">
           <Image
             src="/my_flow_logo.png"
             alt="MyFlow"
             width={140}
             height={40}
             priority
-            className="h-auto w-[140px]"
+            className="h-auto w-[140px] transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(74,144,226,0.5)]"
           />
         </Link>
         <div className="flex items-center gap-4">
