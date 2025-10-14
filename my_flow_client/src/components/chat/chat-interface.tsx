@@ -166,7 +166,7 @@ export function ChatInterface({
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-bg-primary border border-border rounded-lg',
+        'flex flex-col h-full bg-bg-primary border border-border rounded-lg overflow-hidden',
         className
       )}
     >
