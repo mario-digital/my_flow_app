@@ -11,12 +11,14 @@ import { cn } from '@/lib/utils';
 export interface ContextSummaryCardProps {
   contextWithSummary: ContextWithSummary;
   onClick: (contextId: string) => void;
+  isActive?: boolean;
   className?: string;
 }
 
 export function ContextSummaryCard({
   contextWithSummary,
   onClick,
+  isActive = false,
   className,
 }: ContextSummaryCardProps): ReactElement {
   const { context_id, context_name, context_icon, context_color, summary } =
@@ -44,6 +46,14 @@ export function ContextSummaryCard({
 
         className
       )}
+      style={
+        isActive
+          ? ({
+              borderTopColor: context_color,
+              borderTopWidth: '3px',
+            } as React.CSSProperties)
+          : undefined
+      }
       onClick={() => onClick(context_id)}
     >
       {/* Card Header - component-styling-guide.md#634-647 */}
