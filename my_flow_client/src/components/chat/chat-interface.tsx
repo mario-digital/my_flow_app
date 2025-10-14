@@ -166,7 +166,7 @@ export function ChatInterface({
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-bg-primary border border-border rounded-lg overflow-hidden',
+        'flex flex-col h-full bg-bg-primary border border-border-subtle rounded-lg overflow-hidden shadow-[0_0_0_1px_rgba(74,144,226,0.1)]',
         className
       )}
     >
@@ -228,7 +228,7 @@ export function ChatInterface({
 
       {/* Flow Extraction Notification */}
       {showNotification && (
-        <div className="p-4 border-t border-border bg-bg-primary">
+        <div className="p-4 border-t border-border-subtle bg-bg-primary">
           <FlowExtractionNotification
             flows={pendingFlows}
             onAccept={acceptFlows}
@@ -241,7 +241,7 @@ export function ChatInterface({
       {/* Input Area */}
       <form
         onSubmit={handleFormSubmit}
-        className="p-4 border-t border-border bg-bg-secondary"
+        className="p-4 border-t border-border-subtle bg-bg-secondary"
       >
         <div className="flex gap-2">
           <Textarea

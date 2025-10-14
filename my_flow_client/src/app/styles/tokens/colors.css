@@ -3,26 +3,32 @@
      PRIMITIVE COLORS (Layer 1)
      ======================================== */
 
-  /* Neutrals - Black scale */
-  --primitive-black-900: #0a0a0a;
-  --primitive-black-800: #1a1a1a;
-  --primitive-black-700: #2a2a2a;
-  --primitive-neutral-600: #404040;
-  --primitive-neutral-500: #525252;
-  --primitive-neutral-400: #a3a3a3;
-  --primitive-white: #fafafa;
+  /* Brand Colors - Inspired by Logo's Blue-Purple Gradient */
+  --primitive-brand-blue: #4a90e2; /* Logo blue */
+  --primitive-brand-purple: #8b5cf6; /* Logo purple */
+  --primitive-brand-blue-light: #5ba3f5;
+  --primitive-brand-purple-light: #a78bfa;
 
-  /* Enhanced neutral palette - Slate scale for sophisticated UI */
-  --primitive-slate-50: #f8fafc;
-  --primitive-slate-100: #f1f5f9;
-  --primitive-slate-200: #e2e8f0;
-  --primitive-slate-300: #cbd5e1;
-  --primitive-slate-400: #94a3b8;
-  --primitive-slate-500: #64748b;
-  --primitive-slate-600: #475569;
-  --primitive-slate-700: #334155;
-  --primitive-slate-800: #1e293b;
-  --primitive-slate-900: #0f172a;
+  /* Neutrals - Enhanced with subtle blue undertones for modern feel */
+  --primitive-black-900: #0d0f1a; /* Deepest black with blue tint */
+  --primitive-black-800: #14162b; /* Very dark with blue undertone */
+  --primitive-black-700: #1c1f3a; /* Dark elevated with richer tone */
+  --primitive-neutral-600: #454966;
+  --primitive-neutral-500: #5a5f7a;
+  --primitive-neutral-400: #a3a8ba;
+  --primitive-white: #fafbfd;
+
+  /* Enhanced neutral palette - Cool blue-slate scale for sophisticated modern UI */
+  --primitive-slate-50: #f5f8ff;
+  --primitive-slate-100: #edf2fc;
+  --primitive-slate-200: #dce4f5;
+  --primitive-slate-300: #c0ceeb;
+  --primitive-slate-400: #8e9fc9;
+  --primitive-slate-500: #6477a8;
+  --primitive-slate-600: #4a5f8f;
+  --primitive-slate-700: #374772;
+  --primitive-slate-800: #252f52;
+  --primitive-slate-900: #151d38;
 
   /* Context Colors - Refined sophisticated palette */
   --primitive-work: #6366f1; /* Indigo - professional, focused */
@@ -105,6 +111,32 @@
   --color-warning-bg: color-mix(in srgb, var(--color-warning) 10%, transparent);
   --color-error: var(--primitive-error);
   --color-error-bg: color-mix(in srgb, var(--color-error) 10%, transparent);
+
+  /* Brand Accents - Logo-inspired blue-purple */
+  --color-accent-primary: var(--primitive-brand-blue);
+  --color-accent-secondary: var(--primitive-brand-purple);
+  --color-accent-gradient: linear-gradient(
+    135deg,
+    var(--primitive-brand-blue) 0%,
+    var(--primitive-brand-purple) 100%
+  );
+  --color-accent-gradient-hover: linear-gradient(
+    135deg,
+    var(--primitive-brand-blue-light) 0%,
+    var(--primitive-brand-purple-light) 100%
+  );
+
+  /* Subtle background gradients for modern depth */
+  --color-gradient-bg-subtle: radial-gradient(
+    ellipse at top right,
+    color-mix(in srgb, var(--primitive-brand-blue) 5%, transparent) 0%,
+    transparent 50%
+  );
+  --color-gradient-bg-emphasis: radial-gradient(
+    ellipse at top,
+    color-mix(in srgb, var(--primitive-brand-purple) 8%, transparent) 0%,
+    transparent 60%
+  );
 
   /* ========================================
      COMPONENT COLORS (Layer 3)

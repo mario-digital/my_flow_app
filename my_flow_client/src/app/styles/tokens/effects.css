@@ -18,20 +18,33 @@
   --token-border-width-flow: 3px; /* For flow cards with context-colored left border */
   --token-border-width-urgent: 3px; /* For urgent indicators with error-colored left border */
 
-  /* Elevation shadows - Token prefix to avoid Tailwind @theme conflicts */
+  /* Elevation shadows - Enhanced with subtle blue tints for modern depth */
   --token-shadow-none: none;
-  --token-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --token-shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+  --token-shadow-xs: 0 1px 2px 0 rgba(13, 15, 26, 0.3);
+  --token-shadow-sm:
+    0 2px 4px 0 rgba(13, 15, 26, 0.4), 0 1px 2px 0 rgba(74, 144, 226, 0.05); /* Subtle blue tint */
   --token-shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    0 4px 6px -1px rgba(13, 15, 26, 0.5), 0 2px 4px -1px rgba(13, 15, 26, 0.3),
+    0 2px 8px -2px rgba(74, 144, 226, 0.08); /* Blue glow */
   --token-shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    0 10px 15px -3px rgba(13, 15, 26, 0.6),
+    0 4px 6px -2px rgba(13, 15, 26, 0.4),
+    0 4px 12px -2px rgba(74, 144, 226, 0.1); /* Stronger blue glow */
   --token-shadow-xl:
-    0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    0 20px 25px -5px rgba(13, 15, 26, 0.7),
+    0 10px 10px -5px rgba(13, 15, 26, 0.4),
+    0 8px 20px -4px rgba(139, 92, 246, 0.12); /* Purple-blue glow */
 
-  /* Focus ring */
-  --token-shadow-focus: 0 0 0 2px var(--color-context-current);
-  --token-shadow-focus-error: 0 0 0 2px var(--color-error);
+  /* Focus ring - Enhanced with subtle glow */
+  --token-shadow-focus:
+    0 0 0 2px var(--color-context-current),
+    0 0 16px -4px var(--color-context-current);
+  --token-shadow-focus-error:
+    0 0 0 2px var(--color-error), 0 0 12px -4px var(--color-error);
+
+  /* Glow effects for interactive elements */
+  --token-shadow-glow-brand: 0 0 20px -8px rgba(74, 144, 226, 0.6);
+  --token-shadow-glow-brand-hover: 0 0 24px -6px rgba(74, 144, 226, 0.8);
 
   /* Component-specific shadows */
   --token-shadow-card: var(--token-shadow-sm);

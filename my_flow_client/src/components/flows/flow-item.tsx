@@ -25,18 +25,19 @@ interface FlowItemProps {
 
 /**
  * Maps FlowPriority to semantic feedback color classes.
- * Uses error (red), warning (yellow), success (green) - NOT context colors.
+ * Uses soft, subtle transparent backgrounds for a modern look.
+ * Colors: error (red), warning (yellow), success (green) - NOT context colors.
  *
  * @see docs/architecture/coding-standards.md#priority-badge-color-mapping
  */
 function getPriorityBadgeClasses(priority: FlowPriority): string {
   switch (priority) {
     case FlowPriority.High:
-      return 'bg-error text-white border-error';
+      return 'bg-error/15 text-error border-error/30';
     case FlowPriority.Medium:
-      return 'bg-warning text-black border-warning';
+      return 'bg-warning/15 text-warning border-warning/30';
     case FlowPriority.Low:
-      return 'bg-success text-white border-success';
+      return 'bg-success/15 text-success border-success/30';
   }
 }
 
