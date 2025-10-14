@@ -31,7 +31,7 @@ describe('AddContextCard', () => {
       wrapper: Wrapper,
     });
 
-    expect(screen.getByLabelText('Add new context')).toBeInTheDocument();
+    expect(screen.getByText('Add Context')).toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText('Context name')
     ).not.toBeInTheDocument();
@@ -43,8 +43,8 @@ describe('AddContextCard', () => {
       wrapper: Wrapper,
     });
 
-    const addButton = screen.getByLabelText('Add new context');
-    await user.click(addButton);
+    const addButton = screen.getByText('Add Context').closest('div');
+    await user.click(addButton!);
 
     expect(screen.getByPlaceholderText('Context name')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
@@ -58,7 +58,8 @@ describe('AddContextCard', () => {
     });
 
     // Expand
-    await user.click(screen.getByLabelText('Add new context'));
+    const expandButton = screen.getByText('Add Context').closest('div');
+    await user.click(expandButton!);
     expect(screen.getByPlaceholderText('Context name')).toBeInTheDocument();
 
     // Collapse
@@ -90,7 +91,8 @@ describe('AddContextCard', () => {
     });
 
     // Expand form
-    await user.click(screen.getByLabelText('Add new context'));
+    const formButton = screen.getByText('Add Context').closest('div');
+    await user.click(formButton!);
 
     // Fill in name
     const nameInput = screen.getByPlaceholderText('Context name');
@@ -115,7 +117,8 @@ describe('AddContextCard', () => {
       wrapper: Wrapper,
     });
 
-    await user.click(screen.getByLabelText('Add new context'));
+    const disabledButton = screen.getByText('Add Context').closest('div');
+    await user.click(disabledButton!);
 
     const createButton = screen.getByRole('button', { name: /create/i });
     expect(createButton).toBeDisabled();
@@ -132,7 +135,8 @@ describe('AddContextCard', () => {
     });
 
     // Expand and fill
-    await user.click(screen.getByLabelText('Add new context'));
+    const errorButton = screen.getByText('Add Context').closest('div');
+    await user.click(errorButton!);
     await user.type(
       screen.getByPlaceholderText('Context name'),
       'Test Context'
