@@ -3,9 +3,6 @@ import { userEvent } from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AddContextCard } from '../add-context-card';
-import * as apiClient from '@/lib/api/contexts';
-
-vi.mock('@/lib/api/contexts');
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
   const queryClient = new QueryClient({
@@ -46,7 +43,9 @@ describe('AddContextCard', () => {
 
     expect(screen.getByLabelText('Context Name')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+    // Check for both cancel buttons (X icon and Cancel text button)
+    const cancelButtons = screen.getAllByRole('button', { name: /cancel/i });
+    expect(cancelButtons.length).toBeGreaterThan(0);
   });
 
   it('collapses form when cancel is clicked', async () => {
@@ -60,8 +59,12 @@ describe('AddContextCard', () => {
     await user.click(expandButton!);
     expect(screen.getByLabelText('Context Name')).toBeInTheDocument();
 
-    // Collapse
-    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    // Collapse - click the text Cancel button (not the X icon)
+    const cancelButtons = screen.getAllByRole('button', { name: /cancel/i });
+    // The text "Cancel" button is the second one (first is X icon with aria-label)
+    const cancelButton = cancelButtons[cancelButtons.length - 1];
+    if (!cancelButton) throw new Error('Cancel button not found');
+    await user.click(cancelButton);
 
     await waitFor(() => {
       expect(screen.queryByLabelText('Context Name')).not.toBeInTheDocument();
@@ -80,7 +83,11 @@ describe('AddContextCard', () => {
       updated_at: new Date().toISOString(),
     };
 
-    vi.mocked(apiClient.createContext).mockResolvedValue(mockCreatedContext);
+    // Mock the fetch API
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockCreatedContext,
+    } as Response);
 
     render(<AddContextCard onContextCreated={mockOnContextCreated} />, {
       wrapper: Wrapper,
@@ -98,11 +105,24 @@ describe('AddContextCard', () => {
     await user.click(screen.getByRole('button', { name: /create/i }));
 
     await waitFor(() => {
-      expect(apiClient.createContext).toHaveBeenCalledWith({
-        name: 'My New Context',
-        icon: expect.any(String),
-        color: expect.any(String),
-      });
+      // Check that fetch was called with correct URL and method
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/contexts',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      // Verify the body contains the name we entered
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock
+        .calls[0];
+      if (!fetchCall) throw new Error('Fetch was not called');
+      const body = JSON.parse(fetchCall[1].body as string);
+      expect(body.name).toBe('My New Context');
+      expect(body.icon).toBeTruthy();
+      expect(body.color).toBeTruthy();
+
       expect(mockOnContextCreated).toHaveBeenCalledWith('new-ctx-1');
     });
   });
@@ -122,9 +142,13 @@ describe('AddContextCard', () => {
 
   it('shows error toast when context creation fails', async () => {
     const user = userEvent.setup();
-    vi.mocked(apiClient.createContext).mockRejectedValue(
-      new Error('Failed to create')
-    );
+
+    // Mock fetch to return an error
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as Response);
 
     render(<AddContextCard onContextCreated={mockOnContextCreated} />, {
       wrapper: Wrapper,
