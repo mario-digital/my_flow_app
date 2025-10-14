@@ -4,11 +4,14 @@ import type { ReactElement } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useContextSummaries } from '@/hooks/use-context-summaries';
 import { ContextSummaryCard } from './context-summary-card';
+import { AddContextCard } from './add-context-card';
 import { cn } from '@/lib/utils';
 
 export interface ContextSummaryWidgetProps {
   /** Callback when a context card is clicked */
   onContextClick: (contextId: string) => void;
+  /** Callback when a new context is created */
+  onContextCreated: (contextId: string) => void;
   /** Currently active context ID to highlight */
   currentContextId?: string | null;
   className?: string;
@@ -16,6 +19,7 @@ export interface ContextSummaryWidgetProps {
 
 export function ContextSummaryWidget({
   onContextClick,
+  onContextCreated,
   currentContextId,
   className,
 }: ContextSummaryWidgetProps): ReactElement {
@@ -80,29 +84,21 @@ export function ContextSummaryWidget({
     );
   }
 
-  // Empty state
+  // Empty state - still show the add context card
   if (!contextSummaries || contextSummaries.length === 0) {
     return (
       <div
         className={cn(
-          'flex flex-col items-center justify-center',
-          'bg-card',
-          'border border-card-border',
-          'rounded-card',
-          'p-8',
-          'text-center',
+          'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
           className
         )}
       >
-        <p className="mb-2 text-base text-text-secondary">No contexts yet</p>
-        <p className="text-small text-text-muted">
-          Create your first context to get started
-        </p>
+        <AddContextCard onContextCreated={onContextCreated} />
       </div>
     );
   }
 
-  // Success state - Grid of context cards
+  // Success state - Grid of context cards + add card
   return (
     <div
       className={cn(
@@ -118,6 +114,8 @@ export function ContextSummaryWidget({
           isActive={contextWithSummary.context_id === currentContextId}
         />
       ))}
+      {/* Always show add context card */}
+      <AddContextCard onContextCreated={onContextCreated} />
     </div>
   );
 }
