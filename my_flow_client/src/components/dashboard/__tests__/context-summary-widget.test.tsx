@@ -4,11 +4,32 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ContextSummaryWidget } from '../context-summary-widget';
 import * as useContextSummariesModule from '@/hooks/use-context-summaries';
 import type { ContextWithSummary } from '@/types/context-summary';
+import {
+  CurrentUserProvider,
+  type CurrentUserState,
+} from '@/hooks/use-current-user';
 
 // Mock the useContextSummaries hook
 vi.mock('@/hooks/use-context-summaries', () => ({
   useContextSummaries: vi.fn(),
 }));
+
+const mockCurrentUser: CurrentUserState = {
+  userId: 'test-user-id',
+  email: 'test@example.com',
+  name: 'Test User',
+  claims: {
+    sub: 'test-user-id',
+    iss: 'https://test.logto.app/oidc',
+    aud: 'test-client-id',
+    exp: Date.now() / 1000 + 3600,
+    iat: Date.now() / 1000,
+    email: 'test@example.com',
+    name: 'Test User',
+  },
+  isAuthenticated: true,
+  isLoading: false,
+};
 
 const mockContextSummaries: ContextWithSummary[] = [
   {
@@ -55,9 +76,11 @@ function createTestQueryClient() {
 // Helper wrapper component
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={createTestQueryClient()}>
-      {children}
-    </QueryClientProvider>
+    <CurrentUserProvider value={mockCurrentUser}>
+      <QueryClientProvider client={createTestQueryClient()}>
+        {children}
+      </QueryClientProvider>
+    </CurrentUserProvider>
   );
 }
 
