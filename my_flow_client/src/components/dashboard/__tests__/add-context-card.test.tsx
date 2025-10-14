@@ -32,9 +32,7 @@ describe('AddContextCard', () => {
     });
 
     expect(screen.getByText('Add Context')).toBeInTheDocument();
-    expect(
-      screen.queryByPlaceholderText('Context name')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Context Name')).not.toBeInTheDocument();
   });
 
   it('expands to show form when plus icon is clicked', async () => {
@@ -46,7 +44,7 @@ describe('AddContextCard', () => {
     const addButton = screen.getByText('Add Context').closest('div');
     await user.click(addButton!);
 
-    expect(screen.getByPlaceholderText('Context name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Context Name')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
   });
@@ -60,15 +58,13 @@ describe('AddContextCard', () => {
     // Expand
     const expandButton = screen.getByText('Add Context').closest('div');
     await user.click(expandButton!);
-    expect(screen.getByPlaceholderText('Context name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Context Name')).toBeInTheDocument();
 
     // Collapse
     await user.click(screen.getByRole('button', { name: /cancel/i }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByPlaceholderText('Context name')
-      ).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Context Name')).not.toBeInTheDocument();
     });
   });
 
@@ -95,7 +91,7 @@ describe('AddContextCard', () => {
     await user.click(formButton!);
 
     // Fill in name
-    const nameInput = screen.getByPlaceholderText('Context name');
+    const nameInput = screen.getByLabelText('Context Name');
     await user.type(nameInput, 'My New Context');
 
     // Submit
@@ -137,10 +133,7 @@ describe('AddContextCard', () => {
     // Expand and fill
     const errorButton = screen.getByText('Add Context').closest('div');
     await user.click(errorButton!);
-    await user.type(
-      screen.getByPlaceholderText('Context name'),
-      'Test Context'
-    );
+    await user.type(screen.getByLabelText('Context Name'), 'Test Context');
 
     // Submit
     await user.click(screen.getByRole('button', { name: /create/i }));
@@ -148,7 +141,7 @@ describe('AddContextCard', () => {
     await waitFor(() => {
       expect(mockOnContextCreated).not.toHaveBeenCalled();
       // Form should stay open on error
-      expect(screen.getByPlaceholderText('Context name')).toBeInTheDocument();
+      expect(screen.getByLabelText('Context Name')).toBeInTheDocument();
     });
   });
 });
