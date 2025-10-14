@@ -126,7 +126,7 @@ describe('ContextSummaryWidget', () => {
     ).toBeInTheDocument();
   });
 
-  it('empty state shows "No contexts yet"', () => {
+  it('empty state shows "Add Context" card', () => {
     vi.mocked(useContextSummariesModule.useContextSummaries).mockReturnValue({
       data: [],
       isLoading: false,
@@ -147,10 +147,8 @@ describe('ContextSummaryWidget', () => {
       }
     );
 
-    expect(screen.getByText('No contexts yet')).toBeInTheDocument();
-    expect(
-      screen.getByText('Create your first context to get started')
-    ).toBeInTheDocument();
+    // Empty state now shows the Add Context card
+    expect(screen.getByText('Add Context')).toBeInTheDocument();
   });
 
   it('success state renders context cards', () => {
