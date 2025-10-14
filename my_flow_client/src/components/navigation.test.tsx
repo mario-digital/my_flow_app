@@ -121,7 +121,7 @@ describe('Navigation', () => {
 
     render(<Navigation />);
 
-    expect(screen.getByText('MyFlow')).toBeInTheDocument();
+    expect(screen.getByAltText('MyFlow')).toBeInTheDocument();
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Sign Out' })

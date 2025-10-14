@@ -57,7 +57,7 @@ describe('FlowItem', () => {
     render(<FlowItem flow={mockFlow} {...mockCallbacks} />);
 
     const badge = screen.getByText('high').closest('div');
-    expect(badge).toHaveClass('bg-error');
+    expect(badge).toHaveClass('text-error');
   });
 
   it('shows medium priority badge with warning color class', () => {
@@ -65,7 +65,7 @@ describe('FlowItem', () => {
     render(<FlowItem flow={mediumFlow} {...mockCallbacks} />);
 
     const badge = screen.getByText('medium').closest('div');
-    expect(badge).toHaveClass('bg-warning');
+    expect(badge).toHaveClass('text-warning');
   });
 
   it('shows low priority badge with success color class', () => {
@@ -73,7 +73,7 @@ describe('FlowItem', () => {
     render(<FlowItem flow={lowFlow} {...mockCallbacks} />);
 
     const badge = screen.getByText('low').closest('div');
-    expect(badge).toHaveClass('bg-success');
+    expect(badge).toHaveClass('text-success');
   });
 
   it('renders checkbox unchecked when flow is not completed', () => {
