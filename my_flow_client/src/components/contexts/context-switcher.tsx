@@ -32,6 +32,11 @@ export function ContextSwitcher({
 
   const currentContext = contexts.find((c) => c.id === currentContextId);
 
+  // Don't render if no contexts or current context not found yet
+  if (!currentContext) {
+    return <div className="w-full sm:w-[240px] h-10" />; // Placeholder to prevent layout shift
+  }
+
   return (
     <Select
       value={currentContext}
