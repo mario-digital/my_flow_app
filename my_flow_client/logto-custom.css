@@ -1,0 +1,311 @@
+/**
+ * MyFlow Custom CSS for Logto Sign-in Experience
+ * 
+ * This CSS transforms Logto's default sign-in UI to match MyFlow's
+ * dark, sophisticated design system using our 3-tier token approach.
+ * 
+ * Copy and paste this entire file into:
+ * Logto Console > Sign-in experience > Branding > Custom CSS
+ */
+
+/* ========================================
+   ROOT & BACKGROUND
+   ======================================== */
+
+/* Main app container - deep black background */
+#app > div[class$='viewBox'] {
+  background-color: #0a0a0a; /* --color-bg-primary */
+  padding: 48px 24px;
+}
+
+/* ========================================
+   MAIN CARD CONTAINER
+   ======================================== */
+
+#app main[class*='main'] {
+  background-color: #1a1a1a; /* --color-bg-secondary */
+  border: 1px solid #334155; /* --color-border-default (more visible) */
+  border-top: 3px solid #6366f1; /* Context color accent at top */
+  border-radius: 12px; /* --radius-modal (slightly more rounded) */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* --shadow-modal (more elevation) */
+  padding: 40px 40px 32px; /* Enhanced padding with more horizontal space */
+  min-height: initial;
+  max-width: 480px; /* Increased from 400px to 480px */
+  width: 100%;
+  position: relative;
+}
+
+/* ========================================
+   LOGO & BRANDING
+   ======================================== */
+
+/* Style the uploaded logo */
+#app main[class*='main'] img[class*='logo'] {
+  display: block;
+  max-width: 280px; /* Adjust size as needed */
+  height: auto;
+  margin: 0 auto 24px; /* Center and add bottom spacing */
+}
+
+/* Add tagline/subtitle below logo */
+#app main[class*='main'] > div[class*='wrapper']::before {
+  content: 'Welcome back';
+  display: block;
+  font-size: 16px; /* --font-size-body */
+  font-weight: 400; /* --font-weight-regular */
+  color: #94a3b8; /* --color-text-secondary */
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
+
+/* All text - use our font system */
+#app * {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: normal;
+}
+
+/* Headings - primary text color */
+#app main[class*='main'] h1,
+#app main[class*='main'] h2,
+#app main[class*='main'] h3,
+#app main[class*='main'] div[class*='title'] {
+  color: #fafafa; /* --color-text-primary */
+  font-weight: 600; /* --font-weight-semibold */
+}
+
+/* Secondary text */
+#app main[class*='main'] p,
+#app main[class*='main'] span,
+#app main[class*='main'] div[class*='description'] {
+  color: #94a3b8; /* --color-text-secondary */
+}
+
+/* ========================================
+   FORM INPUTS
+   ======================================== */
+
+/* Add spacing between form fields */
+#app form div[class*='inputField'] {
+  margin-bottom: 16px; /* --space-4 */
+}
+
+/* Style Logto's existing input container */
+#app form div[class*='inputField'] > div {
+  background-color: #1a1a1a !important; /* --input-bg */
+  border-color: #334155 !important; /* --input-border */
+  transition: all 200ms cubic-bezier(0, 0, 0.2, 1) !important;
+}
+
+/* Input field hover state */
+#app form div[class*='inputField'] > div:hover {
+  border-color: #475569 !important; /* --input-border-hover */
+}
+
+/* Input field focus state */
+#app form div[class*='inputField'] > div:focus-within {
+  border-color: #6366f1 !important; /* --color-context-current */
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important; /* --shadow-focus */
+}
+
+/* Input text - work with Logto's structure */
+#app form div[class*='inputField'] input {
+  color: #fafafa !important; /* --input-text */
+  font-size: 16px !important; /* --font-size-body */
+  font-weight: 400 !important;
+}
+
+/* Input placeholder */
+#app form div[class*='inputField'] input::placeholder {
+  color: #64748b !important; /* --input-placeholder */
+}
+
+/* Input labels */
+#app form label {
+  color: #fafafa !important; /* --color-text-primary */
+  font-size: 14px !important; /* --font-size-small */
+  font-weight: 500 !important; /* --font-weight-medium */
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+/* Primary submit button - Enhanced with more prominence */
+#app button[type='submit'] {
+  background-color: #2a2a2a; /* --button-bg-primary */
+  color: #fafafa; /* --button-text-primary */
+  border: 1px solid #334155; /* --button-border-primary */
+  border-radius: 6px; /* --radius-button */
+  padding: 14px 24px; /* Slightly larger for prominence */
+  font-size: 16px; /* --font-size-body */
+  font-weight: 600; /* --font-weight-semibold (bolder) */
+  transition: all 200ms cubic-bezier(0, 0, 0.2, 1);
+  width: 100%; /* Full width for better UX */
+  margin-top: 8px; /* Space from inputs */
+}
+
+/* Primary button hover - More dramatic effect */
+#app button[type='submit']:hover {
+  background-color: #1e293b; /* --button-bg-primary-hover */
+  border-color: #6366f1; /* --color-context-current */
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3); /* Enhanced glow + elevation */
+  transform: translateY(-1px); /* Subtle lift */
+}
+
+/* Primary button active */
+#app button[type='submit']:active {
+  transform: scale(0.98) translateY(0);
+}
+
+/* Secondary buttons (ghost/text buttons) */
+#app button:not([type='submit']) {
+  background-color: transparent;
+  color: #94a3b8; /* --button-text-ghost */
+  border: none;
+  padding: 8px 16px; /* --space-2 --space-4 */
+  font-weight: 500;
+  transition: all 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Secondary button hover */
+#app button:not([type='submit']):hover {
+  background-color: #2a2a2a; /* --button-bg-ghost-hover */
+  color: #fafafa; /* --button-text-ghost-hover */
+}
+
+/* ========================================
+   SOCIAL LOGIN BUTTONS
+   ======================================== */
+
+#app div[class*='socialLinkList'] > button {
+  background-color: #1a1a1a; /* --color-bg-secondary */
+  border: 1px solid #334155; /* --color-border-default */
+  color: #fafafa;
+  transition: all 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+#app div[class*='socialLinkList'] > button:hover {
+  background-color: #2a2a2a; /* --color-bg-tertiary */
+  border-color: #475569; /* --color-border-hover */
+}
+
+/* ========================================
+   LINKS
+   ======================================== */
+
+/* Create account link, forgot password, etc. */
+#app main[class*='main'] a,
+#app main[class*='main'] div[class*='createAccount'],
+#app main[class*='main'] div[class*='switch'] {
+  color: #6366f1; /* --color-context-current */
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+#app main[class*='main'] a:hover,
+#app main[class*='main'] div[class*='createAccount']:hover {
+  color: #818cf8; /* --color-context-current-hover */
+  text-decoration: underline;
+}
+
+/* Create account section spacing */
+#app main[class*='main'] div[class*='createAccount'] {
+  text-align: center;
+  margin-top: 24px; /* --space-6 */
+  padding-top: 24px;
+  border-top: 1px solid #1e293b; /* --color-border-subtle */
+}
+
+/* Forgot password link */
+#app main[class*='main'] div[class*='switch'] {
+  text-align: right;
+  margin-top: 8px;
+  font-size: 14px; /* --font-size-small */
+}
+
+/* ========================================
+   DIVIDERS
+   ======================================== */
+
+#app main[class*='main'] div[class*='divider'] {
+  color: #64748b; /* --color-text-muted */
+}
+
+#app main[class*='main'] div[class*='divider'] > i[class*='line'],
+#app main[class*='main'] div[class*='terms'] > i[class*='divider']::after {
+  background: #1e293b; /* --color-border-subtle */
+}
+
+/* ========================================
+   TERMS & PRIVACY
+   ======================================== */
+
+#app main[class*='main'] div[class*='terms'],
+#app main[class*='main'] div[class*='footer'] {
+  color: #64748b; /* --color-text-muted */
+  font-size: 12px; /* --font-size-tiny */
+  margin-top: 16px;
+}
+
+#app main[class*='main'] div[class*='terms'] a {
+  color: #6366f1; /* --color-context-current */
+}
+
+/* ========================================
+   POWERED BY LOGTO FOOTER
+   ======================================== */
+
+/* Hide "Powered by Logto" completely */
+#app div[class*='description'] {
+  display: none !important;
+}
+
+/* ========================================
+   ERROR MESSAGES
+   ======================================== */
+
+#app div[class*='error'],
+#app div[class*='errorMessage'] {
+  color: #ef4444; /* --color-error */
+  font-size: 14px; /* --font-size-small */
+  margin-top: 8px; /* --space-2 */
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+#app button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+  #app main[class*='main'] {
+    padding: 20px; /* --space-5 */
+    margin: 16px; /* --space-4 */
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+/* Focus visible for keyboard navigation */
+#app button:focus-visible,
+#app a:focus-visible,
+#app input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #6366f1; /* --shadow-focus */
+}
+
