@@ -39,6 +39,14 @@ class ConversationRequest(BaseModel):
 
     messages: list[Message] = Field(..., min_length=1)
     context_id: str = Field(..., min_length=1)
+    conversation_id: str | None = Field(
+        default=None,
+        description="Existing conversation ID if continuing an active conversation",
+    )
+    is_context_switch: bool = Field(
+        default=False,
+        description="True if this is the first message after switching to this context",
+    )
 
     @field_validator("messages")
     @classmethod

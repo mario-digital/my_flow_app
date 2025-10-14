@@ -86,10 +86,9 @@ export function ChatInterface({
   // Clear streaming messages when context changes
   useEffect(() => {
     if (prevContextIdRef.current !== contextId) {
-      console.log('[ChatInterface] Context changed, clearing messages');
-      setStreamingMessages([]);
-
-      // Update ref for next comparison
+      console.log(
+        `[ChatInterface] Context switched: ${prevContextIdRef.current} → ${contextId}`
+      );
       prevContextIdRef.current = contextId;
     }
   }, [contextId]);

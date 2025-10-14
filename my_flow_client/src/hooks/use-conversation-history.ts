@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { Conversation, Message } from '@/types/chat';
 
 /**
@@ -69,9 +69,23 @@ export function useConversationHistory(
       // Return most recent conversation
       if (conversations.length > 0 && conversations[0]) {
         const latest = conversations[0]; // Backend returns sorted by updated_at desc
+
+        const normalizedMessages = latest.messages
+          .slice(-50)
+          .map((message, index) => {
+            const timestamp = message.timestamp ?? new Date().toISOString();
+            return {
+              ...message,
+              id:
+                message.id ??
+                `${latest.id}-${timestamp}-${message.role}-${index}`,
+              timestamp,
+            } satisfies Message;
+          });
+
         return {
           conversationId: latest.id,
-          messages: latest.messages.slice(-50), // Last 50 messages
+          messages: normalizedMessages,
         };
       }
 
@@ -84,6 +98,7 @@ export function useConversationHistory(
     staleTime: 5 * 60 * 1000, // Consider fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     enabled: !!contextId, // Only fetch if contextId exists
+    placeholderData: keepPreviousData, // Keep last conversation visible during context switches
   });
 
   return {

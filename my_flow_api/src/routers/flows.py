@@ -14,7 +14,8 @@ from src.models.errors import RateLimitError
 from src.models.flow import FlowCreate, FlowInDB, FlowUpdate
 from src.models.pagination import PaginatedResponse
 from src.rate_limit import limiter
-from src.services.cache_service import summary_cache
+from src.routers.conversations import _normalize_title
+from src.services.cache_service import dismissed_flow_cache, summary_cache
 
 if TYPE_CHECKING:
     from src.repositories.context_repository import ContextRepository
@@ -196,6 +197,12 @@ async def delete_flow(
     # Invalidate context summary cache to reflect updated counts
     cache_key = f"summary:{flow.context_id}"
     await summary_cache.delete(cache_key)
+
+    # Suppress recently deleted titles to avoid immediate re-creation
+    normalized_title = _normalize_title(flow.title)
+    dismissed_key = f"dismissed:{flow.context_id}:{normalized_title}"
+    # Keep dismissal memory for 15 minutes
+    await dismissed_flow_cache.set(dismissed_key, True, ttl_seconds=900)
 
 
 @router.patch(

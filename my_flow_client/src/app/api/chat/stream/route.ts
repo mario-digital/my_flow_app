@@ -10,6 +10,8 @@ const API_BASE_URL =
 interface StreamRequestBody {
   contextId?: string;
   messages?: Message[];
+  isContextSwitch?: boolean;
+  conversationId?: string | null;
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -22,11 +24,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const body = (await req.json()) as StreamRequestBody;
-  const { contextId, messages = [] } = body;
+  const {
+    contextId,
+    messages = [],
+    isContextSwitch = false,
+    conversationId = null,
+  } = body;
 
   console.log('[BFF Stream] Request body:', {
     contextId,
     messageCount: messages.length,
+    conversationId,
   });
   console.log('[BFF Stream] Messages:', JSON.stringify(messages, null, 2));
 
@@ -62,6 +70,8 @@ export async function POST(req: NextRequest): Promise<Response> {
           // Send null to let backend use server timestamp
           timestamp: null,
         })),
+        is_context_switch: isContextSwitch,
+        conversation_id: conversationId,
       }),
     }
   );
