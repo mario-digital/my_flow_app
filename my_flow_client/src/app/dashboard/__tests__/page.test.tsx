@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import DashboardPage from '../page';
+import { DashboardContent } from '../dashboard-content';
 import { AppProviders } from '@/components/providers/app-providers';
 import { CurrentUserProvider } from '@/hooks/use-current-user';
 import type { CurrentUserState } from '@/hooks/use-current-user';
@@ -87,7 +87,7 @@ const createWrapper = (userState: CurrentUserState) => {
   return Wrapper;
 };
 
-describe('DashboardPage', () => {
+describe('DashboardContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -124,7 +124,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    render(<DashboardPage />, { wrapper: createWrapper(userState) });
+    render(<DashboardContent />, { wrapper: createWrapper(userState) });
 
     expect(screen.getByRole('heading', { name: /dashboard/i })).toBeTruthy();
   });
@@ -161,7 +161,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    const { container } = render(<DashboardPage />, {
+    const { container } = render(<DashboardContent />, {
       wrapper: createWrapper(userState),
     });
 
@@ -202,7 +202,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    render(<DashboardPage />, { wrapper: createWrapper(userState) });
+    render(<DashboardContent />, { wrapper: createWrapper(userState) });
 
     await waitFor(() => {
       expect(screen.getByText(/no flows yet in this context/i)).toBeTruthy();
@@ -241,7 +241,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    render(<DashboardPage />, { wrapper: createWrapper(userState) });
+    render(<DashboardContent />, { wrapper: createWrapper(userState) });
 
     await waitFor(() => {
       expect(screen.getByTestId('flow-list')).toBeTruthy();
@@ -282,7 +282,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    render(<DashboardPage />, { wrapper: createWrapper(userState) });
+    render(<DashboardContent />, { wrapper: createWrapper(userState) });
 
     await waitFor(() => {
       expect(screen.getByTestId('chat-interface')).toBeTruthy();
@@ -321,7 +321,7 @@ describe('DashboardPage', () => {
       claims: null,
     };
 
-    render(<DashboardPage />, { wrapper: createWrapper(userState) });
+    render(<DashboardContent />, { wrapper: createWrapper(userState) });
 
     expect(screen.getByText(/failed to load contexts/i)).toBeTruthy();
   });
