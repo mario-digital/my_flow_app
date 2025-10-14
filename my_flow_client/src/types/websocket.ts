@@ -27,6 +27,7 @@ export interface ChatStreamOptions {
     result: { success: boolean; message?: string; error?: string }
   ) => void;
   onError?: (error: Error) => void;
+  onConversationUpdated?: (conversationId: string) => void;
 }
 
 /**

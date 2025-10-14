@@ -76,3 +76,6 @@ class CacheService:
 
 # Global cache instance for context summaries
 summary_cache = CacheService()
+
+# Cache for recently dismissed flows to prevent immediate re-creation
+dismissed_flow_cache = CacheService()

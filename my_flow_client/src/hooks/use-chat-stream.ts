@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Message } from '@/types/chat';
 import type { ChatStreamState, ChatStreamOptions } from '@/types/websocket';
 import { flowKeys } from '@/hooks/use-flows';
+import { conversationKeys } from '@/hooks/use-conversation-history';
 import type { Flow } from '@/types/flow';
 
 /**
@@ -53,6 +54,10 @@ export function useChatStream(
   const retryCountRef = useRef<number>(0);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Track context switches to inform AI on next message
+  const isContextSwitchRef = useRef<boolean>(false);
+  const previousContextIdRef = useRef<string>(contextId);
+
   /**
    * Handles incoming assistant tokens and builds the assistant message.
    */
@@ -78,11 +83,13 @@ export function useChatStream(
 
         if (existingAssistantMsg) {
           // Append token to existing assistant message
-          const result = prev.map((msg) =>
-            msg.id === messageId
-              ? { ...msg, content: msg.content + token }
-              : msg
-          );
+          const result = prev
+            .map((msg) =>
+              msg.id === messageId
+                ? { ...msg, content: msg.content + token }
+                : msg
+            )
+            .slice(-50);
           console.log(
             '[handleAssistantToken] Appending to existing message, result length:',
             result.length
@@ -97,7 +104,7 @@ export function useChatStream(
             timestamp: new Date().toISOString(),
           };
           currentAssistantMessageRef.current = newMessage;
-          const result = [...prev, newMessage];
+          const result = [...prev, newMessage].slice(-50);
           console.log(
             '[handleAssistantToken] Creating new assistant message, result length:',
             result.length
@@ -196,6 +203,11 @@ export function useChatStream(
       queryKey: flowKeys.list(contextId),
     });
 
+    // Invalidate context summaries to update counts
+    void queryClient.invalidateQueries({
+      queryKey: ['context-summaries'],
+    });
+
     // Clear notification
     setPendingFlows([]);
     setShowNotification(false);
@@ -225,7 +237,7 @@ export function useChatStream(
 
   /**
    * Handle tool execution from AI.
-   * Shows a toast notification and invalidates flows query to update UI.
+   * Shows a toast notification and invalidates flows/summaries queries to update UI.
    */
   const handleToolExecuted = useCallback(
     async (payload: {
@@ -242,14 +254,17 @@ export function useChatStream(
         options?.onToolExecuted?.(payload.tool_name, payload.result);
 
         console.log(
-          '[useChatStream] Invalidating flows query for context:',
-          contextId
+          '[useChatStream] Invalidating flows and context summaries queries'
         );
-        // Invalidate flows query to refresh the list with refetch
+        // Invalidate flows query to refresh the flow list
         await queryClient.invalidateQueries({
-          queryKey: flowKeys.list(contextId), // FIX: Use correct query key structure
+          queryKey: flowKeys.list(contextId),
         });
-        console.log('[useChatStream] Flows query invalidated and refetched');
+        // Invalidate context summaries to update counts on dashboard
+        await queryClient.invalidateQueries({
+          queryKey: ['context-summaries'],
+        });
+        console.log('[useChatStream] All queries invalidated and refetched');
       } else {
         console.error('Tool execution failed:', payload.result.error);
         options?.onError?.(
@@ -283,7 +298,7 @@ export function useChatStream(
 
       // Build messages array synchronously BEFORE setState
       // We can't rely on setState callback to capture the value
-      const messagesToSend = [...messages, userMessage];
+      const messagesToSend = [...messages, userMessage].slice(-50);
 
       console.log('[useChatStream] Current messages:', messages.length);
       console.log('[useChatStream] Messages to send:', messagesToSend.length);
@@ -304,6 +319,11 @@ export function useChatStream(
 
       try {
         // Send to Next.js BFF endpoint (no token needed - uses session cookie)
+        const isContextSwitch = isContextSwitchRef.current;
+        console.log(
+          `[useChatStream] Sending message with isContextSwitch=${isContextSwitch}`
+        );
+
         const response = await fetch('/api/chat/stream', {
           method: 'POST',
           headers: {
@@ -313,8 +333,17 @@ export function useChatStream(
             contextId,
             conversationId,
             messages: messagesToSend,
+            isContextSwitch,
           }),
         });
+
+        // Reset context switch flag after sending
+        if (isContextSwitch) {
+          console.log(
+            '[useChatStream] Resetting isContextSwitch flag after sending'
+          );
+          isContextSwitchRef.current = false;
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -399,6 +428,23 @@ export function useChatStream(
                       }
                     );
                     break;
+                  case 'conversation_updated':
+                    {
+                      const { conversation_id } = parsed.payload as {
+                        conversation_id?: string;
+                      };
+                      console.log(
+                        '[useChatStream] Conversation updated event received:',
+                        conversation_id
+                      );
+                      if (conversation_id) {
+                        options?.onConversationUpdated?.(conversation_id);
+                      }
+                      void queryClient.invalidateQueries({
+                        queryKey: conversationKeys.byContext(contextId),
+                      });
+                    }
+                    break;
                   case 'error':
                     handleError(
                       parsed.payload as { message?: string; code?: string }
@@ -428,6 +474,11 @@ export function useChatStream(
 
         // Attempt reconnection
         attemptReconnect();
+      } finally {
+        // Ensure conversation cache stays in sync even if errors occur
+        void queryClient.invalidateQueries({
+          queryKey: conversationKeys.byContext(contextId),
+        });
       }
     },
     [
@@ -441,8 +492,26 @@ export function useChatStream(
       handleError,
       options,
       attemptReconnect,
+      queryClient,
     ]
   );
+
+  /**
+   * Detect context switches and flag the next message.
+   */
+  useEffect(() => {
+    if (previousContextIdRef.current !== contextId) {
+      console.log(
+        `[useChatStream] Context switched from ${previousContextIdRef.current} to ${contextId}`
+      );
+      isContextSwitchRef.current = true;
+      previousContextIdRef.current = contextId;
+
+      // Clear context-specific transient UI (flows notifications) on switch
+      setPendingFlows([]);
+      setShowNotification(false);
+    }
+  }, [contextId]);
 
   /**
    * Cleanup on unmount.

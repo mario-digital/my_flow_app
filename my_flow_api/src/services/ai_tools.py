@@ -6,6 +6,7 @@ from typing import Any
 
 from src.models.flow import FlowPriority, FlowUpdate
 from src.repositories.flow_repository import FlowRepository
+from src.services.cache_service import summary_cache
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +107,33 @@ class AITools:
         }
         self._executors["update_flow_priority"] = self._execute_update_priority
 
+        # Update flow title/name
+        self._tools["update_flow_title"] = {
+            "type": "function",
+            "function": {
+                "name": "update_flow_title",
+                "description": (
+                    "Update the name/title of a flow (task/todo). Use this when the user wants to "
+                    "rename, change the name, or update the title of an existing task."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "flow_id": {
+                            "type": "string",
+                            "description": "The ID of the flow to update",
+                        },
+                        "new_title": {
+                            "type": "string",
+                            "description": "The new title/name for the flow",
+                        },
+                    },
+                    "required": ["flow_id", "new_title"],
+                },
+            },
+        }
+        self._executors["update_flow_title"] = self._execute_update_title
+
     def get_tool_schemas(self) -> list[dict[str, Any]]:
         """Get all tool schemas in OpenAI function calling format."""
         return list(self._tools.values())
@@ -179,6 +207,11 @@ class AITools:
             logger.error("Failed to mark flow %s as complete", flow_id)
             return {"success": False, "error": "Failed to mark flow as complete"}
 
+        # Invalidate summary cache for this context
+        cache_key = f"summary:{flow.context_id}"
+        await summary_cache.delete(cache_key)
+        logger.info("Invalidated summary cache for context: %s", flow.context_id)
+
         logger.info("Successfully marked flow %s as complete", flow_id)
         return {
             "success": True,
@@ -208,6 +241,11 @@ class AITools:
         deleted = await flow_repo.delete(flow_id, user_id)
         if not deleted:
             return {"success": False, "error": "Failed to delete flow"}
+
+        # Invalidate summary cache for this context
+        cache_key = f"summary:{flow.context_id}"
+        await summary_cache.delete(cache_key)
+        logger.info("Invalidated summary cache for context: %s", flow.context_id)
 
         return {
             "success": True,
@@ -252,6 +290,11 @@ class AITools:
             if not updated_flow:
                 return {"success": False, "error": "Failed to update flow priority"}
 
+            # Invalidate summary cache for this context
+            cache_key = f"summary:{flow.context_id}"
+            await summary_cache.delete(cache_key)
+            logger.info("Invalidated summary cache for context: %s", flow.context_id)
+
             return {
                 "success": True,
                 "message": f"Updated '{flow.title}' priority to {priority_str}",
@@ -261,6 +304,58 @@ class AITools:
             }
         except ValueError as e:
             return {"success": False, "error": f"Invalid priority: {e!s}"}
+
+    async def _execute_update_title(
+        self,
+        arguments: dict[str, Any],
+        user_id: str,
+        flow_repo: FlowRepository,
+    ) -> dict[str, Any]:
+        """Execute update_flow_title tool."""
+        flow_id = arguments["flow_id"]
+        new_title = arguments["new_title"]
+
+        # Get flow to verify ownership and get old title
+        flow = await flow_repo.get_by_id(flow_id, user_id)
+        if not flow:
+            return {
+                "success": False,
+                "error": f"Flow {flow_id} not found or you don't have access",
+            }
+
+        old_title = flow.title
+
+        # Update title
+        try:
+            update_data = FlowUpdate(
+                title=new_title,
+                description=None,
+                priority=None,
+                due_date=None,
+                reminder_enabled=None,
+            )
+            updated_flow = await flow_repo.update(
+                flow_id=flow_id,
+                user_id=user_id,
+                updates=update_data,
+            )
+            if not updated_flow:
+                return {"success": False, "error": "Failed to update flow title"}
+
+            # Invalidate summary cache for this context
+            cache_key = f"summary:{flow.context_id}"
+            await summary_cache.delete(cache_key)
+            logger.info("Invalidated summary cache for context: %s", flow.context_id)
+
+            return {
+                "success": True,
+                "message": f"Renamed '{old_title}' to '{new_title}'",
+                "flow_id": flow_id,
+                "old_title": old_title,
+                "new_title": new_title,
+            }
+        except ValueError as e:
+            return {"success": False, "error": f"Invalid title: {e!s}"}
 
 
 # Global instance
