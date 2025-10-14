@@ -122,6 +122,18 @@ export function DashboardContent(): JSX.Element {
     [setCurrentContextId]
   );
 
+  const handleContextCreated = useCallback(
+    (contextId: string): void => {
+      // Invalidate contexts and context summaries to refetch with new context
+      void queryClient.invalidateQueries({ queryKey: ['contexts'] });
+      void queryClient.invalidateQueries({ queryKey: ['context-summaries'] });
+
+      // Automatically switch to the newly created context
+      setCurrentContextId(contextId);
+    },
+    [queryClient, setCurrentContextId]
+  );
+
   // Auto-select first context if none selected
   useEffect(() => {
     if (!currentContextId && contexts && contexts.length > 0 && contexts[0]) {
@@ -154,6 +166,7 @@ export function DashboardContent(): JSX.Element {
         </h2>
         <ContextSummaryWidget
           onContextClick={handleContextClick}
+          onContextCreated={handleContextCreated}
           currentContextId={currentContextId}
         />
       </div>

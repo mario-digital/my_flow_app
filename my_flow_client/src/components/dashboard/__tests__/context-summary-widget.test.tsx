@@ -77,9 +77,15 @@ describe('ContextSummaryWidget', () => {
       status: 'pending',
     } as never);
 
-    render(<ContextSummaryWidget onContextClick={vi.fn()} />, {
-      wrapper: Wrapper,
-    });
+    render(
+      <ContextSummaryWidget
+        onContextClick={vi.fn()}
+        onContextCreated={vi.fn()}
+      />,
+      {
+        wrapper: Wrapper,
+      }
+    );
 
     // Check for skeleton elements (should have 4 skeleton cards)
     const skeletons = document.querySelectorAll('.animate-pulse');
@@ -102,9 +108,15 @@ describe('ContextSummaryWidget', () => {
       status: 'error',
     } as never);
 
-    render(<ContextSummaryWidget onContextClick={vi.fn()} />, {
-      wrapper: Wrapper,
-    });
+    render(
+      <ContextSummaryWidget
+        onContextClick={vi.fn()}
+        onContextCreated={vi.fn()}
+      />,
+      {
+        wrapper: Wrapper,
+      }
+    );
 
     expect(
       screen.getByText('Failed to load context summaries')
@@ -125,9 +137,15 @@ describe('ContextSummaryWidget', () => {
       status: 'success',
     } as never);
 
-    render(<ContextSummaryWidget onContextClick={vi.fn()} />, {
-      wrapper: Wrapper,
-    });
+    render(
+      <ContextSummaryWidget
+        onContextClick={vi.fn()}
+        onContextCreated={vi.fn()}
+      />,
+      {
+        wrapper: Wrapper,
+      }
+    );
 
     expect(screen.getByText('No contexts yet')).toBeInTheDocument();
     expect(
@@ -146,9 +164,15 @@ describe('ContextSummaryWidget', () => {
       status: 'success',
     } as never);
 
-    render(<ContextSummaryWidget onContextClick={vi.fn()} />, {
-      wrapper: Wrapper,
-    });
+    render(
+      <ContextSummaryWidget
+        onContextClick={vi.fn()}
+        onContextCreated={vi.fn()}
+      />,
+      {
+        wrapper: Wrapper,
+      }
+    );
 
     // Check that both contexts are rendered
     expect(screen.getByText('Work')).toBeInTheDocument();
@@ -167,9 +191,15 @@ describe('ContextSummaryWidget', () => {
       status: 'success',
     } as never);
 
-    render(<ContextSummaryWidget onContextClick={handleContextClick} />, {
-      wrapper: Wrapper,
-    });
+    render(
+      <ContextSummaryWidget
+        onContextClick={handleContextClick}
+        onContextCreated={vi.fn()}
+      />,
+      {
+        wrapper: Wrapper,
+      }
+    );
 
     // Click the Work context card
     const workCard = screen.getByText('Work').closest('[role="button"]');
@@ -191,7 +221,10 @@ describe('ContextSummaryWidget', () => {
     } as never);
 
     const { container } = render(
-      <ContextSummaryWidget onContextClick={vi.fn()} />,
+      <ContextSummaryWidget
+        onContextClick={vi.fn()}
+        onContextCreated={vi.fn()}
+      />,
       { wrapper: Wrapper }
     );
 
