@@ -71,9 +71,9 @@
   ); /* #1e293b - highest elevation */
   --color-bg-overlay: color-mix(
     in srgb,
-    var(--color-bg-primary) 60%,
+    var(--color-bg-primary) 99%,
     transparent
-  ); /* 60% opacity for modals */
+  ); /* 99% opacity for modals - darker backdrop */
 
   /* Text - Refined hierarchy */
   --color-text-primary: var(--primitive-white); /* #fafafa - main text */

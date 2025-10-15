@@ -194,10 +194,15 @@ class AITools:
         # Get flow to verify ownership and existence
         flow = await flow_repo.get_by_id(flow_id, user_id)
         if not flow:
-            logger.warning("Flow %s not found for user %s", flow_id, user_id)
+            logger.warning(
+                "Flow %s not found for user %s (already removed or completed)",
+                flow_id,
+                user_id,
+            )
             return {
-                "success": False,
-                "error": f"Flow {flow_id} not found or you don't have access",
+                "success": True,
+                "message": "That task is already cleared",
+                "flow_id": flow_id,
             }
 
         # Mark as complete
@@ -233,8 +238,9 @@ class AITools:
         flow = await flow_repo.get_by_id(flow_id, user_id)
         if not flow:
             return {
-                "success": False,
-                "error": f"Flow {flow_id} not found or you don't have access",
+                "success": True,
+                "message": "That task was already removed",
+                "flow_id": flow_id,
             }
 
         # Delete the flow
@@ -268,8 +274,9 @@ class AITools:
         flow = await flow_repo.get_by_id(flow_id, user_id)
         if not flow:
             return {
-                "success": False,
-                "error": f"Flow {flow_id} not found or you don't have access",
+                "success": True,
+                "message": "That task is already gone",
+                "flow_id": flow_id,
             }
 
         # Update priority
@@ -319,8 +326,9 @@ class AITools:
         flow = await flow_repo.get_by_id(flow_id, user_id)
         if not flow:
             return {
-                "success": False,
-                "error": f"Flow {flow_id} not found or you don't have access",
+                "success": True,
+                "message": "That task is already gone",
+                "flow_id": flow_id,
             }
 
         old_title = flow.title
