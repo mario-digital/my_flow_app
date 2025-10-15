@@ -36,7 +36,7 @@ export function ChatLoadingSkeleton({
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-bg-primary border border-border rounded-lg',
+        'flex flex-col h-full bg-bg-primary border border-border-subtle rounded-lg overflow-hidden shadow-[0_0_0_1px_rgba(74,144,226,0.1)]',
         className
       )}
     >
@@ -74,7 +74,7 @@ export function ChatLoadingSkeleton({
       </div>
 
       {/* Input skeleton */}
-      <div className="p-4 border-t border-border bg-bg-secondary">
+      <div className="p-4 border-t border-border-subtle bg-bg-secondary">
         <div className="h-skeleton-input bg-bg-tertiary rounded-md animate-pulse" />
       </div>
     </div>

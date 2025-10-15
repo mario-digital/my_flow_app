@@ -100,7 +100,8 @@ export function ChatInterface({
       streamingCount: streamingMessages.length,
       total: historyMessages.length + streamingMessages.length,
     });
-    return [...historyMessages, ...streamingMessages];
+
+    return streamingMessages.length > 0 ? streamingMessages : historyMessages;
   }, [historyMessages, streamingMessages]);
 
   console.log(
@@ -116,13 +117,14 @@ export function ChatInterface({
   // Ref for auto-scroll functionality
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (scrollViewportRef.current) {
-      scrollViewportRef.current.scrollTop =
-        scrollViewportRef.current.scrollHeight;
-    }
+    endOfMessagesRef.current?.scrollIntoView({
+      behavior: isStreaming ? 'auto' : 'smooth',
+      block: 'end',
+    });
   }, [allMessages, isStreaming]);
 
   // Handle sending a message
@@ -220,6 +222,7 @@ export function ChatInterface({
                   isTyping={true}
                 />
               )}
+              <div ref={endOfMessagesRef} aria-hidden="true" />
             </>
           )}
         </div>
