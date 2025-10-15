@@ -14,10 +14,11 @@ from src.main import app
 from src.models.context import ContextInDB
 from src.models.conversation import Message, MessageRole
 from src.models.flow import FlowCreate, FlowInDB, FlowPriority
-from src.routers.conversations import get_flow_repository
+from src.routers.conversations import get_conversation_repository, get_flow_repository
 from src.utils.exceptions import AIServiceError
 from tests.integration.routers.conftest import (
     create_mock_context_repository,
+    create_mock_conversation_repository,
     create_mock_flow_repository,
     mock_auth_success,
 )
@@ -134,8 +135,18 @@ class TestStreamChat:
             )
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service to stream tokens
-            async def mock_stream(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 """Mock async generator for streaming."""
                 for token in ["I'll", " help", " you", " with", " that"]:
                     yield {"type": "text", "content": token}
@@ -144,6 +155,7 @@ class TestStreamChat:
             mock_ai_service.extract_flows_from_text = AsyncMock(return_value=[])
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
@@ -197,8 +209,18 @@ class TestStreamChat:
             )
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service to stream tokens and extract flows
-            async def mock_stream(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 """Mock async generator for streaming."""
                 for token in ["Sure", ", I'll", " help"]:
                     yield {"type": "text", "content": token}
@@ -214,6 +236,7 @@ class TestStreamChat:
             mock_ai_service.extract_flows_from_text = AsyncMock(return_value=[mock_extracted_flow])
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
@@ -258,8 +281,18 @@ class TestStreamChat:
             )
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service
-            async def mock_stream(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 for token in ["Sure"]:
                     yield {"type": "text", "content": token}
 
@@ -280,6 +313,7 @@ class TestStreamChat:
             mock_ai_service.extract_flows_from_text = AsyncMock(return_value=mock_extracted_flows)
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
@@ -322,14 +356,25 @@ class TestStreamChat:
             mock_flow_repo = create_mock_flow_repository()
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service to raise error
-            async def mock_stream_error(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream_error(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 error_msg = "AI service unavailable"
                 raise AIServiceError(error_msg)
 
             mock_ai_service.stream_chat_response = mock_stream_error
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
@@ -367,8 +412,18 @@ class TestStreamChat:
             mock_flow_repo = create_mock_flow_repository()
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service - streaming works, extraction fails
-            async def mock_stream(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 for token in ["Hello", " there"]:
                     yield {"type": "text", "content": token}
 
@@ -377,6 +432,7 @@ class TestStreamChat:
             mock_ai_service.extract_flows_from_text = AsyncMock(side_effect=extraction_error)
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
@@ -431,8 +487,18 @@ class TestStreamChat:
             )
             mock_flow_repo.context_repo = mock_context_repo
 
+            # Mock conversation repository
+            mock_conv_repo = create_mock_conversation_repository()
+
             # Mock AI service
-            async def mock_stream(messages, context_id, tools=None, available_flows=None):
+            async def mock_stream(
+                messages,
+                context_id,
+                tools=None,
+                available_flows=None,
+                is_context_switch=False,
+                context_name=None,
+            ):
                 for token in ["Sure"]:
                     yield {"type": "text", "content": token}
 
@@ -453,6 +519,7 @@ class TestStreamChat:
             mock_ai_service.extract_flows_from_text = AsyncMock(return_value=mock_extracted_flows)
 
             app.dependency_overrides[get_flow_repository] = lambda: mock_flow_repo
+            app.dependency_overrides[get_conversation_repository] = lambda: mock_conv_repo
 
             context_id = str(mock_context_data["_id"])
             response = client.post(
