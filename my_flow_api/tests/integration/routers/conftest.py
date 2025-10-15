@@ -133,8 +133,29 @@ def create_mock_flow_repository(**method_mocks):
         )
     """
     mock = MagicMock()
-    # Set default for get_all_by_context (required for AI function calling)
+    # Set defaults for required methods (required for conversation fetching)
     mock.get_all_by_context = AsyncMock(return_value=[])
+    mock.get_conversations_by_context = AsyncMock(return_value=[])
+    # Override with any provided method mocks
+    for method_name, mock_impl in method_mocks.items():
+        setattr(mock, method_name, mock_impl)
+    return mock
+
+
+def create_mock_conversation_repository(**method_mocks):
+    """
+    Create a mock ConversationRepository with specified method implementations.
+
+    Usage:
+        mock_repo = create_mock_conversation_repository(
+            get_conversations_by_context=AsyncMock(return_value=[])
+        )
+    """
+    mock = MagicMock()
+    # Set defaults for required methods
+    mock.get_conversations_by_context = AsyncMock(return_value=[])
+    mock.create_conversation = AsyncMock(return_value=MagicMock(id="conv-1"))
+    mock.append_message = AsyncMock()
     # Override with any provided method mocks
     for method_name, mock_impl in method_mocks.items():
         setattr(mock, method_name, mock_impl)

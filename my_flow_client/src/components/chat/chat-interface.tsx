@@ -121,10 +121,12 @@ export function ChatInterface({
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({
-      behavior: isStreaming ? 'auto' : 'smooth',
-      block: 'end',
-    });
+    if (endOfMessagesRef.current?.scrollIntoView) {
+      endOfMessagesRef.current.scrollIntoView({
+        behavior: isStreaming ? 'auto' : 'smooth',
+        block: 'end',
+      });
+    }
   }, [allMessages, isStreaming]);
 
   // Handle sending a message

@@ -110,7 +110,10 @@ describe('useChatStream (SSE via BFF)', () => {
     ];
 
     const onFlowsExtractedMock = vi.fn();
+    // Create a spy that tracks flow-specific invalidation calls only
     const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    // Reset the spy counter to start fresh after hook setup
+    invalidateQueriesSpy.mockClear();
 
     mockServer.simulateStreamingMessage(['Response'], 'assistant-msg-1');
     mockServer.simulateFlowsExtractedEvent(mockFlows);
@@ -123,6 +126,9 @@ describe('useChatStream (SSE via BFF)', () => {
       { wrapper }
     );
 
+    // Clear calls from hook initialization
+    invalidateQueriesSpy.mockClear();
+
     await act(async () => {
       await result.current.sendMessage('Extract flows from this');
     });
@@ -134,20 +140,34 @@ describe('useChatStream (SSE via BFF)', () => {
         expect(onFlowsExtractedMock).toHaveBeenCalledWith(mockFlows);
         expect(result.current.pendingFlows).toEqual(mockFlows);
         expect(result.current.showNotification).toBe(true);
-        // Invalidation should NOT happen automatically anymore
-        expect(invalidateQueriesSpy).not.toHaveBeenCalled();
+        // Check that flow-specific invalidation did NOT happen automatically
+        // (only conversation invalidation happens on message send)
+        const flowInvalidations = invalidateQueriesSpy.mock.calls.filter(
+          (call) =>
+            call[0]?.queryKey?.[0] === 'flows' ||
+            (Array.isArray(call[0]?.queryKey) &&
+              call[0].queryKey[0] === 'flows')
+        );
+        expect(flowInvalidations.length).toBe(0);
       },
       { timeout: 3000 }
     );
 
-    // When user accepts flows, THEN invalidation should happen
+    // When user accepts flows, THEN flow invalidation should happen
     await act(async () => {
       result.current.acceptFlows();
     });
 
     await waitFor(
       () => {
-        expect(invalidateQueriesSpy).toHaveBeenCalled();
+        // Now flow invalidation should have been called
+        const flowInvalidations = invalidateQueriesSpy.mock.calls.filter(
+          (call) =>
+            call[0]?.queryKey?.[0] === 'flows' ||
+            (Array.isArray(call[0]?.queryKey) &&
+              call[0].queryKey[0] === 'flows')
+        );
+        expect(flowInvalidations.length).toBeGreaterThan(0);
         expect(result.current.pendingFlows).toEqual([]);
         expect(result.current.showNotification).toBe(false);
       },

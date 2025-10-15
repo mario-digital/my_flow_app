@@ -9,6 +9,13 @@ import { ChatInterface } from '@/components/chat/chat-interface';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 /**
+ * Mock scrollIntoView for all elements in tests
+ */
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
+
+/**
  * Helper function to render ChatInterface with QueryClient provider.
  */
 function renderWithQueryClient(ui: React.ReactElement) {
