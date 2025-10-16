@@ -30,6 +30,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('my_flow_api/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
       - name: Install dependencies
         run: |
           cd my_flow_api
