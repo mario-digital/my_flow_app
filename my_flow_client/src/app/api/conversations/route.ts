@@ -35,10 +35,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log(
-      `[BFF Conversations] Fetching history for context: ${context_id}`
-    );
-
     // 3. Call FastAPI with JWT token
     const response = await fetch(
       `${API_BASE_URL}/api/v1/conversations?context_id=${context_id}`,
@@ -62,9 +58,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // 4. Proxy response back to browser (without token)
     const data = (await response.json()) as unknown[];
-    console.log(
-      `[BFF Conversations] Successfully fetched ${data.length} conversations`
-    );
     return NextResponse.json(data);
   } catch (error) {
     console.error('[BFF Conversations] Unexpected error:', error);

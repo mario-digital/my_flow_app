@@ -75,41 +75,20 @@ export function ChatInterface({
 
   // Update streaming messages when live messages change
   useEffect(() => {
-    console.log(
-      '[ChatInterface] liveMessages updated:',
-      liveMessages.length,
-      liveMessages
-    );
     setStreamingMessages(liveMessages);
   }, [liveMessages]);
 
   // Clear streaming messages when context changes
   useEffect(() => {
     if (prevContextIdRef.current !== contextId) {
-      console.log(
-        `[ChatInterface] Context switched: ${prevContextIdRef.current} → ${contextId}`
-      );
       prevContextIdRef.current = contextId;
     }
   }, [contextId]);
 
   // Merge history with current streaming messages
   const allMessages = useMemo(() => {
-    console.log('[ChatInterface] Computing allMessages:', {
-      historyCount: historyMessages.length,
-      streamingCount: streamingMessages.length,
-      total: historyMessages.length + streamingMessages.length,
-    });
-
     return streamingMessages.length > 0 ? streamingMessages : historyMessages;
   }, [historyMessages, streamingMessages]);
-
-  console.log(
-    '[ChatInterface] Render - isEmpty:',
-    allMessages.length === 0,
-    'allMessages:',
-    allMessages.length
-  );
 
   // Local state for input
   const [inputValue, setInputValue] = useState('');

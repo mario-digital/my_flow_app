@@ -65,20 +65,10 @@ export function usePreferences(): UseQueryResult<UserPreferences, Error> {
     retryDelay: 1000, // Wait 1 second before retrying
   });
 
-  // Debug logging
+  // Debug logging for errors only
   if (query.error) {
     console.error('[usePreferences] Error fetching preferences:', query.error);
   }
-  if (query.data) {
-    console.log('[usePreferences] Preferences loaded:', query.data);
-  }
-  console.log('[usePreferences] Query state:', {
-    isLoading: query.isLoading,
-    isError: query.isError,
-    data: query.data,
-    isAuthenticated,
-    isLoadingUser,
-  });
 
   return query;
 }

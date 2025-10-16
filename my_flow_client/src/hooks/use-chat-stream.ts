@@ -65,36 +65,19 @@ export function useChatStream(
     (payload: { token: string; messageId: string; isComplete?: boolean }) => {
       const { token, messageId, isComplete } = payload;
 
-      console.log('[handleAssistantToken]', {
-        token: token.substring(0, 20),
-        messageId,
-        isComplete,
-      });
-
       setMessages((prev) => {
-        console.log('[handleAssistantToken] prev messages:', prev.length);
-        console.log(
-          '[handleAssistantToken] currentAssistantMessageRef:',
-          currentAssistantMessageRef.current?.id
-        );
-
         // Check if assistant message already exists in the array
         const existingAssistantMsg = prev.find((msg) => msg.id === messageId);
 
         if (existingAssistantMsg) {
           // Append token to existing assistant message
-          const result = prev
+          return prev
             .map((msg) =>
               msg.id === messageId
                 ? { ...msg, content: msg.content + token }
                 : msg
             )
             .slice(-50);
-          console.log(
-            '[handleAssistantToken] Appending to existing message, result length:',
-            result.length
-          );
-          return result;
         } else {
           // Create new assistant message (first token)
           const newMessage: Message = {
@@ -104,12 +87,7 @@ export function useChatStream(
             timestamp: new Date().toISOString(),
           };
           currentAssistantMessageRef.current = newMessage;
-          const result = [...prev, newMessage].slice(-50);
-          console.log(
-            '[handleAssistantToken] Creating new assistant message, result length:',
-            result.length
-          );
-          return result;
+          return [...prev, newMessage].slice(-50);
         }
       });
 
@@ -174,9 +152,6 @@ export function useChatStream(
 
     const delay =
       retryDelays[retryCountRef.current] || retryDelays[retryDelays.length - 1];
-    console.log(
-      `Reconnecting in ${delay}ms (attempt ${retryCountRef.current + 1}/3)...`
-    );
 
     setConnectionStatus('connecting');
     setError('Connection lost, attempting to reconnect...');
@@ -244,18 +219,10 @@ export function useChatStream(
       tool_name: string;
       result: { success: boolean; message?: string; error?: string };
     }) => {
-      console.log('[useChatStream] Tool executed:', payload);
-
       // Show toast notification
       if (payload.result.success) {
-        console.log(
-          '[useChatStream] Tool execution successful, calling onToolExecuted callback'
-        );
         options?.onToolExecuted?.(payload.tool_name, payload.result);
 
-        console.log(
-          '[useChatStream] Invalidating flows and context summaries queries'
-        );
         // Invalidate flows query to refresh the flow list
         await queryClient.invalidateQueries({
           queryKey: flowKeys.list(contextId),
@@ -264,7 +231,6 @@ export function useChatStream(
         await queryClient.invalidateQueries({
           queryKey: ['context-summaries'],
         });
-        console.log('[useChatStream] All queries invalidated and refetched');
       } else {
         console.error('Tool execution failed:', payload.result.error);
         options?.onError?.(
@@ -300,9 +266,6 @@ export function useChatStream(
       // We can't rely on setState callback to capture the value
       const messagesToSend = [...messages, userMessage].slice(-50);
 
-      console.log('[useChatStream] Current messages:', messages.length);
-      console.log('[useChatStream] Messages to send:', messagesToSend.length);
-
       // Update UI state optimistically
       setMessages(messagesToSend);
 
@@ -311,18 +274,9 @@ export function useChatStream(
       setError(null); // Clear any previous errors
       setConnectionStatus('connecting');
 
-      console.log('[useChatStream] About to send:', {
-        contextId,
-        conversationId,
-        messageCount: messagesToSend.length,
-      });
-
       try {
         // Send to Next.js BFF endpoint (no token needed - uses session cookie)
         const isContextSwitch = isContextSwitchRef.current;
-        console.log(
-          `[useChatStream] Sending message with isContextSwitch=${isContextSwitch}`
-        );
 
         const response = await fetch('/api/chat/stream', {
           method: 'POST',
@@ -339,9 +293,6 @@ export function useChatStream(
 
         // Reset context switch flag after sending
         if (isContextSwitch) {
-          console.log(
-            '[useChatStream] Resetting isContextSwitch flag after sending'
-          );
           isContextSwitchRef.current = false;
         }
 
@@ -377,17 +328,8 @@ export function useChatStream(
           for (const line of lines) {
             if (!line.trim() || line.startsWith(':')) continue;
 
-            console.log(
-              '[useChatStream] Received line:',
-              line.substring(0, 100)
-            );
-
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
-              console.log(
-                '[useChatStream] Data content:',
-                data.substring(0, 200)
-              );
 
               if (data === '[DONE]') {
                 setIsStreaming(false);
@@ -400,8 +342,6 @@ export function useChatStream(
                   type: string;
                   payload: unknown;
                 };
-
-                console.log('[useChatStream] Parsed event type:', parsed.type);
 
                 switch (parsed.type) {
                   case 'assistant_token':
@@ -433,10 +373,6 @@ export function useChatStream(
                       const { conversation_id } = parsed.payload as {
                         conversation_id?: string;
                       };
-                      console.log(
-                        '[useChatStream] Conversation updated event received:',
-                        conversation_id
-                      );
                       if (conversation_id) {
                         options?.onConversationUpdated?.(conversation_id);
                       }
@@ -501,9 +437,6 @@ export function useChatStream(
    */
   useEffect(() => {
     if (previousContextIdRef.current !== contextId) {
-      console.log(
-        `[useChatStream] Context switched from ${previousContextIdRef.current} to ${contextId}`
-      );
       isContextSwitchRef.current = true;
       previousContextIdRef.current = contextId;
 

@@ -15,26 +15,17 @@ const API_BASE_URL =
  */
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
-    console.log('[BFF /api/preferences GET] Fetching token...');
     const token = await getApiAccessToken();
     if (!token) {
       console.error('[BFF /api/preferences GET] No token available');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(
-      '[BFF /api/preferences GET] Token obtained, calling backend...'
-    );
     const response = await fetch(`${API_BASE_URL}/api/v1/preferences`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-
-    console.log(
-      '[BFF /api/preferences GET] Backend response status:',
-      response.status
-    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -45,7 +36,6 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     }
 
     const data = (await response.json()) as Record<string, unknown>;
-    console.log('[BFF /api/preferences GET] Success, data:', data);
     return NextResponse.json(data);
   } catch (error) {
     console.error('[BFF /api/preferences GET] Error:', error);
