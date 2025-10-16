@@ -530,7 +530,7 @@ def compute_flow_status(flow: Flow) -> tuple[str, int | None]:
 
 **Technology Specifics:**
 - Implements auto-creation pattern: GET creates default preferences if missing
-- Uses deep merge for nested object updates (notification_preferences, ui_preferences)
+- Supports partial updates for all preference fields
 
 **File Location:** `my_flow_api/src/services/preferences_service.py`
 

@@ -857,17 +857,12 @@ AI_MODEL=claude-3-5-sonnet-20241022
 ```javascript
 {
   _id: ObjectId,
-  user_id: string,       // Unique index
-  default_context_id?: ObjectId,
-  notification_preferences: {
-    email_reminders: boolean,
-    browser_notifications: boolean,
-    reminder_lead_time: number  // Minutes
-  },
-  ui_preferences: {
-    flow_list_view: "compact" | "detailed",
-    context_sort_order: "recent" | "alphabetical" | "custom"
-  },
+  user_id: string,                     // Unique index
+  onboarding_completed: boolean,       // Has user completed onboarding flow
+  onboarding_completed_at?: DateTime,  // When onboarding was completed
+  current_context_id?: string,         // Last active context
+  theme?: "light" | "dark" | "system", // UI theme preference
+  notifications_enabled: boolean,      // Global notification toggle
   created_at: DateTime,
   updated_at: DateTime
 }
@@ -878,22 +873,17 @@ AI_MODEL=claude-3-5-sonnet-20241022
 
 ---
 
-#### 4. Conversations - AI chat history (future)
+#### 4. Conversations - AI chat history
 
 ```javascript
 {
   _id: ObjectId,
-  context_id: ObjectId,
-  user_id: string,
+  context_id: string,        // Parent context reference (string, not ObjectId)
+  user_id: string,           // For authorization
   messages: Array<{
-    id: string,
     role: "user" | "assistant" | "system",
-    content: string,
-    timestamp: DateTime,
-    metadata?: {
-      flow_ids?: string[],
-      tokens_used?: number
-    }
+    content: string,         // Max 10,000 characters
+    timestamp: DateTime | null  // Auto-set if not provided
   }>,
   created_at: DateTime,
   updated_at: DateTime
@@ -901,10 +891,11 @@ AI_MODEL=claude-3-5-sonnet-20241022
 ```
 
 **Indexes:**
-- `user_id` - User's conversations
-- `context_id` - Context's conversations
-- `(user_id, context_id)` - User's conversations in context
+- `user_id` - User isolation queries
+- `context_id` - Context's conversation history
+- `(user_id, context_id)` - User's conversations in specific context
 - `(context_id, updated_at desc)` - Recent conversations per context
+- `(user_id, _id)` - Efficient user-scoped lookups
 
 ---
 

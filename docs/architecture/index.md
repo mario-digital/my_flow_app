@@ -23,7 +23,7 @@
       - [TypeScript Interface](./data-models.md#typescript-interface)
       - [Relationships](./data-models.md#relationships)
       - [Default Values](./data-models.md#default-values)
-    - [Conversation Model (Future - Epic 3)](./data-models.md#conversation-model-future-epic-3)
+    - [Conversation Model](./data-models.md#conversation-model)
     - [Database Indexes (MongoDB)](./data-models.md#database-indexes-mongodb)
   - [Tech Stack](./tech-stack.md)
     - [Technology Stack Table](./tech-stack.md#technology-stack-table)
