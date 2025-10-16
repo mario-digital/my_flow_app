@@ -121,14 +121,11 @@ interface FlowWithStatus extends Flow {
 **Key Attributes:**
 - `id`: string (MongoDB ObjectId) - Unique identifier
 - `user_id`: string - Logto user identifier (from JWT sub claim, unique index)
-- `default_context_id`: string (optional) - Last active context for quick restoration
-- `notification_preferences`: object - Notification settings
-  - `email_reminders`: boolean - Enable email reminders for due dates
-  - `browser_notifications`: boolean - Enable browser push notifications
-  - `reminder_lead_time`: number - Minutes before due date to send reminder (default: 60)
-- `ui_preferences`: object - UI customization settings
-  - `flow_list_view`: "compact" | "detailed" - Flow list display mode
-  - `context_sort_order`: "recent" | "alphabetical" | "custom" - How contexts are sorted
+- `onboarding_completed`: boolean - Has user completed onboarding flow
+- `onboarding_completed_at`: datetime (optional) - When onboarding was completed
+- `current_context_id`: string (optional) - Last active context for quick restoration
+- `theme`: string (optional) - UI theme preference: "light" | "dark" | "system"
+- `notifications_enabled`: boolean - Global notification toggle
 - `created_at`: datetime - Creation timestamp
 - `updated_at`: datetime - Last modification timestamp
 
@@ -138,83 +135,70 @@ interface FlowWithStatus extends Flow {
 interface UserPreferences {
   id: string;
   user_id: string; // From Logto JWT (e.g., "logto_user_abc123")
-
-  default_context_id?: string;
-
-  notification_preferences: {
-    email_reminders: boolean;
-    browser_notifications: boolean;
-    reminder_lead_time: number; // Minutes before due date
-  };
-
-  ui_preferences: {
-    flow_list_view: "compact" | "detailed";
-    context_sort_order: "recent" | "alphabetical" | "custom";
-  };
-
-  created_at: string;
-  updated_at: string;
+  onboarding_completed: boolean;
+  onboarding_completed_at?: string; // ISO 8601 datetime
+  current_context_id?: string;
+  theme?: "light" | "dark" | "system";
+  notifications_enabled: boolean;
+  created_at: string; // ISO 8601 datetime
+  updated_at: string; // ISO 8601 datetime
 }
 
 interface UserPreferencesCreate {
   user_id: string;
-  default_context_id?: string;
-  notification_preferences?: Partial<UserPreferences["notification_preferences"]>;
-  ui_preferences?: Partial<UserPreferences["ui_preferences"]>;
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
+  current_context_id?: string;
+  theme?: "light" | "dark" | "system";
+  notifications_enabled?: boolean;
 }
 
 interface UserPreferencesUpdate {
-  default_context_id?: string;
-  notification_preferences?: Partial<UserPreferences["notification_preferences"]>;
-  ui_preferences?: Partial<UserPreferences["ui_preferences"]>;
+  onboarding_completed?: boolean;
+  onboarding_completed_at?: string;
+  current_context_id?: string;
+  theme?: "light" | "dark" | "system";
+  notifications_enabled?: boolean;
 }
 ```
 
 ### Relationships
 - **One-to-One with User (Logto):** Each user has exactly one UserPreferences document
 - **Auto-created on first login:** If preferences don't exist, create with defaults
-- **Soft reference to Context:** `default_context_id` references a Context but doesn't enforce FK (context may be deleted)
+- **Soft reference to Context:** `current_context_id` references a Context but doesn't enforce FK (context may be deleted)
 
 ### Default Values
 ```typescript
 const DEFAULT_USER_PREFERENCES: Omit<UserPreferences, "id" | "user_id" | "created_at" | "updated_at"> = {
-  notification_preferences: {
-    email_reminders: true,
-    browser_notifications: false, // Requires explicit browser permission
-    reminder_lead_time: 60, // 1 hour before due date
-  },
-  ui_preferences: {
-    flow_list_view: "detailed",
-    context_sort_order: "recent",
-  },
+  onboarding_completed: false,
+  onboarding_completed_at: undefined,
+  current_context_id: undefined,
+  theme: undefined, // System default
+  notifications_enabled: true,
 };
 ```
 
 ---
 
-## Conversation Model (Future - Epic 3)
+## Conversation Model
 
 **Purpose:** Stores chat history between user and AI within a context for continuity and flow extraction.
 
 **Key Attributes:**
-- `id`: string - Unique identifier
+- `id`: string (MongoDB ObjectId) - Unique identifier
 - `context_id`: string - Parent context reference
-- `user_id`: string - Owner
+- `user_id`: string - Owner (for authorization and isolation)
 - `messages`: Message[] - Array of message objects
-- `created_at`: datetime
-- `updated_at`: datetime
+- `created_at`: datetime - Creation timestamp
+- `updated_at`: datetime - Last modification timestamp
 
-**Message Structure:**
+### TypeScript Interface
+
 ```typescript
 interface Message {
-  id: string;
   role: "user" | "assistant" | "system";
-  content: string;
-  timestamp: string; // ISO 8601
-  metadata?: {
-    flow_ids?: string[]; // Flows extracted from this message
-    tokens_used?: number;
-  };
+  content: string; // Max 10,000 characters
+  timestamp: string | null; // ISO 8601 datetime, auto-set if not provided
 }
 
 interface Conversation {
@@ -222,12 +206,30 @@ interface Conversation {
   context_id: string;
   user_id: string;
   messages: Message[];
-  created_at: string;
-  updated_at: string;
+  created_at: string; // ISO 8601 datetime
+  updated_at: string; // ISO 8601 datetime
+}
+
+interface ConversationCreate {
+  context_id: string;
+}
+
+interface ConversationRequest {
+  messages: Message[];
+  context_id: string;
+  conversation_id?: string; // If continuing an existing conversation
+  is_context_switch?: boolean; // True if first message after context switch
 }
 ```
 
-**Note:** This model will be implemented in Epic 3 when AI conversation features are added. For Epic 2, we focus on Context, Flow, and UserPreferences.
+### Relationships
+- **Many-to-One with Context**: A Context can have multiple Conversations
+- **Many-to-One with User**: Each Conversation belongs to a single user (enforced via `user_id`)
+- **Message Array**: Messages are embedded documents within the conversation (not separate collection)
+
+### Security
+- All repository methods enforce user isolation at the data access layer (defense-in-depth)
+- Atomic operations prevent TOCTOU race conditions when appending messages
 
 ---
 
@@ -247,8 +249,11 @@ interface Conversation {
 **UserPreferences Collection:**
 - Unique index on `user_id` (enforce one preferences doc per user, fast lookup)
 
-**Conversations Collection (Future):**
-- Index on `context_id` (for fetching conversation history)
-- Compound index on `(user_id, updated_at desc)` (for recent conversations)
+**Conversations Collection:**
+- Index on `user_id` (for user isolation queries)
+- Index on `context_id` (for fetching conversation history per context)
+- Compound index on `(user_id, context_id)` (for user's conversations in a context)
+- Compound index on `(context_id, updated_at desc)` (for recent conversations per context)
+- Compound index on `(user_id, _id)` (for efficient user-scoped lookups)
 
 ---

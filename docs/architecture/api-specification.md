@@ -336,37 +336,27 @@ components:
     # UserPreferences Schemas
     UserPreferences:
       type: object
-      required: [id, user_id, notification_preferences, ui_preferences, created_at, updated_at]
+      required: [id, user_id, onboarding_completed, notifications_enabled, created_at, updated_at]
       properties:
         id:
           type: string
         user_id:
           type: string
-        default_context_id:
+        onboarding_completed:
+          type: boolean
+        onboarding_completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        current_context_id:
           type: string
           nullable: true
-        notification_preferences:
-          type: object
-          required: [email_reminders, browser_notifications, reminder_lead_time]
-          properties:
-            email_reminders:
-              type: boolean
-            browser_notifications:
-              type: boolean
-            reminder_lead_time:
-              type: number
-              description: Minutes before due date
-              example: 60
-        ui_preferences:
-          type: object
-          required: [flow_list_view, context_sort_order]
-          properties:
-            flow_list_view:
-              type: string
-              enum: [compact, detailed]
-            context_sort_order:
-              type: string
-              enum: [recent, alphabetical, custom]
+        theme:
+          type: string
+          enum: [light, dark, system]
+          nullable: true
+        notifications_enabled:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -377,32 +367,24 @@ components:
     UserPreferencesUpdate:
       type: object
       properties:
-        default_context_id:
+        onboarding_completed:
+          type: boolean
+        onboarding_completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        current_context_id:
           type: string
           nullable: true
-        notification_preferences:
-          type: object
-          properties:
-            email_reminders:
-              type: boolean
-            browser_notifications:
-              type: boolean
-            reminder_lead_time:
-              type: number
-        ui_preferences:
-          type: object
-          properties:
-            flow_list_view:
-              type: string
-              enum: [compact, detailed]
-            context_sort_order:
-              type: string
-              enum: [recent, alphabetical, custom]
+        theme:
+          type: string
+          enum: [light, dark, system]
+          nullable: true
+        notifications_enabled:
+          type: boolean
       example:
-        notification_preferences:
-          reminder_lead_time: 120
-        ui_preferences:
-          flow_list_view: "compact"
+        theme: "dark"
+        notifications_enabled: true
 
     # Error Schemas
     Error:
@@ -939,12 +921,9 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {
-  "notification_preferences": {
-    "reminder_lead_time": 120
-  },
-  "ui_preferences": {
-    "flow_list_view": "compact"
-  }
+  "theme": "dark",
+  "notifications_enabled": true,
+  "current_context_id": "507f1f77bcf86cd799439011"
 }
 ```
 
@@ -953,16 +932,11 @@ Content-Type: application/json
 {
   "id": "507f1f77bcf86cd799439014",
   "user_id": "logto_user_abc123",
-  "default_context_id": null,
-  "notification_preferences": {
-    "email_reminders": true,
-    "browser_notifications": false,
-    "reminder_lead_time": 120
-  },
-  "ui_preferences": {
-    "flow_list_view": "compact",
-    "context_sort_order": "recent"
-  },
+  "onboarding_completed": true,
+  "onboarding_completed_at": "2025-09-29T14:30:00Z",
+  "current_context_id": "507f1f77bcf86cd799439011",
+  "theme": "dark",
+  "notifications_enabled": true,
   "created_at": "2025-09-30T09:00:00Z",
   "updated_at": "2025-09-30T10:15:00Z"
 }
