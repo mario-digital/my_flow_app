@@ -581,29 +581,70 @@ function switchContext(newContext: Context) {
 
 ### Usage Example
 
+**Correct way to use CSS Design Tokens (Tailwind classes mapped to tokens):**
+
 ```tsx
-// Button component using design tokens
-export function Button({ variant = 'primary' }: ButtonProps) {
-  return (
-    <button
-      className={cn(
-        // Uses component tokens
-        'bg-[var(--button-bg-primary)]',
-        'hover:bg-[var(--button-bg-hover)]',
-        'text-[var(--button-text-primary)]',
-        'px-[var(--spacing-4)]',
-        'py-[var(--spacing-2)]',
-        'rounded-[var(--radius-md)]',
-        'shadow-[var(--shadow-sm)]',
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+// Actual Button component from src/components/ui/button.tsx
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const buttonVariants = cva(
+  'inline-flex items-center justify-center gap-2 rounded-sm font-medium transition-all',
+  {
+    variants: {
+      variant: {
+        // Uses token: bg-bg-tertiary → var(--color-bg-tertiary)
+        default:
+          'bg-bg-tertiary text-text-primary border border-border-default hover:border-context-current',
+        
+        // Uses dynamic context token: border-context-current → var(--color-context-current)
+        context:
+          'bg-context-current text-white hover:bg-context-hover',
+      },
+    },
+  }
+);
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
 ```
 
-**When context switches, the button color updates automatically!**
+**How it works:**
+
+1. Tailwind classes like `bg-context-current` are configured in `tailwind.config.ts` to map to CSS tokens
+2. Example: `border-context-current` → `border-color: var(--color-context-current)`
+3. When context switches, `--color-context-current` updates via JavaScript
+4. All components using these classes update instantly (no re-render needed)
+
+**Tailwind Config Example:**
+
+```typescript
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      colors: {
+        'context-current': 'var(--color-context-current)',
+        'context-hover': 'var(--color-context-hover)',
+        'bg-tertiary': 'var(--color-bg-tertiary)',
+        'text-primary': 'var(--color-text-primary)',
+        // ... all tokens mapped
+      },
+    },
+  },
+};
+```
+
+**When context switches, all components using `context-current` update automatically!**
 
 ---
 
