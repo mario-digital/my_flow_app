@@ -33,6 +33,16 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            my_flow_client/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('my_flow_client/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: |
           cd my_flow_client

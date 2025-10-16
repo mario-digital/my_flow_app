@@ -1,0 +1,48 @@
+version: 2
+updates:
+  # Frontend dependencies (npm/bun)
+  - package-ecosystem: "npm"
+    directory: "/my_flow_client"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "chore(deps)"
+    reviewers:
+      - "OWNER_USERNAME" # Replace with actual GitHub username
+    ignore:
+      # Ignore major version updates for stable packages
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+
+  # Backend dependencies (Python/pip)
+  - package-ecosystem: "pip"
+    directory: "/my_flow_api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    commit-message:
+      prefix: "chore(deps)"
+    reviewers:
+      - "OWNER_USERNAME" # Replace with actual GitHub username
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci)"
+

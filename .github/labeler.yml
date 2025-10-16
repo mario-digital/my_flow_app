@@ -1,0 +1,52 @@
+# Auto-labeling configuration for pull requests
+
+frontend:
+  - changed-files:
+    - any-glob-to-any-file: 'my_flow_client/**/*'
+
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 'my_flow_api/**/*'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'docs/**/*'
+      - '**/*.md'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'my_flow_client/**/*.test.{ts,tsx}'
+      - 'my_flow_client/**/*.spec.{ts,tsx}'
+      - 'my_flow_client/e2e/**/*'
+      - 'my_flow_api/tests/**/*'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**/*'
+      - '.github/dependabot.yml'
+      - '.husky/**/*'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'my_flow_client/package.json'
+      - 'my_flow_client/bun.lockb'
+      - 'my_flow_api/pyproject.toml'
+      - 'my_flow_api/uv.lock'
+      - 'package.json'
+
+configuration:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.config.{js,ts,mjs,cjs}'
+      - '**/tsconfig.json'
+      - '**/.eslintrc*'
+      - '**/.prettierrc*'
+      - '**/pytest.ini'
+      - '**/mypy.ini'
+
