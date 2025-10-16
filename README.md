@@ -2,14 +2,12 @@
 
 A production-ready **fullstack monorepo** built with **Next.js 15**, **React 19 Server Components**, **FastAPI**, and **MongoDB**. Features an **intelligent AI conversational agent** for natural language task management with automatic flow extraction, context-aware conversations, and AI-powered task operations.
 
-[![Full Stack CI](https://github.com/YOUR_USERNAME/my_flow_app/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/my_flow_app/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/YOUR_USERNAME/my_flow_app/actions/workflows/codeql.yml/badge.svg)](https://github.com/YOUR_USERNAME/my_flow_app/actions/workflows/codeql.yml)
-[![codecov](https://codecov.io/gh/YOUR_USERNAME/my_flow_app/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/my_flow_app)
+[![Full Stack CI](https://github.com/mario-digital/my_flow_app/actions/workflows/ci.yml/badge.svg)](https://github.com/mario-digital/my_flow_app/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/mario-digital/my_flow_app/actions/workflows/codeql.yml/badge.svg)](https://github.com/mario-digital/my_flow_app/actions/workflows/codeql.yml)
+[![Coverage](https://img.shields.io/badge/coverage-80.78%25-brightgreen)](https://github.com/mario-digital/my_flow_app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.12+-blue)](https://www.python.org/)
 [![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-
-<!-- Replace YOUR_USERNAME with your actual GitHub username to enable badges -->
 
 ---
 
