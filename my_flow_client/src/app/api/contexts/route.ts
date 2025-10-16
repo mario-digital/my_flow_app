@@ -21,8 +21,6 @@ export async function GET(): Promise<NextResponse> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('[BFF Contexts] Fetching contexts for authenticated user');
-
     // Call FastAPI with JWT token
     const response = await fetch(`${API_BASE_URL}/api/v1/contexts`, {
       headers: {
@@ -43,9 +41,6 @@ export async function GET(): Promise<NextResponse> {
 
     // Backend returns paginated response: { items: Context[], total, limit, offset, has_more }
     const data = (await response.json()) as { items: unknown[] };
-    console.log(
-      `[BFF Contexts] Successfully fetched ${data.items.length} contexts`
-    );
     return NextResponse.json(data.items);
   } catch (error) {
     console.error('[BFF Contexts] Unexpected error:', error);
@@ -81,8 +76,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       color: string;
     };
 
-    console.log('[BFF Contexts] Creating new context:', body.name);
-
     // Call FastAPI with JWT token
     const response = await fetch(`${API_BASE_URL}/api/v1/contexts`, {
       method: 'POST',
@@ -106,7 +99,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const context = (await response.json()) as unknown;
-    console.log('[BFF Contexts] Successfully created context');
     return NextResponse.json(context);
   } catch (error) {
     console.error('[BFF Contexts] Unexpected error:', error);

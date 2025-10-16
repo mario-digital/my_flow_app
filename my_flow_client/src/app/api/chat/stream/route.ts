@@ -31,13 +31,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     conversationId = null,
   } = body;
 
-  console.log('[BFF Stream] Request body:', {
-    contextId,
-    messageCount: messages.length,
-    conversationId,
-  });
-  console.log('[BFF Stream] Messages:', JSON.stringify(messages, null, 2));
-
   if (!contextId) {
     return NextResponse.json(
       { error: 'contextId is required' },
