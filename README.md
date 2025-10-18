@@ -4,10 +4,6 @@ A production-ready **fullstack monorepo** built with **Next.js 15**, **React 19 
 
 [![Full Stack CI](https://github.com/mario-digital/my_flow_app/actions/workflows/ci.yml/badge.svg)](https://github.com/mario-digital/my_flow_app/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/mario-digital/my_flow_app/actions/workflows/codeql.yml/badge.svg)](https://github.com/mario-digital/my_flow_app/actions/workflows/codeql.yml)
-[![Coverage](https://img.shields.io/badge/coverage-80.78%25-brightgreen)](https://github.com/mario-digital/my_flow_app)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue)](https://www.python.org/)
-[![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 ---
 
@@ -137,33 +133,10 @@ MyFlow includes an **intelligent AI conversational agent** that makes task manag
 ## Architecture Overview
 
 ### High-Level System Design
+<div align="left">
+  <img src="my_flow_client/public/screenshots/system_design.png" alt="My Contexts" width="500"/>
+</div>
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                      BROWSER                              │
-│  • No JWT tokens (HttpOnly cookies only)                 │
-│  • React 19 Server Components (90% server-rendered)      │
-│  • Client Components for interactivity only              │
-└─────────────────────┬────────────────────────────────────┘
-                      │ fetch('/api/flows')
-┌─────────────────────▼────────────────────────────────────┐
-│               NEXT.JS 15 (BFF Proxy)                     │
-│  • Server Components: Direct data fetching               │
-│  • API Routes: Proxy to FastAPI with JWT                 │
-│  • Server Actions: Form mutations                        │
-│  • getApiAccessToken() → JWT (server-side only)          │
-└─────────────────────┬────────────────────────────────────┘
-                      │ Authorization: Bearer {JWT}
-┌─────────────────────▼────────────────────────────────────┐
-│              FASTAPI BACKEND (Python)                    │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ Routers → Services → Repositories → MongoDB        │  │
-│  └────────────────────────────────────────────────────┘  │
-│  • JWT validation with JWKS caching                      │
-│  • Clean Architecture layers                             │
-│  • AI service integration (OpenAI/Anthropic)             │
-└──────────────────────────────────────────────────────────┘
-```
 
 ### Tech Stack
 
