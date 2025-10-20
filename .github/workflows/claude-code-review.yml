@@ -12,7 +12,6 @@ on:
 
 jobs:
   claude-review:
-    if: false # Temporarily disabled—no Claude credentials available
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
