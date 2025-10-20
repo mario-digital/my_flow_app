@@ -323,9 +323,10 @@
 ### Acceptance Criteria
 
 1. **Backend deployed to Railway/Render/Fly.io:**
-   - Environment variables configured via 1Password service account
-   - Example Railway deployment command: `op run --env-file=.env.template -- railway up`
-   - Health check endpoint configured: `/health`
+   - Uses production Dockerfile from Story 5.0 (Docker Containerization)
+   - Railway auto-detects and deploys Dockerfile from `my_flow_api/Dockerfile`
+   - Environment variables configured via 1Password service account or platform UI
+   - Health check endpoint configured: `/health` (implemented in Story 5.0)
    - Auto-deploy on merge to `main` branch
 
 2. **Frontend deployed to Vercel:**
@@ -333,11 +334,13 @@
    - Auto-deploy on merge to `main` branch
    - Preview deployments for PRs
 
-3. **MongoDB Atlas:**
+3. **MongoDB Atlas & Upstash Redis:**
    - Production database cluster created (free tier)
    - Database name: `myflow_prod`
    - IP whitelist: `0.0.0.0/0` (allow from anywhere) or specific IPs
    - Backup enabled (automatic daily backups)
+   - Upstash Redis configured for production caching (serverless, free tier)
+   - Environment variable `REDIS_URL` configured with Upstash REST URL
 
 4. **Smoke tests after deployment:**
    - Manual checklist:
@@ -354,8 +357,9 @@
    - Test rollback in staging environment
 
 6. **Documentation:**
-   - README includes deployment instructions
-   - `.env.template` documents all required environment variables
+   - README includes deployment instructions (Docker setup from Story 5.0)
+   - Production deployment guide: `docs/deployment/docker-deployment.md` (from Story 5.0)
+   - `.env.template` documents all required environment variables including Docker/Redis
 
 ---
 
