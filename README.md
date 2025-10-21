@@ -382,14 +382,18 @@ docker run --rm -p 3000:3000 \
 
 ### Docker Image Sizes
 
-- Backend: < 300MB (production)
-- Frontend: < 250MB target, < 200MB stretch goal (production)
+**CI Limits (enforced in GitHub Actions):**
+- Backend: < 450MB (actual: ~423MB)
+- Frontend: < 350MB (actual: ~304MB)
 - Redis: ~32MB (Alpine base)
 
-**Typical actual sizes:**
-- node:20-alpine base: ~150MB
-- Next.js standalone output: ~50-100MB
-- Total frontend: ~200-250MB (Alpine), ~150-180MB (Distroless)
+**Warning Thresholds:**
+- Backend: 400MB (triggers CI warning)
+- Frontend: 320MB (triggers CI warning)
+
+**Note:** Original targets were 300MB/250MB, but AI SDK dependencies (OpenAI + Anthropic)
+and Bun workspace structure add ~120MB to backend and ~50MB to frontend. Current sizes
+are acceptable and enforced by CI to prevent unbounded growth.
 
 ### Troubleshooting
 
