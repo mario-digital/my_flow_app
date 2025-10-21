@@ -42,9 +42,11 @@ class TestHealthEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["status"] in ["healthy", "degraded"]
-        assert "mongodb_connected" in data
-        assert "timestamp" in data
+        assert data["status"] in ["ok", "degraded"]
+        assert "db" in data
+        assert data["db"] in ["connected", "disconnected", "unknown"]
+        assert "cache" in data
+        assert data["cache"] in ["connected", "disconnected", "not_configured", "unknown"]
 
 
 @pytest.mark.integration
