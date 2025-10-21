@@ -76,6 +76,7 @@ data/db/
 *.lock
 !bun.lockb
 !package-lock.json
+!uv.lock
 *.wt
 WiredTiger*
 mongod.lock
