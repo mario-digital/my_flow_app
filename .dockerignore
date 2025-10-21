@@ -1,0 +1,37 @@
+# Root .dockerignore for monorepo Docker builds
+# Used when frontend Dockerfile builds with context: . (repository root)
+
+# Exclude version control
+.git/
+.gitignore
+
+# Exclude documentation (not needed in images)
+*.md
+!README.md
+docs/
+
+# Exclude CI/CD and workflows
+.github/
+
+# Exclude backend from frontend builds (major optimization)
+# When building frontend with root context, we don't need backend files
+my_flow_api/
+
+# Exclude environment files (secrets)
+.env
+.env.*
+!.env.template
+
+# Exclude OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Exclude temporary and build artifacts
+tmp/
+temp/
+*.log
+*.bak*
