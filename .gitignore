@@ -74,6 +74,7 @@ my_flow_api/*.pid
 mongodb_data/
 data/db/
 *.lock
+!bun.lock
 !bun.lockb
 !package-lock.json
 !uv.lock
