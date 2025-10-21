@@ -141,12 +141,12 @@ async def test_health_endpoint_mongodb_status() -> None:
             data = response.json()
 
             assert "status" in data
-            assert "mongodb_connected" in data
-            assert "timestamp" in data
+            assert "db" in data
+            assert "cache" in data
 
-            # Should be healthy when connected
-            assert data["status"] == "healthy"
-            assert data["mongodb_connected"] is True
+            # Should be ok when connected
+            assert data["status"] == "ok"
+            assert data["db"] == "connected"
         finally:
             await close_mongo_connection()
 
