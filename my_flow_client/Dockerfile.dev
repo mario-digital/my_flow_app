@@ -1,0 +1,30 @@
+FROM oven/bun:1-alpine
+
+WORKDIR /app
+
+# Copy package files (note: build context must be set to project root)
+# For Bun workspace, we need root package.json + workspace package.json + packages/
+COPY package.json bun.lock ./
+COPY my_flow_client/package.json ./my_flow_client/
+# Copy project configuration files required for Next.js resolution
+COPY my_flow_client/tsconfig.json ./my_flow_client/tsconfig.json
+COPY my_flow_client/next.config.ts ./my_flow_client/next.config.ts
+COPY my_flow_client/postcss.config.mjs ./my_flow_client/postcss.config.mjs
+COPY my_flow_client/vitest.config.ts ./my_flow_client/vitest.config.ts
+COPY my_flow_client/eslint.config.mjs ./my_flow_client/eslint.config.mjs
+COPY my_flow_client/playwright.config.ts ./my_flow_client/playwright.config.ts
+COPY my_flow_client/components.json ./my_flow_client/components.json
+COPY my_flow_client/logto-custom.css ./my_flow_client/logto-custom.css
+COPY packages/ ./packages/
+
+# Install dependencies for the workspace
+# Note: Using --no-save to avoid lockfile changes during build
+RUN bun install --no-save
+
+# Don't copy code (will be mounted as volume)
+
+EXPOSE 3000
+
+# Use next dev directly (don't use package.json script which has op run)
+WORKDIR /app/my_flow_client
+CMD ["bun", "next", "dev", "--turbopack"]

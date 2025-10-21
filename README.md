@@ -235,6 +235,196 @@ cd my_flow_api && uv run pytest
 
 ---
 
+## Docker Setup
+
+### Prerequisites
+- Docker Desktop (includes Docker Compose)
+- 1Password CLI for secret management
+
+### Local Development with Docker
+
+1. **Start all services:**
+   ```bash
+   # Inject secrets and start containers
+   op run --env-file=.env.template -- docker-compose up
+   ```
+
+   > Ensure your 1Password vault includes `LOGTO_RESOURCE` so both frontend and backend receive the same Logto resource audience when running in Docker.
+
+2. **View logs:**
+   ```bash
+   # All services
+   docker-compose logs -f
+
+   # Specific service
+   docker-compose logs -f backend
+   docker-compose logs -f frontend
+   docker-compose logs -f redis
+   ```
+
+3. **Stop services:**
+   ```bash
+   docker-compose down
+
+   # Stop and remove volumes
+   docker-compose down -v
+   ```
+
+### Production Testing with Docker
+
+```bash
+# Build and run production images
+op run --env-file=.env.template -- docker-compose -f docker-compose.prod.yml up --build
+```
+
+### Docker Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `docker-compose up` | Start all services |
+| `docker-compose up -d` | Start in background (detached) |
+| `docker-compose down` | Stop all services |
+| `docker-compose logs -f <service>` | View logs for service |
+| `docker-compose build` | Rebuild images |
+| `docker-compose ps` | List running services |
+| `docker-compose exec <service> sh` | Shell into service |
+
+### Health Checks
+
+- **Backend**: http://localhost:8000/health
+- **Frontend**: http://localhost:3000/api/health
+- **Redis**: `docker-compose exec redis redis-cli ping`
+
+### Testing Individual Docker Builds
+
+#### Backend Production Build
+
+```bash
+# Build production image
+cd my_flow_api
+docker build -t myflow-backend:test -f Dockerfile .
+
+# Check image size
+docker images myflow-backend:test
+
+# Run container (requires environment variables)
+docker run --rm -p 8000:8000 \
+  -e MONGODB_URI="your-mongodb-uri" \
+  -e LOGTO_ENDPOINT="your-logto-endpoint" \
+  -e LOGTO_APP_ID="your-app-id" \
+  -e LOGTO_APP_SECRET="your-app-secret" \
+  myflow-backend:test
+
+# Test health check (in another terminal)
+curl http://localhost:8000/health
+
+# Stop with Ctrl+C
+```
+
+#### Backend Development Build
+
+```bash
+# Build dev image
+cd my_flow_api
+docker build -t myflow-backend:dev -f Dockerfile.dev .
+
+# Run with volume mount for hot reload
+docker run --rm -p 8000:8000 \
+  -v $(pwd)/src:/app/src \
+  -e MONGODB_URI="your-mongodb-uri" \
+  -e LOGTO_ENDPOINT="your-logto-endpoint" \
+  -e LOGTO_APP_ID="your-app-id" \
+  -e LOGTO_APP_SECRET="your-app-secret" \
+  myflow-backend:dev
+```
+
+#### Frontend Production Build
+
+```bash
+# Build production image
+cd my_flow_client
+docker build -t myflow-frontend:test -f Dockerfile .
+
+# Check image size
+docker images myflow-frontend:test
+
+# Run container
+docker run --rm -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL="http://localhost:8000" \
+  -e NEXT_PUBLIC_LOGTO_ENDPOINT="your-logto-endpoint" \
+  -e NEXT_PUBLIC_LOGTO_APP_ID="your-app-id" \
+  -e LOGTO_APP_SECRET="your-app-secret" \
+  -e LOGTO_COOKIE_SECRET="your-cookie-secret" \
+  -e NEXT_PUBLIC_BASE_URL="http://localhost:3000" \
+  -e NEXT_PUBLIC_LOGTO_RESOURCE="your-resource" \
+  myflow-frontend:test
+
+# Test health check (in another terminal)
+curl http://localhost:3000/api/health
+
+# Stop with Ctrl+C
+```
+
+#### Frontend Development Build
+
+```bash
+# Build dev image
+cd my_flow_client
+docker build -t myflow-frontend:dev -f Dockerfile.dev .
+
+# Run with volume mount for hot reload
+docker run --rm -p 3000:3000 \
+  -v $(pwd)/src:/app/src \
+  -v $(pwd)/public:/app/public \
+  -e NEXT_PUBLIC_API_URL="http://localhost:8000" \
+  myflow-frontend:dev
+```
+
+### Docker Image Sizes
+
+- Backend: < 300MB (production)
+- Frontend: < 250MB target, < 200MB stretch goal (production)
+- Redis: ~32MB (Alpine base)
+
+**Typical actual sizes:**
+- node:20-alpine base: ~150MB
+- Next.js standalone output: ~50-100MB
+- Total frontend: ~200-250MB (Alpine), ~150-180MB (Distroless)
+
+### Troubleshooting
+
+**Image build fails:**
+```bash
+# Clean Docker build cache
+docker builder prune
+
+# Build with no cache
+docker build --no-cache -t myflow-backend:test .
+```
+
+**Container won't start:**
+```bash
+# Check container logs
+docker logs <container-id>
+
+# Run with interactive shell (dev images only)
+docker run -it myflow-backend:dev /bin/bash
+```
+
+**Health check fails:**
+```bash
+# Check if port is already in use
+lsof -i :8000  # or :3000
+
+# Verify container is running
+docker ps
+
+# Check container health status
+docker inspect <container-id> | grep Health -A 10
+```
+
+---
+
 ## Monorepo Structure
 
 ```

@@ -27,16 +27,25 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[BFF /api/preferences GET] Backend error:', errorText);
-      throw new Error(
-        `Failed to fetch preferences: ${response.status} ${errorText}`
+    if (response.ok) {
+      const data = (await response.json()) as Record<string, unknown>;
+      return NextResponse.json(data);
+    }
+
+    const errorText = await response.text();
+    console.error('[BFF /api/preferences GET] Backend error:', errorText);
+
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: response.status }
       );
     }
 
-    const data = (await response.json()) as Record<string, unknown>;
-    return NextResponse.json(data);
+    return NextResponse.json(
+      { error: 'Failed to fetch preferences' },
+      { status: 500 }
+    );
   } catch (error) {
     console.error('[BFF /api/preferences GET] Error:', error);
     return NextResponse.json(

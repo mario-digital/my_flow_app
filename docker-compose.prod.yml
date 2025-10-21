@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./my_flow_api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
+      - LOGTO_APP_ID=${LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - LOGTO_RESOURCE=${LOGTO_RESOURCE}
+      - AI_PROVIDER=${AI_PROVIDER}
+      - AI_MODEL=${AI_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - myflow-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: my_flow_client/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_LOGTO_ENDPOINT=${NEXT_PUBLIC_LOGTO_ENDPOINT}
+      - NEXT_PUBLIC_LOGTO_APP_ID=${NEXT_PUBLIC_LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - LOGTO_COOKIE_SECRET=${LOGTO_COOKIE_SECRET}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+      - NEXT_PUBLIC_LOGTO_RESOURCE=${NEXT_PUBLIC_LOGTO_RESOURCE}
+    depends_on:
+      - backend
+    networks:
+      - myflow-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - myflow-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  myflow-network:
