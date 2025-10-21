@@ -1,0 +1,80 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./my_flow_api
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://redis:6379
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
+      - LOGTO_APP_ID=${LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - LOGTO_RESOURCE=${LOGTO_RESOURCE}
+      - AI_PROVIDER=${AI_PROVIDER}
+      - AI_MODEL=${AI_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./my_flow_api/src:/app/src
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - myflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: my_flow_client/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      # CRITICAL: Use service name 'backend' for container-to-container communication
+      # NOT 'localhost' - that's the container's own network namespace!
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_LOGTO_ENDPOINT=${NEXT_PUBLIC_LOGTO_ENDPOINT}
+      - NEXT_PUBLIC_LOGTO_APP_ID=${NEXT_PUBLIC_LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - LOGTO_COOKIE_SECRET=${LOGTO_COOKIE_SECRET}
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      - NEXT_PUBLIC_LOGTO_RESOURCE=${NEXT_PUBLIC_LOGTO_RESOURCE}
+    volumes:
+      - ./my_flow_client/src:/app/my_flow_client/src
+      - ./my_flow_client/public:/app/my_flow_client/public
+    depends_on:
+      - backend
+    networks:
+      - myflow-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - myflow-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  myflow-network:
+    driver: bridge

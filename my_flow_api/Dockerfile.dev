@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+WORKDIR /app
+
+# Install all dependencies (including dev) with cache mount
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen
+
+# Don't copy code (will be mounted as volume)
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+EXPOSE 8000
+
+# Use uvicorn with --reload for hot reload
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

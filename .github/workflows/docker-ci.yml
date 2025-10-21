@@ -1,0 +1,105 @@
+name: Docker CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      # Trigger only on Docker-related changes
+      - 'my_flow_api/Dockerfile'
+      - 'my_flow_api/Dockerfile.dev'
+      - 'my_flow_api/.dockerignore'
+      - 'my_flow_api/pyproject.toml'
+      - 'my_flow_api/uv.lock'
+      - 'my_flow_client/Dockerfile'
+      - 'my_flow_client/Dockerfile.dev'
+      - 'my_flow_client/.dockerignore'
+      - 'my_flow_client/package.json'
+      - 'my_flow_client/bun.lockb'
+      - 'my_flow_client/next.config.ts'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/docker-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      # Same paths for main branch pushes
+      - 'my_flow_api/Dockerfile'
+      - 'my_flow_api/Dockerfile.dev'
+      - 'my_flow_api/.dockerignore'
+      - 'my_flow_api/pyproject.toml'
+      - 'my_flow_api/uv.lock'
+      - 'my_flow_client/Dockerfile'
+      - 'my_flow_client/Dockerfile.dev'
+      - 'my_flow_client/.dockerignore'
+      - 'my_flow_client/package.json'
+      - 'my_flow_client/bun.lockb'
+      - 'my_flow_client/next.config.ts'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/docker-ci.yml'
+
+jobs:
+  docker-build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./my_flow_api
+          file: ./my_flow_api/Dockerfile
+          push: false
+          tags: myflow-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./my_flow_client
+          file: ./my_flow_client/Dockerfile
+          push: false
+          tags: myflow-frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify image sizes
+        run: |
+          backend_size=$(docker images myflow-backend:test --format "{{.Size}}")
+          frontend_size=$(docker images myflow-frontend:test --format "{{.Size}}")
+          echo "Backend image size: $backend_size"
+          echo "Frontend image size: $frontend_size"
+          echo "::notice title=Backend Image Size::$backend_size"
+          echo "::notice title=Frontend Image Size::$frontend_size"
+
+      - name: Check image size limits
+        run: |
+          backend_size_mb=$(docker images myflow-backend:test --format "{{.Size}}" | sed 's/MB//' | awk '{print int($1)}')
+          frontend_size_mb=$(docker images myflow-frontend:test --format "{{.Size}}" | sed 's/MB//' | awk '{print int($1)}')
+
+          # Updated realistic limits based on actual builds with AI SDKs and Bun workspace
+          if [ "$backend_size_mb" -gt 450 ]; then
+            echo "::error title=Backend Image Too Large::Backend image is ${backend_size_mb}MB, exceeds 450MB limit"
+            exit 1
+          fi
+
+          if [ "$frontend_size_mb" -gt 350 ]; then
+            echo "::error title=Frontend Image Too Large::Frontend image is ${frontend_size_mb}MB, exceeds 350MB limit"
+            exit 1
+          fi
+
+          # Warn if approaching limits
+          if [ "$backend_size_mb" -gt 400 ]; then
+            echo "::warning title=Backend Image Size::Backend image is ${backend_size_mb}MB, approaching 450MB limit"
+          fi
+
+          if [ "$frontend_size_mb" -gt 320 ]; then
+            echo "::warning title=Frontend Image Size::Frontend image is ${frontend_size_mb}MB, approaching 350MB limit"
+          fi
+
+          echo "✅ Image sizes are acceptable (Backend: ${backend_size_mb}MB, Frontend: ${frontend_size_mb}MB)"

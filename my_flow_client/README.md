@@ -76,7 +76,7 @@ export const logtoConfig: LogtoNextConfig = {
 
 **Key Points:**
 - Cookies are HttpOnly and Secure in production
-- `resources` array allows API access token retrieval
+- `resources` array allows API access token retrieval (make sure the same `LOGTO_RESOURCE` value is available to the FastAPI backend)
 - All secrets stay server-side
 
 #### 2. Protected Routes
