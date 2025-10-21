@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     MAX_CONTEXTS_PER_USER: int = 100
     MAX_FLOWS_PER_CONTEXT: int = 100
 
+    # Redis Cache Configuration (optional)
+    REDIS_URL: str | None = None
+
     # Logto Authentication Configuration
     # Defaults let local tests run without secrets; production validator enforces real values
     LOGTO_ENDPOINT: str = ""
