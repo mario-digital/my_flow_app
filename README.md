@@ -291,7 +291,7 @@ op run --env-file=.env.template -- docker-compose -f docker-compose.prod.yml up 
 
 ### Health Checks
 
-- **Backend**: http://localhost:8000/health
+- **Backend**: http://localhost:8000/api/v1/health
 - **Frontend**: http://localhost:3000/api/health
 - **Redis**: `docker-compose exec redis redis-cli ping`
 
@@ -316,7 +316,7 @@ docker run --rm -p 8000:8000 \
   myflow-backend:test
 
 # Test health check (in another terminal)
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 
 # Stop with Ctrl+C
 ```

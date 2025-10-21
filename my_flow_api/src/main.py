@@ -97,32 +97,13 @@ app.add_middleware(
 )
 
 # Register API routers
-app.include_router(health.router, tags=["health"])
+# Health check router at /api/v1/health (Docker HEALTHCHECK + monitoring)
+app.include_router(health.router, prefix=settings.API_V1_STR, tags=["health"])
 app.include_router(contexts.router)
 app.include_router(conversations.router)
 app.include_router(flows.router)
 app.include_router(preferences.router)
 app.include_router(transitions.router)
-
-
-@app.get(f"{settings.API_V1_STR}/health")
-async def health_check() -> dict[str, str | bool]:
-    """Health check endpoint with MongoDB connection status."""
-    mongodb_connected = False
-
-    try:
-        # Ping MongoDB to verify connection
-        if db_instance.db is not None:
-            await db_instance.db.command("ping")
-            mongodb_connected = True
-    except Exception as e:
-        print(f"MongoDB health check failed: {e}")
-
-    return {
-        "status": "healthy" if mongodb_connected else "degraded",
-        "mongodb_connected": mongodb_connected,
-        "timestamp": datetime.now(UTC).isoformat(),
-    }
 
 
 @app.get("/")
