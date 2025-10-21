@@ -1,11 +1,11 @@
 """Health check endpoint for Docker and deployment platforms."""
 
-import os
 from typing import Any
 
 import redis.asyncio as redis
 from fastapi import APIRouter, status
 
+from src.config import settings
 from src.database import get_database
 
 router = APIRouter()
@@ -32,9 +32,8 @@ async def health_check() -> dict[str, Any]:
 
     # Check Redis connection (if configured)
     try:
-        redis_url = os.getenv("REDIS_URL")
-        if redis_url:
-            redis_client = redis.from_url(redis_url)  # type: ignore[no-untyped-call]
+        if settings.REDIS_URL:
+            redis_client = redis.from_url(settings.REDIS_URL)  # type: ignore[no-untyped-call]
             try:
                 await redis_client.ping()
                 health_status["cache"] = "connected"

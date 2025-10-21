@@ -112,7 +112,7 @@ log/
 tmp/
 temp/
 *.tmp
-*.bak
+*.bak*
 *.swp
 *~
 
@@ -124,7 +124,6 @@ temp/
 *.7z
 
 # Docker (if used later)
-.dockerignore
 docker-compose.override.yml
 
 # Certificates
