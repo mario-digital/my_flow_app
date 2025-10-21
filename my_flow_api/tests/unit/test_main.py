@@ -23,13 +23,16 @@ def test_app_creation():
 
 @pytest.mark.unit
 def test_health_check(client):
-    """Test the health check endpoint."""
+    """Test the health check endpoint (used by Docker HEALTHCHECK)."""
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] in ["healthy", "degraded"]
-    assert "mongodb_connected" in data
-    assert "timestamp" in data
+    # Health endpoint returns: {"status": "ok"|"degraded", "db": "...", "cache": "..."}
+    assert data["status"] in ["ok", "degraded"]
+    assert "db" in data
+    assert data["db"] in ["connected", "disconnected", "unknown"]
+    assert "cache" in data
+    assert data["cache"] in ["connected", "disconnected", "not_configured", "unknown"]
 
 
 @pytest.mark.unit

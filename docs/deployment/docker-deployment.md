@@ -24,7 +24,7 @@
    - LOGTO_APP_ID
    - LOGTO_APP_SECRET
 4. **Railway auto-detects Dockerfile and deploys**
-5. **Health check**: `https://your-app.railway.app/health`
+5. **Health check**: `https://your-app.railway.app/api/v1/health`
 
 ## Vercel Frontend Deployment
 
@@ -63,5 +63,5 @@
 
 - **Railway**: Built-in logs and metrics dashboard
 - **Vercel**: Analytics and deployment logs
-- **Health checks**: Monitor `/health` endpoints
+- **Health checks**: Monitor `/api/v1/health` (backend) and `/api/health` (frontend) endpoints
 - **Uptime monitoring**: Use UptimeRobot or similar (free tier)
