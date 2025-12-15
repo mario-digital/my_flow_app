@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
 
       - name: Cache Python dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-uv-${{ hashFiles('my_flow_api/uv.lock') }}
@@ -74,7 +74,7 @@ jobs:
           bun-version: latest
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.bun/install/cache
